@@ -1,0 +1,9 @@
+{
+  "name": "interactionToggle",
+  "version": "1.0.0",
+  "description": "点赞/收藏切换（事务 + 计数同步 + 合并消息）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

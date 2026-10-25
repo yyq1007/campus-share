@@ -1,0 +1,67 @@
+<view class="page-bg"></view>
+
+<!-- 页头：圆体标语 + 小猫插画（自定义导航，右侧避让胶囊） -->
+<view class="hero" style="padding-top:{{statusBarH + navH}}px">
+  <view class="hero-inner">
+    <view class="hero-title-wrap">
+      <view class="hero-title font-title">把好东西，</view>
+      <view class="hero-title font-title">留在这所学校</view>
+    </view>
+    <image class="hero-cat" src="/assets/deco/cat-white.png" mode="aspectFit" />
+    <image class="hero-cloud" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <image class="hero-star" src="/assets/deco/cloud.png" mode="aspectFit" />
+  </view>
+
+  <!-- 搜索框（假输入，点击跳搜索页） -->
+  <view class="search-pill" bindtap="onSearchTap">
+    <icon name="search-primary" size="36" />
+    <text class="search-ph">搜好物 / 美食 / 资料…</text>
+  </view>
+</view>
+
+<view class="page-pad body">
+  <!-- 分类贴纸 -->
+  <view class="stickers">
+    <view class="sticker-entry" wx:for="{{stickers}}" wx:key="key" data-board="{{item.board || item.key}}" bindtap="onStickerTap">
+      <view class="sticker sticker-{{item.color}}">
+        <icon name="{{item.icon}}" size="52" />
+      </view>
+      <text class="sticker-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <!-- AI 引导卡（设计 B1：白底单行 + 左侧紫色圆章 "AI" + 右箭头） -->
+  <view class="ai-card card" bindtap="onAiTap">
+    <view class="ai-badge">AI</view>
+    <view class="ai-text">
+      <view class="ai-main">问问同学都在推荐什么</view>
+    </view>
+    <icon name="chevron-right-primary" size="36" />
+  </view>
+
+  <!-- 信息流（板块筛选由上方分类贴纸跳转板块页承担，不再重复放筛选 chips） -->
+  <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}"
+    state="{{state}}" type="list"
+    emptyText="{{board === 'all' ? '还没有内容' : '这个板块还空着'}}"
+    emptySub="{{board === 'all' ? '做第一个分享好物的同学吧' : ''}}"
+    btnText="发布第一条分享"
+    bind:retry="onRetry" bind:action="onEmptyAction"
+  />
+  <block wx:else>
+    <post-card
+      wx:for="{{list}}" wx:key="id"
+      post="{{item}}"
+      bind:tap="onPostTap" bind:like="onLike" bind:fav="onFav"
+    />
+    <view wx:if="{{loadingMore}}" class="load-more">加载中…</view>
+    <view wx:if="{{loadMoreError}}" class="load-more load-more-err">加载失败，下拉重试</view>
+    <view wx:if="{{!hasMore && list.length > 2}}" class="load-more">没有更多了</view>
+  </block>
+
+  <view class="tab-page-bottom"></view>
+</view>
+
+<!-- FAB 发一条 -->
+<view class="fab fab-tab" bindtap="onFab">
+  <icon name="plus-white" size="40" />
+</view>

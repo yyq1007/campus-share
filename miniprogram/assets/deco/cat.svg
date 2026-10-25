@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- 手绘白色小猫（页头装饰） -->
+  <g stroke="#DCD3FB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 尾巴 -->
+    <path d="M84 92 c16 2 22-8 18-18 c-3-8-12-9-14-3" fill="#FFFFFF"/>
+    <!-- 身体 -->
+    <path d="M38 98 c-6-22-4-38 6-46 c8-6 26-6 34 0 c10 8 12 24 6 46 Z" fill="#FFFFFF"/>
+    <!-- 头 -->
+    <circle cx="60" cy="40" r="26" fill="#FFFFFF"/>
+    <!-- 耳朵 -->
+    <path d="M40 28 L36 10 L52 20 Z" fill="#FFFFFF"/>
+    <path d="M80 28 L84 10 L68 20 Z" fill="#FFFFFF"/>
+    <!-- 内耳 -->
+    <path d="M42 25 L40 16 L48 21 Z" fill="#FFECEF" stroke="none"/>
+    <path d="M78 25 L80 16 L72 21 Z" fill="#FFECEF" stroke="none"/>
+    <!-- 前爪 -->
+    <path d="M52 98 v-8 M60 98 v-8 M68 98 v-8" fill="none" stroke-width="2"/>
+  </g>
+  <!-- 表情 -->
+  <path d="M49 38 q4 4 8 0 M63 38 q4 4 8 0" fill="none" stroke="#6B6780" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M56 46 q4 3 8 0" fill="none" stroke="#B5445C" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="42" cy="45" rx="4" ry="2.5" fill="#FFD9DE"/>
+  <ellipse cx="78" cy="45" rx="4" ry="2.5" fill="#FFD9DE"/>
+  <!-- 胡须 -->
+  <path d="M32 42 h-10 M32 47 l-9 3 M88 42 h10 M88 47 l9 3" fill="none" stroke="#DCD3FB" stroke-width="2" stroke-linecap="round"/>
+</svg>

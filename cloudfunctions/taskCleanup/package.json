@@ -1,0 +1,9 @@
+{
+  "name": "taskCleanup",
+  "version": "1.0.0",
+  "description": "每日清理（孤儿媒体/限流记录/注销用户）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

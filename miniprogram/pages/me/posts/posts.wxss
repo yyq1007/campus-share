@@ -1,0 +1,69 @@
+/* 我的分享 —— v4 令牌 */
+.page {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+}
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: 32rpx;
+  box-shadow: var(--shadow-soft);
+}
+.nav-btn-icon { width: 32rpx; height: 32rpx; }
+.nav-title { font-size: 34rpx; font-weight: 600; color: var(--text-strong); }
+.nav-ph { width: 64rpx; }
+
+.tabs {
+  margin-top: 20rpx;
+  white-space: nowrap;
+}
+.tabs-inner {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 0 32rpx;
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  height: 64rpx;
+  padding: 0 32rpx;
+  font-size: 26rpx;
+  color: var(--text-body);
+  background: var(--bg-elevated);
+  border-radius: 32rpx;
+  box-shadow: var(--shadow-soft);
+}
+.tab.is-on {
+  color: var(--text-on-brand);
+  font-weight: 600;
+  background: var(--primary);
+}
+
+.list { height: calc(100vh - 260rpx); }
+.feed { padding: 24rpx 32rpx 0; }
+.pad { height: 200rpx; }
+
+.fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: calc(60rpx + env(safe-area-inset-bottom));
+  width: 108rpx;
+  height: 108rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  border-radius: 54rpx;
+  box-shadow: 0 16rpx 32rpx var(--brand-a40);
+}
+.fab-icon { width: 44rpx; height: 44rpx; }

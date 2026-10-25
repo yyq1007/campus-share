@@ -1,0 +1,70 @@
+<!--S5 AI 问答：聊天流 + 引用帖卡 + 热门问题 + 底部输入 + AIGC 声明 -->
+<view class="page">
+  <!-- 页头（设计 B5：导航 "AI 问答" + 副标，无插画） -->
+  <view class="hero" style="padding-top:{{statusBarH}}px">
+    <view class="hero-nav" style="height:{{navH}}px">
+      <view class="hero-title">AI 问答</view>
+    </view>
+    <view class="hero-sub">仅基于本校同学的分享回答</view>
+  </view>
+
+  <!-- 消息流 -->
+  <scroll-view scroll-y class="chat" scroll-into-view="{{scrollInto}}" scroll-with-animation>
+    <view wx:for="{{messages}}" wx:key="id" id="{{item.id}}" class="msg {{item.role === 'user' ? 'is-user' : 'is-ai'}}">
+      <!-- AI -->
+      <block wx:if="{{item.role === 'ai'}}">
+        <view class="bubble-ai">
+          <view wx:if="{{item.loading}}" class="dot-row">
+            <view class="dot" />
+            <view class="dot dot-2" />
+            <view class="dot dot-3" />
+          </view>
+          <block wx:else>
+            <view class="bubble-text">{{item.text}}</view>
+            <!-- 引用帖卡：无引用不输出 -->
+            <view wx:if="{{item.cites && item.cites.length}}" class="cite-wrap">
+              <view class="cite-label">来自这些分享</view>
+              <view
+                wx:for="{{item.cites}}" wx:for-item="c" wx:key="id"
+                class="cite-card" data-id="{{c.id}}" bind:tap="onCiteTap"
+              >
+                <image wx:if="{{c.cover}}" class="cite-cover" src="{{c.cover}}" mode="aspectFill" />
+                <view class="cite-main">
+                  <view class="cite-title">{{c.title}}</view>
+                  <view class="cite-meta">匿名 · {{c.timeText}}</view>
+                </view>
+                <image class="cite-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit" />
+              </view>
+            </view>
+            <view wx:if="{{item.guidePost}}" class="guide-btn" bind:tap="onGuidePost">去发一条分享</view>
+          </block>
+        </view>
+      </block>
+      <!-- 用户 -->
+      <view wx:else class="bubble-user">{{item.text}}</view>
+    </view>
+
+    <!-- 热门问题（仅首屏展示） -->
+    <view wx:if="{{messages.length <= 1}}" class="hot-wrap">
+      <view class="hot-label">大家可以这样问</view>
+      <view class="hot-row">
+        <view wx:for="{{hotQuestions}}" wx:key="*this" class="hot-chip" data-q="{{item}}" bind:tap="onHotTap">{{item}}</view>
+      </view>
+    </view>
+    <view class="chat-pad" />
+  </scroll-view>
+
+  <!-- 输入区（发送统一走键盘「发送」键；adjust-position 关掉整页上推，键盘高度手动跟随、输入条悬浮在键盘上方） -->
+  <view class="input-bar {{kbH > 0 ? 'is-floating' : ''}}" style="transform: translateY(-{{kbH}}px)">
+    <view class="input-shell">
+      <input
+        class="input-field" placeholder="问问同学都在推荐什么" placeholder-class="ph"
+        value="{{question}}" focus="{{inputFocus}}" confirm-type="send"
+        adjust-position="{{false}}"
+        maxlength="100" bindinput="onInput" bindconfirm="onSend"
+        bindkeyboardheightchange="onKbHeight" bindblur="onKbHide"
+      />
+    </view>
+  </view>
+  <view class="aigc-tip">内容由 AI 生成，仅供参考</view>
+</view>

@@ -1,0 +1,59 @@
+.home { padding-top: 0; }
+
+/* 导航 */
+.nav { display: flex; align-items: flex-end; padding: 0 32rpx 8rpx; }
+.nav__title { font-size: var(--fs-display); color: var(--text-1); }
+
+/* 搜索假框 */
+.search {
+  margin: 12rpx 0 20rpx; height: 80rpx; border-radius: var(--r-chip);
+  background: rgba(255,255,255,.7); display: flex; align-items: center; padding: 0 28rpx;
+  box-shadow: var(--shadow-card);
+}
+.search__icon { font-size: 28rpx; margin-right: 12rpx; opacity: .6; }
+.search__ph { color: var(--text-disabled); font-size: var(--fs-caption); }
+
+/* AI 引导卡 */
+.ai-card {
+  display: flex; align-items: center; background: #fff; border-radius: var(--r-img);
+  box-shadow: var(--shadow-card); padding: 24rpx 28rpx; margin-bottom: 24rpx;
+}
+.ai-card__icon {
+  width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--brand-100);
+  color: var(--brand-700); display: flex; align-items: center; justify-content: center;
+  font-size: 36rpx; margin-right: 20rpx;
+}
+.ai-card__title { font-size: var(--fs-list); color: var(--text-1); }
+.ai-card__sub { font-size: var(--fs-meta); color: var(--text-2); margin-top: 6rpx; }
+.ai-card__chev { margin-left: auto; color: var(--text-3); font-size: 40rpx; }
+
+/* 分类贴纸 */
+.cats { display: flex; gap: 24rpx; margin-bottom: 28rpx; }
+.cat {
+  flex: 1; height: 150rpx; border-radius: var(--r-img); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8rpx;
+}
+.cat__emoji { font-size: 48rpx; }
+.cat__name { font-size: var(--fs-caption); font-weight: 600; color: var(--text-1); }
+.cat--life  { background: var(--board-life-bg); }
+.cat--study { background: var(--board-study-bg); }
+.cat--food  { background: var(--board-food-bg); }
+
+.section-title { display: block; font-size: var(--fs-h2); color: var(--text-1); margin: 8rpx 0 20rpx; }
+
+/* 帖子卡 */
+.post { margin-bottom: var(--gap-card); padding: 28rpx; position: relative; }
+.post__top { display: flex; align-items: center; margin-bottom: 14rpx; }
+.post__time { margin-left: auto; font-size: var(--fs-meta); color: var(--text-3); }
+.post__title { font-size: var(--fs-h2); color: var(--text-1); line-height: 1.4; margin-bottom: 10rpx; }
+.post__body { font-size: var(--fs-body); color: var(--text-2); line-height: 1.7;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.post__imgs { display: flex; gap: 12rpx; margin: 18rpx 0; }
+.post__img { width: 200rpx; height: 200rpx; border-radius: var(--r-img); }
+.post__foot { display: flex; align-items: center; margin-top: 14rpx; }
+.post__author { font-size: var(--fs-meta); color: var(--text-3); margin-left: 14rpx; }
+.post__stats { margin-left: auto; display: flex; gap: 20rpx; font-size: var(--fs-meta); color: var(--text-3); }
+.expired-tag {
+  position: absolute; top: 24rpx; right: 24rpx; background: var(--warn-bg); color: var(--warn-fg);
+  font-size: var(--fs-micro); padding: 4rpx 14rpx; border-radius: var(--r-chip);
+}

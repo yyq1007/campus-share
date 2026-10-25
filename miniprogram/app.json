@@ -1,0 +1,50 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/board/board",
+    "pages/post/create/create",
+    "pages/post/detail/detail",
+    "pages/ask/ask",
+    "pages/profile/profile",
+    "pages/post/comments/comments",
+    "pages/me/messages/messages",
+    "pages/auth/invite/invite",
+    "pages/search/search",
+    "pages/me/posts/posts",
+    "pages/me/favorites/favorites",
+    "pages/about/about"
+  ],
+  "subpackages": [
+    { "root": "pkg-admin", "pages": ["admin/admin"] }
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#F5F1FF",
+    "backgroundTextStyle": "dark",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "校园分享"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#6B6780",
+    "selectedColor": "#5A47C9",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/ask/ask", "text": "问答" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
+  "usingComponents": {
+    "nav-bar": "/components/nav-bar/nav-bar",
+    "post-card": "/components/post-card/post-card",
+    "page-state": "/components/page-state/page-state",
+    "user-avatar": "/components/user-avatar/user-avatar",
+    "comment-item": "/components/comment-item/comment-item",
+    "status-tag": "/components/status-tag/status-tag",
+    "icon": "/components/icon/icon"
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

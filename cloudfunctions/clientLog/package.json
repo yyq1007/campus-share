@@ -1,0 +1,9 @@
+{
+  "name": "clientLog",
+  "version": "1.0.0",
+  "description": "前端异常上报（仅写日志，限流静默丢弃）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

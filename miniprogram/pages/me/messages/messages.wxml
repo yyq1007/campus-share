@@ -1,0 +1,63 @@
+<!--S9 站内消息 -->
+<view class="page">
+  <view class="nav" style="padding-top:{{statusBarH}}px">
+    <view class="nav-inner" style="height:{{navH}}px">
+      <view class="nav-btn" bind:tap="onBack">
+        <image class="nav-btn-icon" src="/assets/icons/arrow-left.png" mode="aspectFit" />
+      </view>
+      <view class="nav-title">站内消息</view>
+      <view class="nav-read {{unread ? '' : 'off'}}" bind:tap="onReadAll">全部已读</view>
+    </view>
+  </view>
+
+  <!-- 分区 Tab（设计稿：全部 / 评论 / 赞和收藏；服务端过滤 + 未读数） -->
+  <view class="msg-tabs">
+    <view class="msg-tab {{msgTab === 'all' ? 'is-on' : ''}}" data-key="all" bind:tap="onMsgTab">
+      <text>全部</text>
+      <text wx:if="{{counts.all > 0}}" class="tab-badge">{{counts.all > 99 ? '99+' : counts.all}}</text>
+    </view>
+    <view class="msg-tab {{msgTab === 'comment' ? 'is-on' : ''}}" data-key="comment" bind:tap="onMsgTab">
+      <text>评论</text>
+      <text wx:if="{{counts.comment > 0}}" class="tab-badge">{{counts.comment > 99 ? '99+' : counts.comment}}</text>
+    </view>
+    <view class="msg-tab {{msgTab === 'social' ? 'is-on' : ''}}" data-key="social" bind:tap="onMsgTab">
+      <text>赞和收藏</text>
+      <text wx:if="{{counts.social > 0}}" class="tab-badge">{{counts.social > 99 ? '99+' : counts.social}}</text>
+    </view>
+  </view>
+
+  <!-- 非 success 态：loading / error / empty（用显式条件，避免 wx:else 依赖兄弟紧邻） -->
+  <page-state
+    wx:if="{{state !== 'success'}}"
+    state="{{state}}"
+    emptyText="还没有消息"
+    emptySub="同学点赞、评论、审核结果都会在这里"
+    btnText="去首页逛逛"
+    bind:retry="onRetry"
+    bind:action="onEmptyAction"
+  />
+
+  <scroll-view wx:if="{{state === 'success'}}" scroll-y class="list" bindscrolltolower="onMore">
+    <view class="card">
+      <view
+        wx:for="{{list}}" wx:key="id"
+        class="msg-row {{item.read ? '' : 'is-unread'}}"
+        data-idx="{{index}}" bind:tap="onTapMsg"
+      >
+        <view class="msg-icon-wrap type-{{item.type}}">
+          <image class="msg-icon" src="/assets/icons/{{item.icon}}.png" mode="aspectFit" />
+        </view>
+        <view class="msg-main">
+          <view class="msg-head">
+            <text class="msg-label">{{item.title}}</text>
+            <text class="msg-time">{{item.timeText}}</text>
+          </view>
+          <view class="msg-text">{{item.body}}</view>
+        </view>
+        <view wx:if="{{!item.read}}" class="unread-dot" />
+      </view>
+      <view wx:if="{{hasMore}}" class="more" bind:tap="onMore">查看更多</view>
+    </view>
+    <view class="pad" />
+  </scroll-view>
+</view>

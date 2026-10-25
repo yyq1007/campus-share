@@ -1,0 +1,9 @@
+{
+  "name": "adminReview",
+  "version": "1.0.0",
+  "description": "审核处理（通过/驳回/隐藏/忽略/封禁）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

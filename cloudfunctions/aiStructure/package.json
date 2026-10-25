@@ -1,0 +1,9 @@
+{
+  "name": "aiStructure",
+  "version": "1.0.0",
+  "description": "帖子结构化（标签/摘要/字段补全）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

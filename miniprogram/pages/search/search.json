@@ -1,0 +1,7 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "page-state": "/components/page-state/page-state",
+    "post-card": "/components/post-card/post-card"
+  }
+}

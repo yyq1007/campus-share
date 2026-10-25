@@ -1,0 +1,26 @@
+.ua { position: relative; border-radius: 50%; }
+.ua-img { width: 100%; height: 100%; border-radius: 50%; }
+.ua-default {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ua-1 { background: var(--avatar-1); }
+.ua-2 { background: var(--avatar-2); }
+.ua-3 { background: var(--avatar-3); }
+.ua-4 { background: var(--avatar-4); }
+.ua-5 { background: var(--avatar-5); }
+.ua-char { color: var(--text-on-brand); font-weight: 500; }
+.ua-edit {
+  position: absolute;
+  right: -4rpx; bottom: -4rpx;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 2rpx solid var(--brand-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}

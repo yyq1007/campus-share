@@ -1,0 +1,71 @@
+/* ============================================================
+ * v4「软萌手账」设计令牌（Design Tokens）
+ * 唯一色彩/字号准绳。页面只引用变量，禁止硬编码色值。
+ * 单位 rpx（375 设计宽 → 750rpx）。
+ * ============================================================ */
+
+page {
+  /* —— 品牌紫 —— */
+  --brand-50:  #F7F4FF;
+  --brand-100: #EDE9FE;
+  --brand-200: #DCD3FB;
+  --brand-700: #6C5CE7;   /* 主色：按钮底 / 选中 chip / 激活态 */
+  --brand-800: #5A47C9;   /* 淡紫底上的紫字（对比度 5.6:1） */
+  --brand-900: #4A3AAE;   /* 按压态 */
+
+  /* —— 背景 —— */
+  --bg-page:   #F5F1FF;    /* 渐变起点 */
+  --bg-end:    #EAF4FF;    /* 渐变终点 */
+  --bg-card:   #FFFFFF;    /* 白卡 */
+  --bg-field:  #F7F4FF;    /* 输入框 / 骨架屏 */
+
+  /* —— 描边 —— */
+  --border:        #EAE4F6;
+  --border-strong: #D9D0F0;
+
+  /* —— 文字 —— */
+  --text-1: #2E2A3B;  /* 标题/正文 13:1 */
+  --text-2: #6B6780;  /* 摘要/次级 5.4:1 */
+  --text-3: #716D82;  /* 时间/占位 4.6:1 */
+  --text-disabled: #A9A4B8;
+
+  /* —— 语义色 —— */
+  --danger:   #C73648;
+  --warn-bg:  #FFF3D9;  --warn-fg: #7A4A00;
+  --error-bg: #FFECEF;  --error-fg: #C73648;
+
+  /* —— 板块色（主/底/字） —— */
+  --board-life:  #4ECDC4;  --board-life-bg:  #E3F7F5;  --board-life-fg:  #0E6E63;
+  --board-study: #5AA9FF;  --board-study-bg: #E7F1FF;  --board-study-fg: #1B5FBF;
+  --board-food:  #FF7A8A;  --board-food-bg:  #FFECEF;  --board-food-fg:  #B5445C;
+
+  /* —— 匿名头像糖果色 —— */
+  --avatar-1: #6C5CE7;
+  --avatar-2: #4ECDC4;
+  --avatar-3: #FF7A8A;
+  --avatar-4: #FFC85C;
+  --avatar-5: #5AA9FF;
+
+  /* —— 字阶（只取这些档） —— */
+  --fs-display: 44rpx;  /* 页面大标题 */
+  --fs-h1:     40rpx;  /* 详情标题 */
+  --fs-nav:    36rpx;  /* 导航标题 */
+  --fs-h2:     34rpx;  /* 卡片标题 */
+  --fs-list:   32rpx;  /* 列表行 / 引导卡主文案 */
+  --fs-body:   30rpx;  /* 正文 */
+  --fs-caption:26rpx;  /* 二级说明 */
+  --fs-meta:   24rpx;  /* 时间 / 匿名 */
+  --fs-micro:  22rpx;  /* 最小标注 */
+
+  /* —— 形状 —— */
+  --r-card: 48rpx;
+  --r-img:  32rpx;
+  --r-field:32rpx;
+  --r-chip: 999rpx;     /* 胶囊 */
+  --r-fab:  999rpx;
+  --shadow-card: 0 16rpx 48rpx rgba(108, 92, 231, .08);
+
+  /* —— 间距 —— */
+  --gap-page: 32rpx;    /* 左右边距 */
+  --gap-card: 24rpx;    /* 卡片间距 */
+}

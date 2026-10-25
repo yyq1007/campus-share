@@ -1,0 +1,292 @@
+/* ============================================================
+   campus-share 主题变量 v4.0（软萌手账版）
+   用法：在 app.wxss 顶部 @import "theme.wxss";
+   对比度：正文类文字均 ≥ 4.5:1（WCAG AA），大字号与控件 ≥ 3:1
+   注意：淡紫底（--brand-100）上的紫色文字请用 --brand-800（--brand-700 在淡紫底仅 4.1:1）
+   ============================================================ */
+page {
+  /* ---------- 主色：紫罗兰 Primary ---------- */
+  --brand-50: #F7F4FF;
+  --brand-100: #EDE9FE;
+  --brand-200: #DCD3FB;
+  --brand-300: #B9A8F5;
+  --brand-400: #B9A8F5;   /* 弱装饰、分隔 */
+  --brand-500: #9D8BF0;   /* 图标、高亮 */
+  --brand-600: #8F7BEE;   /* 大色块、插画 */
+  --brand-gradient: linear-gradient(160deg, #8F7BEE 0%, #6C5CE7 100%); /* 头像占位渐变 */
+  --brand-700: #6C5CE7;   /* ★主色默认：按钮底/主色文字（白字 4.85:1、白底 4.85:1） */
+  --brand-800: #5A47C9;   /* hover；★淡紫底上的紫色文字（5.6:1） */
+  --brand-900: #4A3AAE;   /* active / pressed */
+  --brand-text-soft: #5A47C9; /* 淡紫底上的正文语义别名 = brand-800 */
+
+  /* ---------- 辅助色：天蓝 Secondary ---------- */
+  --blue-50: #EFF8FF;
+  --blue-100: #E7F1FF;
+  --blue-400: #5AA9FF;    /* 装饰、图标 */
+  --blue-500: #3D95F7;
+  --blue-600: #2E7FD6;
+  --blue-700: #1B5FBF;    /* ★链接与辅助文字（白底 5.9:1） */
+  --blue-800: #1750A3;    /* hover */
+
+  /* ---------- 点缀色：珊瑚粉 Accent ---------- */
+  --orange-50: #FFECEF;
+  --orange-100: #FFD9DE;
+  --orange-400: #FF9AA6;
+  --orange-500: #FF7A8A;  /* 点缀：红点、图标、小色块 */
+  --orange-600: #F2606F;  /* 大字号按钮底（白字 ≈3.6:1，仅 ≥18px） */
+  --orange-700: #D64556;  /* ★CTA 按钮底 / 珊瑚粉文字（白字 ≈4.3:1，仅大字号） */
+  --orange-800: #B83A49;  /* hover */
+
+  /* ---------- 糖果色（贴纸 / 头像 / 板块用） ---------- */
+  --mint: #4ECDC4;        /* 薄荷 */
+  --mint-bg: #E3F7F5;
+  --mint-text: #0E6E63;
+  --coral: #FF7A8A;       /* 珊瑚粉 */
+  --coral-bg: #FFECEF;
+  --coral-text: #B5445C;
+  --coral-border: #FFC2CC; /* 珊瑚描边（驳回/下线按钮） */
+  --sun: #FFC85C;         /* 奶黄 */
+  --sun-bg: #FFF3D9;
+  --sun-text: #7A4A00;
+  --sky: #5AA9FF;         /* 天蓝 */
+  --sky-bg: #E7F1FF;
+  --sky-text: #1B5FBF;
+
+  /* ---------- 匿名头像轮换（糖果色 + 白"匿"字） ---------- */
+  --avatar-1: #6C5CE7;
+  --avatar-2: #4ECDC4;
+  --avatar-3: #FF7A8A;
+  --avatar-4: #FFC85C;
+  --avatar-5: #5AA9FF;
+
+  /* ---------- 中性 / 背景（淡紫蓝渐变底） ---------- */
+  --bg-page: #F5F1FF;     /* 渐变起点（渐变在 app.wxss 的 page 上） */
+  --bg-subtle: #F7F4FF;   /* 输入框、分区底 */
+  --bg-muted: #F7F4FF;    /* 输入框、骨架屏 */
+  --bg-field: #F1EEF8;    /* 表单字段底、骨架屏块 */
+  --bg-elevated: #FFFFFF; /* 卡片 */
+  --border: #EAE4F6;
+  --border-strong: #D9D0F0;
+  --card-border: #D2CBFD;  /* 帖子卡专用描边（用户指定，比 border-strong 明显） */
+  --text-1: #2E2A3B;      /* 主文字 ≈13:1 */
+  --text-2: #6B6780;      /* 次文字 白底 ≈5.4:1 */
+  --text-3: #716D82;      /* 三级文字 白底 ≈4.6:1 */
+  --text-disabled: #A9A4B8;
+  --text-on-brand: #FFFFFF;
+
+  /* ---------- 状态色 ---------- */
+  --success-bg: #E3F7F5;
+  --success: #0FA37F;        /* 图标/描边 */
+  --success-text: #0E6E63;   /* 成功文字 ≈5.5:1 */
+  --warning-bg: #FFF3D9;
+  --warning: #FFB937;        /* 审核中 / 信息可能过期 */
+  --warning-text: #7A4A00;   /* ≈6.4:1 */
+  --error-bg: #FFECEF;
+  --error: #F2606F;          /* 发布失败 / 被拦截 */
+  --error-text: #C73648;     /* ≈5.2:1 */
+  --info-bg: #EDE9FE;
+  --info-text: #5A47C9;      /* AI 提示 / 说明 */
+
+  /* ---------- 板块色（糖果色 + 深色文字保证对比度） ---------- */
+  --board-life: #4ECDC4;
+  --board-life-bg: #E3F7F5;
+  --board-life-text: #0E6E63;
+  --board-study: #5AA9FF;
+  --board-study-bg: #E7F1FF;
+  --board-study-text: #1B5FBF;
+  --board-food: #FF7A8A;
+  --board-food-bg: #FFECEF;
+  --board-food-text: #B5445C;
+
+  /* ---------- 交互态（统一） ---------- */
+  --state-hover-brand: var(--brand-800);
+  --state-active-brand: var(--brand-900);
+  --state-hover-orange: var(--orange-800);
+  --state-active-orange: #96303C;
+  --state-hover-blue: var(--blue-800);
+  --state-disabled-bg: #F1EEF8;
+  --state-disabled-text: #A9A4B8;
+  --state-disabled-border: #E0DBEE;
+  --focus-ring: 0 0 0 6rpx rgba(108, 92, 231, 0.28);
+
+  /* ---------- 圆角 / 阴影（v4 软萌手账：大圆角 + 紫晕阴影） ---------- */
+  --radius-card: 48rpx;    /* 卡片 24px */
+  --radius-img: 32rpx;     /* 图片 16px */
+  --radius-input: 32rpx;   /* 输入框 16px */
+  --radius-chip: 999rpx;   /* Chip 胶囊 */
+  --radius-pill: 999rpx;
+  --shadow-card: 0 16rpx 48rpx rgba(108, 92, 231, 0.08);
+  --shadow-fab: 0 12rpx 32rpx rgba(108, 92, 231, 0.32);
+
+  /* ---------- 字阶（V-04：字号只取字阶，禁止随手写值） ----------
+     展示级：72 头像占位字 / 48 统计数字
+     标题级：44 / 40 / 36 / 34
+     正文级：32 / 30 / 28 / 26
+     辅助级：24 / 22
+     （20 及以下在小程序 375 宽下不可读，已废止） */
+  --fs-display-xl: 72rpx;
+  --fs-display-l: 48rpx;
+  --fs-h1: 44rpx;
+  --fs-h2: 40rpx;
+  --fs-h3: 36rpx;
+  --fs-h4: 34rpx;
+  --fs-body-l: 32rpx;
+  --fs-body: 30rpx;
+  --fs-body-m: 28rpx;
+  --fs-body-s: 26rpx;
+  --fs-caption: 24rpx;
+  --fs-micro: 22rpx;
+
+  /* ---------- v4 语义别名（页面层统一使用，禁止直接用十六进制） ---------- */
+  --primary: var(--brand-700);
+  --primary-deep: var(--brand-800);
+  --primary-tint: var(--brand-100);
+  --bg-gradient: linear-gradient(180deg, #F5F1FF 0%, #EAF4FF 100%);
+  --fill-soft: var(--bg-subtle);
+  --text-strong: var(--text-1);
+  --text-body: var(--text-1);
+  --text-soft: var(--text-2);
+  --text-faint: var(--text-3);
+  --font-title: "KuaiLe", -apple-system, "PingFang SC", sans-serif;
+  --shadow-soft: 0 8rpx 24rpx rgba(108, 92, 231, 0.10);
+  --board-mint: var(--board-life);
+  --board-sky: var(--board-study);
+  --board-coral: var(--board-food);
+  --skeleton-hi: var(--brand-100);   /* 骨架屏高光 */
+  --sun-deep: #F2A93B;               /* 收藏激活（奶黄深） */
+
+  /* ---------- 半透明色令牌（V-01：页面层禁止直写 rgba，一律引用此处） ----------
+     命名规则 --{色板}-a{透明度两位}；遮罩另有语义名 */
+  --brand-a04: rgba(108, 92, 231, 0.04);  /* 导航卡微阴影 */
+  --brand-a06: rgba(108, 92, 231, 0.06);  /* TabBar 浮起阴影 */
+  --brand-a25: rgba(108, 92, 231, 0.25);  /* 首页入口光晕 */
+  --brand-a30: rgba(108, 92, 231, 0.3);   /* 按钮/气泡紫光晕 */
+  --brand-a35: rgba(108, 92, 231, 0.35);  /* 主按钮光晕（深一档） */
+  --brand-a40: rgba(108, 92, 231, 0.4);   /* 浮动卡阴影 */
+  --brand800-a85: rgba(90, 71, 201, 0.85); /* 深紫半透明文字 */
+  --sky-a12: rgba(90, 169, 255, 0.12);    /* 天蓝淡底（评论消息） */
+  --sky-a30: rgba(90, 169, 255, 0.3);     /* 天蓝光晕（AI 用户气泡） */
+  --coral-a10: rgba(255, 122, 138, 0.1);  /* 珊瑚淡底 */
+  --coral-a12: rgba(255, 122, 138, 0.12); /* 珊瑚淡底（点赞消息） */
+  --sun-a14: rgba(242, 169, 59, 0.14);    /* 奶黄淡底（收藏消息） */
+  --text1-a18: rgba(46, 42, 59, 0.18);    /* 深色投影（弱） */
+  --text1-a24: rgba(46, 42, 59, 0.24);    /* 深色文字投影 */
+  --bg-a24: rgba(245, 241, 255, 0.24);    /* 渐变叠加（板头） */
+  --white-a90: rgba(255, 255, 255, 0.9);  /* 白底 90% */
+  --white-a92: rgba(255, 255, 255, 0.92); /* 白底 92% */
+  --scrim: rgba(0, 0, 0, 0.45);           /* 模态遮罩（标准） */
+  --scrim-soft: rgba(0, 0, 0, 0.32);      /* 轻遮罩 */
+}
+
+/* ===================== 语义类：全站统一 ===================== */
+
+/* 主按钮：白字 ≥4.85:1 */
+.btn-primary {
+  background: var(--brand-700);
+  color: var(--text-on-brand);
+  border-radius: var(--radius-pill);
+  font-size: 30rpx;
+}
+.btn-primary.button-hover { background: var(--brand-800); }
+.btn-primary[disabled] {
+  background: var(--state-disabled-bg);
+  color: var(--state-disabled-text);
+}
+
+/* 强调按钮（珊瑚粉）：大字号使用 */
+.btn-accent {
+  background: var(--orange-700);
+  color: var(--text-on-brand);
+  border-radius: var(--radius-pill);
+  font-size: 30rpx;
+}
+.btn-accent.button-hover { background: var(--orange-800); }
+.btn-accent[disabled] {
+  background: var(--state-disabled-bg);
+  color: var(--state-disabled-text);
+}
+
+/* 次按钮 */
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-1);
+  border: 1rpx solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: 30rpx;
+}
+.btn-secondary.button-hover { background: var(--bg-subtle); }
+
+/* 危险文字按钮 */
+.btn-danger {
+  color: var(--error-text);
+  font-size: 28rpx;
+}
+
+/* 文字链接 */
+.link {
+  color: var(--brand-800);
+  font-size: 28rpx;
+}
+
+/* 输入框 */
+.field {
+  background: var(--bg-muted);
+  border: 1rpx solid transparent;
+  border-radius: var(--radius-input);
+  color: var(--text-1);
+  font-size: 28rpx;
+  padding: 20rpx 24rpx;
+}
+.field-focused { border-color: var(--brand-700); box-shadow: var(--focus-ring); }
+.field-error { border-color: var(--error); }
+.field-error-text { color: var(--error-text); font-size: 24rpx; margin-top: 8rpx; }
+.field-placeholder { color: var(--text-3); }
+
+/* Chip */
+.chip {
+  background: transparent;
+  border: 1rpx solid var(--border-strong);
+  color: var(--text-2);
+  border-radius: var(--radius-chip);
+  font-size: 26rpx;
+  padding: 12rpx 28rpx;
+}
+.chip-active {
+  background: var(--brand-700);
+  border-color: var(--brand-700);
+  color: var(--text-on-brand);
+}
+
+/* 卡片（v4：无描边，白卡 + 紫晕阴影） */
+.card {
+  background: var(--bg-elevated);
+  border: none;
+  border-radius: var(--radius-card);
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow-card);
+}
+
+/* 标签 */
+.tag {
+  display: inline-block;
+  font-size: 22rpx;
+  border-radius: 16rpx;
+  padding: 4rpx 12rpx;
+  margin-right: 12rpx;
+}
+.tag-life { background: var(--board-life-bg); color: var(--board-life-text); }
+.tag-study { background: var(--board-study-bg); color: var(--board-study-text); }
+.tag-food { background: var(--board-food-bg); color: var(--board-food-text); }
+.tag-ai { background: var(--brand-100); color: var(--brand-800); }
+
+/* 状态提示条 */
+.bar-success { background: var(--success-bg); color: var(--success-text); }
+.bar-warning { background: var(--warning-bg); color: var(--warning-text); }
+.bar-error { background: var(--error-bg); color: var(--error-text); }
+.bar-info { background: var(--info-bg); color: var(--info-text); }
+
+/* 文本层级 */
+.t1 { color: var(--text-1); }
+.t2 { color: var(--text-2); }
+.t3 { color: var(--text-3); }

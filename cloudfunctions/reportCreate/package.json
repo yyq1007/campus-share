@@ -1,0 +1,9 @@
+{
+  "name": "reportCreate",
+  "version": "1.0.0",
+  "description": "举报内容（防重复 + 合并入审核队列）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

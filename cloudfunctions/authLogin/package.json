@@ -1,0 +1,9 @@
+{
+  "name": "authLogin",
+  "version": "1.0.0",
+  "description": "无感登录：OPENID 识别并初始化账号",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

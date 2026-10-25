@@ -1,0 +1,201 @@
+/* S8 评论页 —— v4 设计稿：渐变底 + 摘要白卡 + 楼中楼淡紫块 + 圆形纸飞机发送键 */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-gradient);
+}
+
+/* ---------- 导航：左箭头 + 左对齐标题 ---------- */
+.nav { background: transparent; }
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 0 40rpx;
+}
+.nav-back {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-back-icon { width: 40rpx; height: 40rpx; }
+.nav-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--text-strong);
+  font-family: var(--font-title);
+}
+
+/* ---------- 帖子摘要白卡（335×64，圆角 20px） ---------- */
+.list { flex: 1; min-height: 0; }
+.post-card {
+  margin: 24rpx 40rpx 0;
+  padding: 24rpx 30rpx;
+  background: var(--bg-elevated);
+  border-radius: 40rpx;
+  box-shadow: var(--shadow-card);
+}
+.post-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-strong);
+}
+.post-meta {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: var(--text-faint);
+}
+
+/* ---------- 一级评论流（不包白卡，直接排在渐变底上） ---------- */
+.comments { padding: 0 40rpx; }
+.cmt { padding: 28rpx 0 8rpx; }
+.cmt-head {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.cmt-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-on-brand);
+  border-radius: 50%;
+}
+.av-1 { background: var(--avatar-1); }
+.av-2 { background: var(--avatar-2); }
+.av-3 { background: var(--avatar-3); }
+.av-4 { background: var(--avatar-4); }
+.av-5 { background: var(--avatar-5); }
+.cmt-name {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.cmt-time {
+  font-size: 24rpx;
+  color: var(--text-faint);
+}
+.cmt-text {
+  margin-top: 12rpx;
+  font-size: 30rpx;
+  line-height: 1.7;
+  color: var(--text-1);
+  word-break: break-all;
+}
+.cmt-reply {
+  margin-top: 8rpx;
+  text-align: right;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--primary-deep);
+}
+
+/* ---------- 楼中楼（--brand-50 底，左侧 6rpx --brand-200 竖线） ---------- */
+.sub {
+  margin-top: 16rpx;
+  padding: 20rpx 24rpx;
+  background: var(--brand-50);
+  border-left: 6rpx solid var(--brand-200);
+  border-radius: 24rpx;
+}
+.sub-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  font-size: 26rpx;
+  line-height: 1.7;
+}
+.sub-row + .sub-row { margin-top: 8rpx; }
+.sub-name {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--primary-deep);
+}
+.sub-at {
+  flex-shrink: 0;
+  color: var(--text-soft);
+}
+.sub-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-1);
+  word-break: break-all;
+}
+.sub-more {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--primary-deep);
+}
+
+.more {
+  padding: 28rpx 0 8rpx;
+  text-align: center;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--primary-deep);
+}
+.no-more {
+  padding: 28rpx 0 8rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-faint);
+}
+.pad { height: 60rpx; }
+
+/* ---------- 底部输入条：白底上圆角 + 淡紫输入框 + 圆形纸飞机 ---------- */
+.input-bar {
+  position: relative;
+  padding: 20rpx 40rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: var(--bg-elevated);
+  border-radius: 40rpx 40rpx 0 0;
+  box-shadow: var(--shadow-soft);
+}
+.reply-tip {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+  font-size: 24rpx;
+  color: var(--primary-deep);
+}
+.reply-close { width: 28rpx; height: 28rpx; }
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.input-field {
+  flex: 1;
+  height: 72rpx;
+  padding: 0 28rpx;
+  font-size: 28rpx;
+  color: var(--text-1);
+  background: var(--brand-100);
+  border-radius: 36rpx;
+}
+.ph { color: var(--text-faint); }
+.send-btn {
+  width: 88rpx;
+  height: 88rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  border-radius: 44rpx;
+  box-shadow: var(--shadow-fab);
+  opacity: 0.45;
+}
+.send-btn.can-send { opacity: 1; }
+.send-icon { width: 40rpx; height: 40rpx; }

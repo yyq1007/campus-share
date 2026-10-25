@@ -1,0 +1,9 @@
+{
+  "name": "commentList",
+  "version": "1.0.0",
+  "description": "评论列表（一级 + 内嵌二级）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

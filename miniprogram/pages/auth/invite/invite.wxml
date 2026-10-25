@@ -1,0 +1,25 @@
+<!--邀请码页：渐变底 + 品牌区 + 白卡输入 + 胶囊主按钮（规格 6.10） -->
+<view class="page">
+  <view class="nav" style="padding-top:{{statusBarH}}px">
+    <view class="nav-inner" style="height:{{navH}}px" />
+  </view>
+
+  <view class="center">
+    <image class="deco" src="/assets/deco/cat.png" mode="aspectFit" />
+    <view class="title">欢迎来到好物分享</view>
+    <view class="sub">仅限本校同学，用邀请码进入</view>
+
+    <view class="card {{shake ? 'shake' : ''}}">
+      <input
+        class="code-input" placeholder="请输入邀请码" placeholder-class="ph"
+        value="{{code}}" maxlength="16" bindinput="onInput" bindconfirm="onSubmit"
+      />
+      <view class="error {{error ? 'show' : ''}}">{{error || ' '}}</view>
+      <button class="submit-btn {{code && !submitting ? 'ready' : ''}}" bind:tap="onSubmit" disabled="{{submitting}}">
+        {{submitting ? '验证中…' : '进入'}}
+      </button>
+    </view>
+
+    <view class="about-link" bind:tap="onAbout">了解「好物分享」</view>
+  </view>
+</view>

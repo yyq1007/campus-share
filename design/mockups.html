@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>校园分享小程序 · 高保真设计稿 v2.0（新中式手账风）</title>
+<style>
+:root{
+  /* -------- v3 明亮活泼配色 -------- */
+  --paper:#FFFFFF;      /* 页面底：纯白 */
+  --card:#FFFFFF;       /* 卡片 */
+  --line:#E4ECF0;       /* 描边 */
+  --ink:#14262B;        /* 主文字 ≈15:1 */
+  --ink2:#4B5E66;       /* 次文字 ≈6.8:1 */
+  --ink3:#5F737B;       /* 三级文字 ≈5.0:1 */
+  --green:#0B7F6C;      /* ★主色：清新青绿（按钮/主色文字 4.9:1） */
+  --green-soft:#EFFCF8; /* 主色浅底 */
+  --brand-300:#5FE6CE;  /* 亮青绿：装饰/高亮 */
+  --brand-500:#12BF9F;  /* 主色大色块 */
+  --red:#C93C1E;        /* ★点缀色：珊瑚橙（CTA/强调 5.1:1） */
+  --red-soft:#FFF3EE;   /* 橙浅底 */
+  --orange-500:#FF6B4A; /* 点缀亮橙：图标/红点 */
+  --blue:#0F62C4;       /* ★辅助色：天蓝（链接 5.9:1） */
+  --blue-500:#2E9BF5;
+  /* 状态色 */
+  --success:#0A7A45; --success-bg:#E7F8EE;
+  --warning:#8A5300; --warning-bg:#FFF6E5;
+  --error:#C1272D;   --error-bg:#FDECEC;
+  --info:#0F62C4;    --info-bg:#EFF8FF;
+  /* 板块色 */
+  --board-life:#FF6B4A; --board-life-bg:#FFF0EB; --board-life-text:#C93C1E;
+  --board-study:#2E9BF5; --board-study-bg:#EAF5FF; --board-study-text:#0F62C4;
+  --board-food:#FFB020; --board-food-bg:#FFF6E5; --board-food-text:#8A5300;
+  --serif:"Songti SC","STSong","Source Han Serif SC","SimSun",serif;
+  --sans:"PingFang SC","Helvetica Neue",Arial,sans-serif;
+}
+
+/* 统一覆盖：硬编码在 SVG 里的旧色值（presentation attribute 可被 CSS 覆盖） */
+svg[stroke="#B3A794"]{stroke:var(--ink3);}
+svg[stroke="#7C7266"]{stroke:var(--ink2);}
+svg[stroke="#2B2620"]{stroke:var(--ink);}
+svg[stroke="#2F5D50"]{stroke:var(--green);}
+svg[stroke="#B5432F"]{stroke:var(--red);}
+svg[fill="#2F5D50"]{fill:var(--green);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#EDE7DA;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;padding:24px;}
+
+/* ---------- 顶部切换栏 ---------- */
+.toolbar{max-width:1200px;margin:0 auto 24px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;}
+.toolbar h1{font-family:var(--serif);font-size:18px;font-weight:600;margin-bottom:4px;}
+.toolbar .meta{font-size:11px;color:var(--ink3);margin-bottom:12px;}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;}
+.tabs button{font-family:var(--sans);font-size:12px;padding:7px 14px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer;}
+.tabs button.active{background:var(--green);border-color:var(--green);color:#fff;}
+.tabs button.var{border-style:dashed;}
+.hint{font-size:11px;color:var(--ink3);margin-top:12px;line-height:1.7;}
+
+/* ---------- 手机画板 ---------- */
+.stage{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;}
+.screen-wrap{display:none;}
+.screen-wrap.show{display:block;}
+.caption{font-size:12px;color:var(--ink2);margin-bottom:8px;font-family:var(--serif);font-weight:600;}
+.caption span{font-family:var(--sans);font-weight:400;color:var(--ink3);}
+.phone{position:relative;width:375px;height:812px;background:var(--paper);border-radius:10px;overflow:hidden;box-shadow:0 12px 40px rgba(43,38,32,.18);}
+.statusbar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:11px;color:var(--ink);z-index:5;}
+.sb-right{display:flex;align-items:center;gap:4px;}
+.sb-right i{display:block;background:var(--ink);border-radius:1px;}
+
+.navbar{position:absolute;top:44px;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:center;z-index:4;}
+.nav-title{font-family:var(--serif);font-size:17px;font-weight:600;}
+.nav-back{position:absolute;left:16px;color:var(--ink);}
+.nav-action{position:absolute;right:16px;font-size:14px;color:var(--green);font-weight:500;}
+.nav-action.disabled{color:var(--ink3);}
+
+.body{position:absolute;top:88px;left:0;right:0;bottom:0;overflow:hidden;}
+.body.no-nav{top:44px;}
+.body.pad-tab{padding-bottom:83px;}
+
+/* ---------- 照片占位（实拍后替换） ---------- */
+.photo{position:relative;border-radius:10px;overflow:hidden;background:#E9E0CE;}
+.photo::before{content:"";position:absolute;inset:0;background-image:var(--ph);background-size:cover;filter:saturate(.9);}
+.photo::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 2px,transparent 2px 4px);}
+.ph-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:11px;color:rgba(255,255,255,.92);background:rgba(43,38,32,.28);padding:4px 10px;border-radius:4px;z-index:2;white-space:nowrap;}
+.vignette{position:absolute;inset:0;background:linear-gradient(to right,rgba(43,38,32,0) 0%,rgba(43,38,32,.38) 100%);z-index:1;}
+
+/* ---------- 通用组件 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;}
+.row{display:flex;align-items:center;}
+.between{justify-content:space-between;}
+.grow{flex:1;}
+.muted{color:var(--ink2);}
+.tiny{font-size:11px;color:var(--ink3);}
+.small{font-size:12px;color:var(--ink2);}
+.tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 7px;border-radius:4px;}
+.tag-food{background:var(--board-food-bg);color:var(--board-food-text);}
+.tag-life{background:var(--board-life-bg);color:var(--board-life-text);}
+.tag-study{background:var(--board-study-bg);color:var(--board-study-text);}
+.chip{display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:6px;font-size:13px;border:1px solid var(--line);color:var(--ink2);background:transparent;}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff;}
+.chip.on-red{background:var(--red);border-color:var(--red);color:#fff;}
+.btn-main{height:48px;border-radius:8px;background:var(--green);color:#fff;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;}
+.btn-sub{height:48px;border-radius:8px;background:var(--card);border:1px solid var(--line);color:var(--ink);font-size:15px;display:flex;align-items:center;justify-content:center;}
+.btn-sm{height:36px;border-radius:8px;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.btn-sm.main{background:var(--green);color:#fff;width:120px;}
+.btn-sm.sub{background:var(--card);border:1px solid var(--line);color:var(--ink);width:120px;}
+.input{height:44px;border-radius:8px;background:#FAF4E7;border:1px solid transparent;display:flex;align-items:center;padding:0 12px;font-size:14px;color:var(--ink3);}
+.input.filled{color:var(--ink);}
+.textarea{height:160px;border-radius:8px;background:#FAF4E7;padding:12px;font-size:15px;line-height:1.7;color:var(--ink3);position:relative;}
+.ta-count{position:absolute;right:10px;bottom:8px;font-size:11px;color:var(--ink3);}
+.search{height:40px;border-radius:20px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;padding:0 14px;font-size:13px;color:var(--ink3);}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;}
+.avatar-lg{width:64px;height:64px;font-size:24px;font-family:var(--serif);}
+.fab{position:absolute;right:16px;bottom:100px;width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(43,38,32,.22);font-size:22px;z-index:6;}
+.tabbar{position:absolute;left:0;right:0;bottom:34px;height:49px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:6;}
+.tabbar div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:var(--ink3);}
+.tabbar div.on{color:var(--green);}
+.safe{position:absolute;left:0;right:0;bottom:0;height:34px;background:var(--card);}
+.bottombar{position:absolute;left:0;right:0;bottom:0;height:56px;background:var(--card);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 16px;gap:14px;}
+.sheet-mask{position:absolute;inset:0;background:rgba(43,38,32,.35);z-index:8;}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:16px 16px 0 0;padding:16px;z-index:9;}
+.seal{position:absolute;width:36px;height:36px;border-radius:4px;background:var(--red);color:#fff;font-family:var(--serif);font-size:11px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;}
+.seal-round{border-radius:50%;width:40px;height:40px;font-size:13px;}
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 40px;text-align:center;}
+.empty-bg{position:absolute;inset:0;opacity:.2;background-image:var(--ph);background-size:cover;}
+.dots{display:flex;gap:4px;}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--ink3);opacity:.4;animation:blink 1.2s infinite;}
+.dots i:nth-child(2){animation-delay:.2s;}
+.dots i:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+svg{display:block;}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1>校园分享小程序 · 高保真设计稿 v3.0（明亮活泼）</h1>
+  <div class="meta">375 × 812 · 明亮活泼版 v3 · 纯白底 / 清新青绿主色 #0B7F6C / 珊瑚橙点缀 #C93C1E / 天蓝辅助 #0F62C4 · 全部画面素材为校园实拍照片（当前为占位）</div>
+  <div class="tabs">
+    <button class="active" data-s="home">首页</button>
+    <button data-s="board">板块页</button>
+    <button data-s="create">发帖页</button>
+    <button data-s="detail">详情页</button>
+    <button data-s="ask">AI 问答</button>
+    <button data-s="profile">我的</button>
+    <button data-s="admin">审核后台</button>
+    <button class="var" data-s="home-empty">态：首页空</button>
+    <button class="var" data-s="board-empty">态：板块空</button>
+    <button class="var" data-s="create-upload">态：上传中</button>
+    <button class="var" data-s="detail-liked">态：已点赞</button>
+    <button class="var" data-s="detail-report">态：举报弹层</button>
+    <button class="var" data-s="ask-thinking">态：思考中</button>
+    <button class="var" data-s="ask-noresult">态：无结果</button>
+    <button class="var" data-s="admin-empty">态：审核已清空</button>
+  </div>
+  <div class="hint">
+    照片替换方式：把 .photo 的 <code>--ph</code> 变量改为实拍照片的 url 即可（如 <code>--ph:url("../assets/home_banner_canteen.jpg")</code>）；<br />
+    拍摄清单与规范见 <code>docs/高保真UI设计提示词-v2-新中式.md</code> §8。
+  </div>
+</div>
+
+<div class="stage">
+
+<!-- ===================== 首页 ===================== -->
+<div class="screen-wrap show" id="home">
+  <div class="caption">首页 <span>· 默认态（含页头实拍照 / 分类入口 / AI 引导条 / 单列卡片流）</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span>
+      <span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span>
+    </div>
+
+    <!-- 页头：375×140 校园实拍照片 -->
+    <div class="photo" style="position:absolute;top:44px;left:0;width:375px;height:140px;border-radius:0;--ph:linear-gradient(120deg,#C9A87C,#E3C79B 40%,#B98F5F 75%,#8E6B45)">
+      <div class="vignette"></div>
+      <div style="position:absolute;left:16px;top:26px;color:#fff;font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.3;z-index:3;">把好东西，<br/>留在这所学校</div>
+      <div class="seal" style="right:16px;top:16px;z-index:3;">校园<br/>分享</div>
+      <div class="ph-label">页头 · 校园实拍照片</div>
+    </div>
+
+    <!-- 搜索框（上浮叠压 20） -->
+    <div style="position:absolute;top:164px;left:16px;right:16px;z-index:4;">
+      <div class="search" style="box-shadow:0 4px 16px rgba(43,38,32,.06);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C7266" stroke-width="1.5" style="margin-right:8px"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+        搜好物 / 美食 / 资料…
+      </div>
+    </div>
+
+    <!-- 分类入口：40×40 圆形照片裁切 ×4 -->
+    <div style="position:absolute;top:216px;left:16px;right:16px;display:flex;justify-content:space-between;">
+      <div style="width:72px;text-align:center;">
+        <div class="photo" style="width:40px;height:40px;border-radius:50%;margin:0 auto 6px;border:1px solid var(--line);--ph:linear-gradient(135deg,#D9C7A7,#B8965F)"></div>
+        <div class="tiny">生活好物</div>
+      </div>
+      <div style="width:72px;text-align:center;">
+        <div class="photo" style="width:40px;height:40px;border-radius:50%;margin:0 auto 6px;border:1px solid var(--line);--ph:linear-gradient(135deg,#E0A56F,#B5432F)"></div>
+        <div class="tiny">食堂美食</div>
+      </div>
+      <div style="width:72px;text-align:center;">
+        <div class="photo" style="width:40px;height:40px;border-radius:50%;margin:0 auto 6px;border:1px solid var(--line);--ph:linear-gradient(135deg,#9FB3A6,#2F5D50)"></div>
+        <div class="tiny">学习资料</div>
+      </div>
+      <div style="width:72px;text-align:center;">
+        <div class="photo" style="width:40px;height:40px;border-radius:50%;margin:0 auto 6px;border:1px solid var(--line);--ph:linear-gradient(135deg,#CBBFA6,#7C7266)"></div>
+        <div class="tiny">选课经验</div>
+      </div>
+    </div>
+
+    <!-- AI 引导条 343×64 -->
+    <div class="row" style="position:absolute;top:304px;left:16px;right:16px;height:64px;border-radius:14px;background:var(--red-soft);padding:0 14px;">
+      <div class="seal seal-round" style="position:static;">AI</div>
+      <div style="margin-left:12px;" class="grow">
+        <div style="font-size:15px;font-weight:500;">问问同学都在推荐什么</div>
+        <div class="tiny">只答本校真实分享</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B5432F" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+
+    <!-- 信息流 -->
+    <div class="body no-nav" style="top:388px;">
+      <div class="card" style="margin:0 16px 12px;">
+        <div class="photo" style="width:311px;height:207px;--ph:linear-gradient(135deg,#D98E5B,#B5432F 60%,#7E3626)"><div class="ph-label">食堂实拍照片</div></div>
+        <div style="font-family:var(--serif);font-size:17px;font-weight:600;margin-top:12px;line-height:1.4;">一食堂二楼麻辣拌，加麻酱真的绝了</div>
+        <div style="font-size:14px;color:var(--ink2);line-height:1.6;margin-top:6px;">8 块钱分量足，建议 11:20 前去，之后排队 20 分钟起。麻酱一定要多要一勺。</div>
+        <div class="row between" style="margin-top:12px;">
+          <span class="tiny">匿名 · 3 天前</span>
+          <span class="row" style="gap:14px;"><span class="tiny">♡ 12</span><span class="tiny">☆ 8</span></span>
+        </div>
+      </div>
+
+      <div class="card" style="margin:0 16px 12px;">
+        <div class="photo" style="width:311px;height:207px;--ph:linear-gradient(135deg,#CBB08A,#8E6B45)"><div class="ph-label">宿舍实拍照片</div></div>
+        <div style="font-family:var(--serif);font-size:17px;font-weight:600;margin-top:12px;line-height:1.4;">床上折叠桌 ¥25，上床下桌必备</div>
+        <div style="font-size:14px;color:var(--ink2);line-height:1.6;margin-top:6px;">放笔记本和零食都稳，用了半学期没变形，比学校超市便宜一半。</div>
+        <div class="row between" style="margin-top:12px;">
+          <span class="tiny">匿名 · 5 天前</span>
+          <span class="row" style="gap:14px;"><span class="tiny">♡ 20</span><span class="tiny">☆ 15</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fab">✎</div>
+    <div class="tabbar">
+      <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>首页</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.4A8 8 0 1121 12z"/></svg>问答</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>我的</div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 板块页 ===================== -->
+<div class="screen-wrap" id="board">
+  <div class="caption">板块页 <span>· 美食（板块页头实拍照 + 声明行 + 卡片流 + 过期角标）</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar">
+      <span class="nav-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></span>
+      <span class="nav-title">美食</span>
+    </div>
+    <div class="body pad-tab" style="top:88px;">
+      <div class="photo" style="margin:0 16px;width:343px;height:96px;--ph:linear-gradient(135deg,#E0A56F,#B5432F 70%)">
+        <div class="vignette"></div>
+        <div style="position:absolute;left:16px;bottom:14px;z-index:3;">
+          <div style="font-family:var(--serif);font-size:24px;font-weight:600;color:#fff;">美食</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.85);">共 42 条</div>
+        </div>
+        <div class="ph-label">板块页头 · 食堂实拍</div>
+      </div>
+      <div class="tiny" style="padding:8px 16px 0;">板块内容均为同学个人体验分享</div>
+
+      <div class="card" style="margin:12px 16px 0;">
+        <div style="position:relative;">
+          <div class="photo" style="width:311px;height:207px;--ph:linear-gradient(135deg,#D98E5B,#7E3626)"><div class="ph-label">食堂实拍照片</div></div>
+          <div style="position:absolute;right:8px;top:8px;background:rgba(43,38,32,.55);color:#fff;font-size:10px;padding:3px 6px;border-radius:4px;">可能已过期</div>
+        </div>
+        <div style="font-family:var(--serif);font-size:17px;font-weight:600;margin-top:12px;">二食堂三楼铁板饭，性价比之王</div>
+        <div style="font-size:14px;color:var(--ink2);line-height:1.6;margin-top:6px;">12 元管饱，配菜可以续，但 2025 年那次改过价格，建议先确认。</div>
+        <div class="row between" style="margin-top:12px;"><span class="tiny">匿名 · 去年</span><span class="tiny">☆ 9</span></div>
+      </div>
+
+      <div class="card" style="margin:12px 16px 0;">
+        <div class="photo" style="width:311px;height:207px;--ph:linear-gradient(135deg,#C9A06A,#8E6B45)"><div class="ph-label">食堂实拍照片</div></div>
+        <div style="font-family:var(--serif);font-size:17px;font-weight:600;margin-top:12px;">图书馆门口的烤冷面小摊</div>
+        <div style="font-size:14px;color:var(--ink2);line-height:1.6;margin-top:6px;">晚上 9 点后才出摊，加蛋加肠 7 块，自习党续命神器。</div>
+        <div class="row between" style="margin-top:12px;"><span class="tiny">匿名 · 2 天前</span><span class="tiny">♡ 31</span></div>
+      </div>
+    </div>
+    <div class="fab">✎</div>
+    <div class="tabbar">
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>首页</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.4A8 8 0 1121 12z"/></svg>问答</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>我的</div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 发帖页 ===================== -->
+<div class="screen-wrap" id="create">
+  <div class="caption">发帖页 <span>· 默认态（一句话必填，结构化字段仅占位提示）</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar">
+      <span class="nav-back" style="font-size:14px;color:var(--ink2);">取消</span>
+      <span class="nav-title">发帖</span>
+      <span class="nav-action">发布</span>
+    </div>
+    <div class="body pad-tab" style="top:88px;">
+      <div class="row" style="gap:8px;padding:0 16px;">
+        <span class="chip">生活</span><span class="chip">学习</span><span class="chip on-red">美食</span>
+      </div>
+
+      <div style="padding:16px;">
+        <div class="input" style="background:transparent;border-bottom:1px solid var(--line);border-radius:0;padding-left:0;font-family:var(--serif);font-size:17px;color:var(--ink3);">一句话概括（选填）</div>
+        <div class="textarea" style="margin-top:16px;background:transparent;border:1px solid var(--line);color:var(--ink3);">
+          说说你的真实体验～
+          <span class="ta-count">0/2000</span>
+        </div>
+
+        <div class="row" style="gap:8px;margin-top:16px;">
+          <div class="photo" style="width:100px;height:100px;--ph:linear-gradient(135deg,#D98E5B,#B5432F)"><div class="ph-label" style="font-size:10px;">照片</div></div>
+          <div class="photo" style="width:100px;height:100px;--ph:linear-gradient(135deg,#CBB08A,#8E6B45)"><div class="ph-label" style="font-size:10px;">照片</div></div>
+          <div style="width:100px;height:100px;border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:28px;">＋</div>
+        </div>
+
+        <div class="tiny" style="margin:20px 0 8px;">补充信息（选填）</div>
+        <div class="input" style="margin-bottom:8px;">店名 / 窗口</div>
+        <div class="input" style="margin-bottom:8px;">人均</div>
+        <div class="input">位置</div>
+
+        <div class="tiny" style="margin-top:24px;line-height:1.8;text-align:center;">
+          前台统一显示"匿名"<br/>请描述亲身经历，不要做无依据的猜测或指控
+        </div>
+      </div>
+    </div>
+    <div class="tabbar" style="display:none;"></div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 详情页 ===================== -->
+<div class="screen-wrap" id="detail">
+  <div class="caption">详情页 <span>· 默认态（含作者私密数据卡、评论区、底部操作条）</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar">
+      <span class="nav-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></span>
+      <span class="nav-title">详情</span>
+    </div>
+    <div class="photo" style="position:absolute;top:88px;left:0;width:375px;height:281px;border-radius:0;--ph:linear-gradient(135deg,#D98E5B,#B5432F 65%,#7E3626)">
+      <div class="ph-label">详情头图 · 实拍照片</div>
+      <div style="position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:5px;">
+        <span style="width:4px;height:4px;border-radius:50%;background:#fff;opacity:.9;display:block;"></span>
+        <span style="width:4px;height:4px;border-radius:50%;background:#fff;opacity:.4;display:block;"></span>
+        <span style="width:4px;height:4px;border-radius:50%;background:#fff;opacity:.4;display:block;"></span>
+      </div>
+    </div>
+
+    <div class="body" style="top:381px;bottom:56px;padding:0 16px;overflow-y:hidden;">
+      <span class="tag tag-food">美食</span>
+      <div style="font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.4;margin:8px 0 4px;">一食堂二楼麻辣拌，加麻酱真的绝了</div>
+      <div class="small">匿名 · 2 天前</div>
+      <div style="font-size:15px;line-height:1.7;margin-top:12px;">
+        8 块钱一份，分量很足，米饭免费续。窗口阿姨人很好，麻酱可以多要一勺。<br/><br/>
+        建议 11:20 之前去，之后排队要 20 分钟起。冬天吃特别暖，已经连续吃了一周。
+      </div>
+      <div class="row" style="gap:8px;margin-top:14px;">
+        <span style="background:#FAF4E7;border-radius:4px;padding:4px 8px;font-size:12px;color:var(--ink2);">¥8</span>
+        <span style="background:#FAF4E7;border-radius:4px;padding:4px 8px;font-size:12px;color:var(--ink2);">一食堂二楼</span>
+        <span style="background:#FAF4E7;border-radius:4px;padding:4px 8px;font-size:12px;color:var(--ink2);">2026.09</span>
+      </div>
+
+      <!-- 作者私密数据卡（仅本人可见） -->
+      <div class="row" style="margin-top:14px;background:var(--green-soft);border-radius:14px;padding:14px;">
+        <div class="seal seal-round" style="position:static;background:var(--green);">引</div>
+        <div style="margin-left:12px;font-size:12px;font-weight:500;color:var(--green);line-height:1.5;">你的分享被 AI 引用了 12 次，帮到 12 位同学</div>
+      </div>
+
+      <div style="font-family:var(--serif);font-size:15px;font-weight:600;margin:18px 0 12px;">评论 3</div>
+      <div class="row" style="margin-bottom:14px;">
+        <div class="avatar">匿</div>
+        <div style="margin-left:10px;flex:1;">
+          <div class="row between"><span class="small">匿名 #3</span><span class="tiny">2 小时前</span></div>
+          <div style="font-size:14px;line-height:1.6;margin-top:4px;">今天去了，确实好吃，感谢推荐！</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="avatar">匿</div>
+        <div style="margin-left:10px;flex:1;">
+          <div class="row between"><span class="small">匿名 #2</span><span class="tiny">昨天</span></div>
+          <div style="font-size:14px;line-height:1.6;margin-top:4px;">求问麻酱是免费的吗？</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottombar">
+      <div class="input" style="flex:1;height:36px;border-radius:18px;">说点什么…</div>
+      <div class="row" style="gap:14px;">
+        <div style="text-align:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C7266" stroke-width="1.5"><path d="M12 20s-7-4.4-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.6-7 9-7 9z"/></svg><div class="tiny">12</div></div>
+        <div style="text-align:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C7266" stroke-width="1.5"><path d="M12 4l2.4 5 5.6.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.6-.8z"/></svg><div class="tiny">8</div></div>
+        <div style="text-align:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C7266" stroke-width="1.5"><path d="M5 4v16"/><path d="M5 4h11l-1.6 4 1.6 4H5"/></svg></div>
+      </div>
+    </div>
+    <div class="safe" style="height:0;"></div>
+  </div>
+</div>
+
+<!-- ===================== AI 问答 ===================== -->
+<div class="screen-wrap" id="ask">
+  <div class="caption">AI 问答 <span>· 默认态（回答 + 引用帖卡 + AI 声明）</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar">
+      <span class="nav-title">AI 问答</span>
+    </div>
+    <div class="tiny" style="position:absolute;top:90px;left:0;right:0;text-align:center;">仅基于本校同学的分享回答</div>
+
+    <div class="body" style="top:110px;bottom:100px;padding:0 16px;">
+      <div class="card" style="max-width:300px;">
+        <div style="font-size:15px;line-height:1.7;">你好，我是本校分享问答助手。我只基于同学们的真实分享来回答，不编造信息。</div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+        <div style="max-width:280px;background:var(--green);color:#fff;border-radius:16px 4px 16px 16px;padding:12px 16px;font-size:15px;line-height:1.7;">食堂哪家麻辣烫好吃？</div>
+      </div>
+
+      <div class="card" style="max-width:300px;margin-top:16px;">
+        <div style="font-size:15px;line-height:1.7;">
+          站内共有 3 位同学分享过麻辣拌，综合来看 <b>一食堂二楼</b> 推荐最多：8 元/份，分量足，建议 11:20 前到。<br/>
+          <span class="tiny">其中 1 条是去年的分享，价格可能已变化。</span>
+        </div>
+
+        <!-- 引用帖卡 ×2 -->
+        <div class="row" style="margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:8px;">
+          <div class="photo" style="width:56px;height:56px;border-radius:8px;--ph:linear-gradient(135deg,#D98E5B,#B5432F)"></div>
+          <div style="margin-left:10px;flex:1;">
+            <div style="font-size:13px;font-weight:500;line-height:1.4;">一食堂二楼麻辣拌，加麻酱真的绝了</div>
+            <div class="tiny" style="margin-top:4px;">匿名 · 3 天前</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="row" style="margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px;">
+          <div class="photo" style="width:56px;height:56px;border-radius:8px;--ph:linear-gradient(135deg,#C9A06A,#8E6B45)"></div>
+          <div style="margin-left:10px;flex:1;">
+            <div style="font-size:13px;font-weight:500;line-height:1.4;">二食堂三楼铁板饭，性价比之王</div>
+            <div class="tiny" style="margin-top:4px;">匿名 · 去年</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:16px;right:16px;bottom:56px;display:flex;align-items:center;gap:8px;">
+      <div class="input" style="flex:1;height:40px;border-radius:20px;">问问看：宿舍必备什么？</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M4 12l16-8-6 16-2-6z"/></svg>
+      </div>
+    </div>
+    <div class="tiny" style="position:absolute;bottom:30px;left:0;right:0;text-align:center;">内容由 AI 生成，仅供参考</div>
+
+    <div class="tabbar">
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>首页</div>
+      <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.4A8 8 0 1121 12z"/></svg>问答</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>我的</div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 我的 ===================== -->
+<div class="screen-wrap" id="profile">
+  <div class="caption">我的 <span>· 默认态（含管理员"审核台"入口与朱砂角标）</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-title">我的</span></div>
+    <div class="body pad-tab" style="top:88px;padding:0 16px;">
+      <div class="row" style="padding:20px 0;">
+        <div class="avatar avatar-lg">匿</div>
+        <div style="margin-left:16px;">
+          <div style="font-family:var(--serif);font-size:17px;font-weight:600;">匿名同学</div>
+          <div class="tiny" style="margin-top:4px;">你的身份仅自己可见</div>
+        </div>
+      </div>
+
+      <div class="card row" style="padding:0;height:72px;">
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--serif);font-size:20px;font-weight:600;">12</div><div class="tiny">我的分享</div>
+        </div>
+        <div style="width:1px;height:32px;background:var(--line);"></div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--serif);font-size:20px;font-weight:600;">8</div><div class="tiny">收藏</div>
+        </div>
+        <div style="width:1px;height:32px;background:var(--line);"></div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:var(--serif);font-size:20px;font-weight:600;">34</div><div class="tiny">被引用</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="row between" style="height:52px;padding:0 14px;border-bottom:1px solid var(--line);"><span style="font-size:15px;">我的分享</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+        <div class="row between" style="height:52px;padding:0 14px;border-bottom:1px solid var(--line);"><span style="font-size:15px;">我的收藏</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+        <div class="row between" style="height:52px;padding:0 14px;border-bottom:1px solid var(--line);">
+          <span class="row" style="font-size:15px;">站内消息<span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:block;margin-left:6px;"></span></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="row between" style="height:52px;padding:0 14px;border-bottom:1px solid var(--line);"><span style="font-size:15px;">关于</span><span class="tiny">v1.0.0</span></div>
+        <div class="row between" style="height:52px;padding:0 14px;">
+          <span style="font-size:15px;">审核台</span>
+          <span style="background:var(--red);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;">3</span>
+        </div>
+      </div>
+
+      <div style="text-align:center;color:var(--red);font-size:14px;margin-top:24px;">退出登录</div>
+    </div>
+    <div class="tabbar">
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>首页</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.4A8 8 0 1121 12z"/></svg>问答</div>
+      <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>我的</div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 审核后台 ===================== -->
+<div class="screen-wrap" id="admin">
+  <div class="caption">审核后台 <span>· 待审 3 / 举报 1 / 已处理</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar">
+      <span class="nav-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></span>
+      <span class="nav-title">审核台</span>
+      <span class="nav-action"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><path d="M20 12a8 8 0 11-2.3-5.6"/><path d="M20 4v4h-4"/></svg></span>
+    </div>
+
+    <div class="row" style="position:absolute;top:88px;left:0;right:0;height:44px;padding:0 16px;gap:24px;border-bottom:1px solid var(--line);">
+      <div style="font-size:15px;font-weight:600;font-family:var(--serif);">待审 3<div style="width:24px;height:2px;background:var(--green);margin-top:4px;"></div></div>
+      <div style="font-size:15px;color:var(--ink2);">举报 1</div>
+      <div style="font-size:15px;color:var(--ink2);">已处理</div>
+    </div>
+
+    <div class="body" style="top:132px;">
+      <div class="card" style="margin:12px 16px 0;">
+        <div class="row" style="gap:8px;">
+          <span class="tag tag-food">美食</span>
+          <span class="tag" style="background:var(--red-soft);color:var(--red);">AI 判定：疑似指控</span>
+          <span class="grow"></span><span class="tiny">10 分钟前</span>
+        </div>
+        <div style="font-size:14px;line-height:1.7;margin-top:10px;color:var(--ink2);">"那家窗口的肉肯定是隔夜的，老板每次都……"（系统识别为无依据指控，待人工复核）</div>
+        <div class="row" style="gap:12px;margin-top:14px;">
+          <div class="btn-sm sub">驳回</div><div class="btn-sm main">通过</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:12px 16px 0;">
+        <div class="row" style="gap:8px;">
+          <span class="tag tag-life">生活</span>
+          <span class="tag" style="background:var(--green-soft);color:var(--green);">AI 判定：体验陈述</span>
+          <span class="grow"></span><span class="tiny">1 小时前</span>
+        </div>
+        <div style="font-size:14px;line-height:1.7;margin-top:10px;color:var(--ink2);">"超市二楼的全麦面包 3 块钱一个，早上配牛奶很顶饱，保质期也够长。"</div>
+        <div class="row" style="gap:12px;margin-top:14px;">
+          <div class="btn-sm sub">驳回</div><div class="btn-sm main">通过</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:12px 16px 0;">
+        <div class="row" style="gap:8px;">
+          <span class="tag tag-study">学习</span>
+          <span class="tag" style="background:var(--red-soft);color:var(--red);">举报：涉人身评价</span>
+          <span class="grow"></span><span class="tiny">昨天</span>
+        </div>
+        <div style="font-size:13px;line-height:1.6;margin-top:10px;color:var(--ink2);">举报理由："内容涉及对老师的负面人身评价"</div>
+        <div class="row" style="gap:12px;margin-top:14px;">
+          <div class="btn-sm sub">忽略</div><div class="btn-sm main">处理</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 状态：首页空态 ===================== -->
+<div class="screen-wrap" id="home-empty">
+  <div class="caption">首页 · 空态 <span>· 淡化校园照片作底（20%）+ 引导发布</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="empty">
+      <div class="empty-bg" style="--ph:linear-gradient(135deg,#D8CBAF,#9E8B6C)"></div>
+      <div style="position:relative;z-index:2;">
+        <div style="font-family:var(--serif);font-size:17px;font-weight:600;">还没有内容</div>
+        <div class="small" style="margin-top:8px;">来发第一条，帮到下一个同学</div>
+        <div class="btn-main" style="width:240px;margin:20px auto 0;">发布第一条分享</div>
+      </div>
+    </div>
+    <div class="tabbar">
+      <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>首页</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.4A8 8 0 1121 12z"/></svg>问答</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>我的</div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 状态：板块空态 ===================== -->
+<div class="screen-wrap" id="board-empty">
+  <div class="caption">板块页 · 空态 <span>· 空食堂照片压暗 + 板块引导</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></span><span class="nav-title">美食</span></div>
+    <div class="empty" style="top:88px;">
+      <div class="empty-bg" style="--ph:linear-gradient(135deg,#CBBBA0,#8E7B62)"></div>
+      <div style="position:relative;z-index:2;">
+        <div style="font-family:var(--serif);font-size:17px;font-weight:600;">这个板块还空着</div>
+        <div class="small" style="margin-top:8px;">吃到好吃的，第一个告诉大家</div>
+        <div class="btn-main" style="width:240px;margin:20px auto 0;">发布美食分享</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 状态：上传中 ===================== -->
+<div class="screen-wrap" id="create-upload">
+  <div class="caption">发帖页 · 图片上传中 <span>· 缩略图遮罩 + 环形进度</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-back" style="font-size:14px;color:var(--ink2);">取消</span><span class="nav-title">发帖</span><span class="nav-action">发布</span></div>
+    <div class="body pad-tab" style="top:88px;">
+      <div class="row" style="gap:8px;padding:0 16px;"><span class="chip">生活</span><span class="chip">学习</span><span class="chip on-red">美食</span></div>
+      <div style="padding:16px;">
+        <div class="textarea" style="background:transparent;border:1px solid var(--line);color:var(--ink);">刚发现的宝藏窗口，一定要分享一下～<span class="ta-count">18/2000</span></div>
+        <div class="row" style="gap:8px;margin-top:16px;">
+          <div class="photo" style="width:100px;height:100px;--ph:linear-gradient(135deg,#D98E5B,#B5432F)">
+            <div style="position:absolute;inset:0;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2"><path d="M12 3a9 9 0 109 9" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+          <div class="photo" style="width:100px;height:100px;--ph:linear-gradient(135deg,#CBB08A,#8E6B45)"></div>
+          <div style="width:100px;height:100px;border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:28px;">＋</div>
+        </div>
+        <div class="tiny" style="margin:20px 0 8px;">补充信息（选填）</div>
+        <div class="input" style="margin-bottom:8px;">店名 / 窗口</div>
+        <div class="input" style="margin-bottom:8px;">人均</div>
+        <div class="input">位置</div>
+      </div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 状态：已点赞 ===================== -->
+<div class="screen-wrap" id="detail-liked">
+  <div class="caption">详情页 · 已点赞 <span>· 图标填充黛绿 + 计数 +1</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></span><span class="nav-title">详情</span></div>
+    <div class="photo" style="position:absolute;top:88px;left:0;width:375px;height:281px;border-radius:0;--ph:linear-gradient(135deg,#D98E5B,#B5432F 65%,#7E3626)"><div class="ph-label">详情头图 · 实拍照片</div></div>
+    <div class="body" style="top:381px;bottom:56px;padding:0 16px;">
+      <span class="tag tag-food">美食</span>
+      <div style="font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.4;margin:8px 0 4px;">一食堂二楼麻辣拌，加麻酱真的绝了</div>
+      <div class="small">匿名 · 2 天前</div>
+      <div style="font-size:15px;line-height:1.7;margin-top:12px;">8 块钱一份，分量很足，米饭免费续。建议 11:20 之前去，之后排队要 20 分钟起。</div>
+    </div>
+    <div class="bottombar">
+      <div class="input" style="flex:1;height:36px;border-radius:18px;">说点什么…</div>
+      <div class="row" style="gap:14px;">
+        <div style="text-align:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="#2F5D50" stroke="#2F5D50" stroke-width="1.5"><path d="M12 20s-7-4.4-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.6-7 9-7 9z"/></svg><div class="tiny" style="color:var(--green);">13</div></div>
+        <div style="text-align:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C7266" stroke-width="1.5"><path d="M12 4l2.4 5 5.6.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.6-.8z"/></svg><div class="tiny">8</div></div>
+        <div style="text-align:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C7266" stroke-width="1.5"><path d="M5 4v16"/><path d="M5 4h11l-1.6 4 1.6 4H5"/></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 状态：举报弹层 ===================== -->
+<div class="screen-wrap" id="detail-report">
+  <div class="caption">详情页 · 举报弹层 <span>· 4 条理由单选 + 提交</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></span><span class="nav-title">详情</span></div>
+    <div class="photo" style="position:absolute;top:88px;left:0;width:375px;height:281px;border-radius:0;--ph:linear-gradient(135deg,#D98E5B,#B5432F 65%,#7E3626)"><div class="ph-label">详情头图 · 实拍照片</div></div>
+    <div class="sheet-mask"></div>
+    <div class="sheet">
+      <div style="font-family:var(--serif);font-size:15px;font-weight:600;text-align:center;margin-bottom:16px;">举报这条分享</div>
+      <div style="height:48px;display:flex;align-items:center;border-bottom:1px solid var(--line);font-size:14px;">内容不实或与事实不符</div>
+      <div style="height:48px;display:flex;align-items:center;border-bottom:1px solid var(--line);font-size:14px;">涉及无依据的人身指控</div>
+      <div style="height:48px;display:flex;align-items:center;border-bottom:1px solid var(--line);font-size:14px;color:var(--green);">广告或商业推广</div>
+      <div style="height:48px;display:flex;align-items:center;font-size:14px;">其他</div>
+      <div class="btn-main" style="margin-top:16px;">提交举报</div>
+      <div class="tiny" style="text-align:center;margin-top:12px;">我们会在 48 小时内处理</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 状态：AI 思考中 ===================== -->
+<div class="screen-wrap" id="ask-thinking">
+  <div class="caption">AI 问答 · 思考中 <span>· 三点动画 + 状态文案</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-title">AI 问答</span></div>
+    <div class="tiny" style="position:absolute;top:90px;left:0;right:0;text-align:center;">仅基于本校同学的分享回答</div>
+    <div class="body" style="top:110px;bottom:100px;padding:0 16px;">
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="max-width:280px;background:var(--green);color:#fff;border-radius:16px 4px 16px 16px;padding:12px 16px;font-size:15px;">宿舍必备有哪些？</div>
+      </div>
+      <div class="card" style="max-width:300px;margin-top:16px;display:flex;align-items:center;gap:10px;">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span class="small">正在翻同学们的分享…</span>
+      </div>
+    </div>
+    <div class="tabbar">
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>首页</div>
+      <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.4A8 8 0 1121 12z"/></svg>问答</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>我的</div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 状态：AI 无结果 ===================== -->
+<div class="screen-wrap" id="ask-noresult">
+  <div class="caption">AI 问答 · 无结果 <span>· 引导发第一条（检索失败转化为发帖入口）</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-title">AI 问答</span></div>
+    <div class="tiny" style="position:absolute;top:90px;left:0;right:0;text-align:center;">仅基于本校同学的分享回答</div>
+    <div class="body" style="top:110px;bottom:100px;padding:0 16px;">
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="max-width:280px;background:var(--green);color:#fff;border-radius:16px 4px 16px 16px;padding:12px 16px;font-size:15px;">图书馆占座有什么讲究？</div>
+      </div>
+      <div class="card" style="max-width:300px;margin-top:16px;">
+        <div style="font-size:15px;line-height:1.7;">站内还没人分享过"图书馆占座"的相关内容。<br/>要不要发第一条？你的分享会帮到下一个搜索的同学。</div>
+        <div class="btn-main" style="height:40px;width:240px;margin-top:12px;font-size:14px;">去发一条</div>
+      </div>
+    </div>
+    <div class="tabbar">
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>首页</div>
+      <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="1.5"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.4A8 8 0 1121 12z"/></svg>问答</div>
+      <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3A794" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>我的</div>
+    </div>
+    <div class="safe"></div>
+  </div>
+</div>
+
+<!-- ===================== 状态：审核已清空 ===================== -->
+<div class="screen-wrap" id="admin-empty">
+  <div class="caption">审核后台 · 空态 <span>· 今日已清空</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="sb-right"><i style="width:16px;height:8px"></i><i style="width:6px;height:8px"></i><i style="width:22px;height:9px;opacity:.5"></i></span></div>
+    <div class="navbar"><span class="nav-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></span><span class="nav-title">审核台</span></div>
+    <div class="row" style="position:absolute;top:88px;left:0;right:0;height:44px;padding:0 16px;gap:24px;border-bottom:1px solid var(--line);">
+      <div style="font-size:15px;font-weight:600;font-family:var(--serif);">待审 0<div style="width:24px;height:2px;background:var(--green);margin-top:4px;"></div></div>
+      <div style="font-size:15px;color:var(--ink2);">举报 0</div>
+      <div style="font-size:15px;color:var(--ink2);">已处理</div>
+    </div>
+    <div class="empty" style="top:132px;">
+      <div style="font-family:var(--serif);font-size:17px;font-weight:600;">今日已清空</div>
+      <div class="tiny" style="margin-top:8px;">下次集中处理：明天 10:00</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.tabs button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.tabs button').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.screen-wrap').forEach(function(s){ s.classList.remove('show'); });
+    var target = document.getElementById(btn.dataset.s);
+    if (target) target.classList.add('show');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>

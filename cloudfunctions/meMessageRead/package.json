@@ -1,0 +1,9 @@
+{
+  "name": "meMessageRead",
+  "version": "1.0.0",
+  "description": "消息置读（单条/全部）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "triggers": [
+    {
+      "name": "dailyCleanup",
+      "type": "timer",
+      "config": "0 0 3 * * * *"
+    }
+  ],
+  "timeout": 60,
+  "memorySize": 256
+}

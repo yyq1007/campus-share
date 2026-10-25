@@ -1,0 +1,79 @@
+/* 搜索页 —— v4 令牌 */
+.page {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+}
+.nav { padding-bottom: 8rpx; }
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 0 32rpx;
+}
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: 32rpx;
+  box-shadow: var(--shadow-soft);
+  flex-shrink: 0;
+}
+.nav-btn-icon { width: 32rpx; height: 32rpx; }
+.search-shell {
+  flex: 1;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 0 28rpx;
+  background: var(--bg-elevated);
+  border-radius: 36rpx;
+  box-shadow: var(--shadow-soft);
+}
+.search-icon { width: 32rpx; height: 32rpx; opacity: 0.5; }
+.search-input { flex: 1; font-size: 26rpx; color: var(--text-body); }
+.ph { color: var(--text-faint); }
+.search-go {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--primary-deep);
+  flex-shrink: 0;
+}
+
+.card {
+  margin: 24rpx 32rpx 0;
+  padding: 32rpx;
+  background: var(--bg-elevated);
+  border-radius: 48rpx;
+  box-shadow: var(--shadow-card);
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.card-title { font-size: 30rpx; font-weight: 600; color: var(--text-strong); }
+.card-clear { width: 32rpx; height: 32rpx; opacity: 0.4; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.chip {
+  padding: 12rpx 26rpx;
+  font-size: 24rpx;
+  color: var(--text-body);
+  background: var(--fill-soft);
+  border-radius: 26rpx;
+}
+.chip-hot { color: var(--primary-deep); background: var(--primary-tint); }
+
+.list { height: calc(100vh - 160rpx); }
+.feed { padding: 24rpx 32rpx 0; }
+.list-foot {
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--text-faint);
+}
+.pad { height: 180rpx; }

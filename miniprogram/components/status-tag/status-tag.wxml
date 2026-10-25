@@ -1,0 +1,1 @@
+<view wx:if="{{text || map[type]}}" class="st st-{{type}}">{{text || map[type]}}</view>

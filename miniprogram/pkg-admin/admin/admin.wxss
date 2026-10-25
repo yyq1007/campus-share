@@ -1,0 +1,187 @@
+/* S7 审核台 —— v4 设计稿（实测：Tab 下划线 y=122~124 宽 32px；卡片 335×184 r=22px；按钮 96×40 r=19.5px） */
+.page {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+}
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: 32rpx;
+  box-shadow: var(--shadow-soft);
+}
+.nav-btn-icon { width: 32rpx; height: 32rpx; }
+.nav-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.nav-ph { width: 64rpx; }
+
+/* ---------- 三 Tab ---------- */
+.tabs {
+  display: flex;
+  align-items: flex-start;
+  margin: 24rpx 40rpx 0;
+}
+.tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 30rpx;
+  color: var(--text-soft);
+}
+.tab.is-on {
+  font-weight: 600;
+  color: var(--primary);
+}
+.tab-line {
+  margin-top: 12rpx;
+  width: 64rpx;
+  height: 6rpx;
+  background: var(--primary);
+  border-radius: 3rpx;
+}
+
+/* ---------- 状态 ---------- */
+.state-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 80rpx;
+}
+.state-icon { width: 160rpx; height: 160rpx; }
+.state-text { margin-top: 20rpx; font-size: 28rpx; color: var(--text-soft); }
+
+/* ---------- 卡片（335×184 → 670×368rpx，描边） ---------- */
+.list { height: calc(100vh - 280rpx); }
+.item {
+  margin: 24rpx 40rpx 0;
+  padding: 24rpx 28rpx;
+  background: var(--bg-elevated);
+  border: 2rpx solid var(--brand-200);
+  border-radius: 44rpx;
+  box-shadow: none;
+}
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-width: 0;
+}
+/* 板块 chip（84×26 → 168×52rpx） */
+.board-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 0 16rpx;
+  height: 52rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  font-weight: 600;
+  border-radius: 26rpx;
+}
+.board-sticker { width: 36rpx; height: 36rpx; }
+.board-life { color: var(--board-life-text); background: var(--board-life-bg); }
+.board-study { color: var(--board-study-text); background: var(--board-study-bg); }
+.board-food { color: var(--board-food-text); background: var(--board-food-bg); }
+/* AI 判定 chip（120×24 → 240×48rpx） */
+.ai-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 20rpx;
+  height: 48rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--coral-text);
+  background: var(--coral-bg);
+  border-radius: 24rpx;
+}
+.item-time {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: var(--text-faint);
+}
+.item-title {
+  margin-top: 20rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-strong);
+}
+.item-content {
+  margin-top: 16rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: var(--text-1);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.item-cover {
+  margin-top: 16rpx;
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 24rpx;
+}
+.item-meta {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: var(--text-faint);
+}
+
+/* ---------- 操作按钮（96×40 → 192×80rpx） ---------- */
+.item-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28rpx;
+}
+.act-btn {
+  width: 192rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 40rpx;
+}
+.act-btn.reject {
+  color: var(--primary-deep);
+  background: var(--bg-elevated);
+  border: 2rpx solid var(--brand-300);
+}
+.act-btn.hide {
+  color: var(--coral-text);
+  background: var(--bg-elevated);
+  border: 2rpx solid var(--coral-border);
+}
+.act-btn.approve {
+  color: var(--text-on-brand);
+  background: var(--primary);
+  border: 2rpx solid var(--primary);
+}
+.item-done {
+  margin-top: 24rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--text-faint);
+}
+.pad { height: 160rpx; }

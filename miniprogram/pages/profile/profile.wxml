@@ -1,0 +1,89 @@
+<!--S6 我的：渐变页头 + 居中头像 + 统计描边卡 + 描边菜单卡 + 退出登录 -->
+<view class="page">
+  <!-- 渐变页头 -->
+  <view class="hero" style="padding-top:{{statusBarH}}px">
+    <view class="hero-nav" style="height:{{navH}}px">
+      <view class="hero-title">我的</view>
+    </view>
+  </view>
+
+  <!-- 加载/错误 -->
+  <view wx:if="{{state === 'loading'}}" class="state-wrap">
+    <view class="skeleton" />
+  </view>
+  <view wx:elif="{{state === 'error'}}" class="state-wrap">
+    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <view class="state-text">加载失败了</view>
+    <button class="state-btn" bind:tap="onRetry">重试</button>
+  </view>
+
+  <block wx:elif="{{profile}}">
+    <!-- 个人区（居中：头像 88px + 昵称 + 副标题） -->
+    <view class="user-block">
+      <view class="avatar-wrap" bind:tap="onAvatarTap">
+        <image wx:if="{{profile.avatarUrl}}" class="avatar-img" src="{{profile.avatarUrl}}" mode="aspectFill" />
+        <view wx:else class="avatar-ph">匿</view>
+        <view class="avatar-cam">
+          <image class="avatar-cam-icon" src="/assets/icons/camera-primary.png" mode="aspectFit" />
+        </view>
+      </view>
+      <view class="user-nick">
+        <text>{{profile.nick || '匿名同学'}}</text>
+      </view>
+      <view class="user-sub">你的身份仅自己可见</view>
+    </view>
+
+    <!-- 统计（设计稿：335×84 描边卡，三列） -->
+    <view class="stat-card">
+      <view class="stat-item" bind:tap="onMyPosts">
+        <view class="stat-num">{{profile.stats.posts || 0}}</view>
+        <view class="stat-label">我的分享</view>
+      </view>
+      <view class="stat-item" bind:tap="onMyFavs">
+        <view class="stat-num">{{profile.stats.favs || 0}}</view>
+        <view class="stat-label">我的收藏</view>
+      </view>
+      <view class="stat-item" bind:tap="onCited">
+        <view class="stat-num">{{profile.stats.cited || 0}}</view>
+        <view class="stat-label">被引用</view>
+      </view>
+    </view>
+
+    <!-- 菜单（设计稿：335×280 单张描边卡，5 行） -->
+    <view class="menu-card">
+      <view class="menu-item" bind:tap="onMyPosts">
+        <image class="menu-icon" src="/assets/icons/doc-fold.png" mode="aspectFit" />
+        <text class="menu-text">我的分享</text>
+        <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
+      </view>
+      <view class="menu-item" bind:tap="onMyFavs">
+        <image class="menu-icon" src="/assets/icons/star-line.png" mode="aspectFit" />
+        <text class="menu-text">我的收藏</text>
+        <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
+      </view>
+      <view class="menu-item" bind:tap="onMessages">
+        <image class="menu-icon" src="/assets/icons/bell-line.png" mode="aspectFit" />
+        <text class="menu-text">站内消息</text>
+        <view wx:if="{{profile.unread}}" class="menu-dot">{{profile.unread > 99 ? '99+' : profile.unread}}</view>
+        <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
+      </view>
+      <view class="menu-item" bind:tap="onAbout">
+        <image class="menu-icon" src="/assets/icons/info-circle.png" mode="aspectFit" />
+        <text class="menu-text">关于</text>
+        <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
+      </view>
+      <view wx:if="{{isAdmin}}" class="menu-item" bind:tap="onAdmin">
+        <image class="menu-icon" src="/assets/icons/shield-line.png" mode="aspectFit" />
+        <text class="menu-text">审核台</text>
+        <view class="menu-role">管理员</view>
+        <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
+      </view>
+    </view>
+
+    <!-- 退出登录 -->
+    <view class="logout" bind:tap="onLogout">退出登录</view>
+
+    <view class="version">好物分享 MVP · v1.0.0</view>
+  </block>
+  <view class="tab-page-bottom"></view>
+</view>

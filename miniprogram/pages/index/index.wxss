@@ -1,0 +1,98 @@
+/* S1 首页 */
+/* 设计稿栅格：内容左右边距 20px = 40rpx */
+.hero { padding-left: 40rpx; padding-right: 40rpx; }
+.hero-inner { position: relative; height: 200rpx; }
+.hero-title-wrap { position: absolute; left: 0; top: 20rpx; }
+.hero-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-1);
+}
+/* 设计稿：小猫插画 112×112，贴右 20px */
+.hero-cat {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 224rpx; height: 224rpx;
+}
+.hero-cloud {
+  position: absolute;
+  right: 150rpx; top: 10rpx;
+  width: 96rpx; height: 56rpx;
+  opacity: 0.9;
+}
+.hero-star {
+  position: absolute;
+  left: 44rpx; bottom: 26rpx;
+  width: 88rpx; height: 52rpx;
+  opacity: 0.85;
+}
+
+/* 搜索胶囊 */
+/* 设计稿：搜索胶囊 335×52，左右边距 20px */
+.search-pill {
+  margin-top: 12rpx;
+  height: 104rpx;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 0 40rpx;
+  box-shadow: var(--shadow-card);
+}
+.search-ph { font-size: 28rpx; color: var(--text-3); }
+
+.body { margin-top: 24rpx; }
+
+/* 分类贴纸 */
+/* 设计稿：4 个贴纸 x = 26/118/209/301（48×48），左右再缩进 6px */
+.stickers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding: 0 12rpx 28rpx;
+}
+.sticker-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+.sticker-label { font-size: 24rpx; color: var(--text-1); }
+
+/* AI 引导卡（设计稿：浅紫渐变底 + 渐变圆章 "AI" + 主色文案） */
+.ai-card {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 20rpx 32rpx;
+  background: linear-gradient(100deg, var(--brand-50) 0%, var(--brand-100) 55%, var(--brand-50) 100%);
+  border: 2rpx solid var(--brand-100);
+}
+.ai-badge {
+  width: 80rpx; height: 80rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-200) 0%, var(--primary) 100%);
+  color: var(--text-on-brand);
+  font-size: 26rpx;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8rpx 20rpx var(--brand-a25);
+}
+.ai-text { flex: 1; }
+.ai-main { font-size: 32rpx; font-weight: 600; color: var(--primary-deep); }
+
+/* 加载更多 */
+.load-more {
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-3);
+  padding: 24rpx 0;
+}
+.load-more-err { color: var(--error-text); }

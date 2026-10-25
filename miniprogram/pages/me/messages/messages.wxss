@@ -1,0 +1,123 @@
+/* S9 站内消息 —— v4 令牌 */
+.page {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+}
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: 32rpx;
+  box-shadow: var(--shadow-soft);
+}
+.nav-btn-icon { width: 32rpx; height: 32rpx; }
+.nav-title { font-size: 34rpx; font-weight: 600; color: var(--text-strong); }
+.nav-read {
+  font-size: 24rpx;
+  color: var(--primary);
+  padding: 8rpx 16rpx;
+}
+.nav-read.off { color: var(--text-faint); }
+
+.list { height: calc(100vh - 200rpx); }
+.card {
+  margin: 24rpx 32rpx 0;
+  padding: 12rpx 32rpx;
+  background: var(--bg-elevated);
+  border-radius: 48rpx;
+  box-shadow: var(--shadow-card);
+}
+.msg-row {
+  position: relative;
+  display: flex;
+  gap: 20rpx;
+  padding: 28rpx 0;
+  border-bottom: 2rpx solid var(--fill-soft);
+}
+.msg-row:last-child { border-bottom: none; }
+.msg-icon-wrap {
+  width: 72rpx;
+  height: 72rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24rpx;
+}
+.msg-icon-wrap.type-like { background: var(--coral-a12); }
+.msg-icon-wrap.type-fav { background: var(--sun-a14); }
+.msg-icon-wrap.type-comment { background: var(--sky-a12); }
+.msg-icon-wrap.type-review { background: var(--primary-tint); }
+.msg-icon-wrap.type-system { background: var(--fill-soft); }
+.msg-icon { width: 36rpx; height: 36rpx; }
+.msg-main { flex: 1; min-width: 0; }
+.msg-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.msg-label { font-size: 26rpx; font-weight: 500; color: var(--text-strong); }
+.msg-time { font-size: 22rpx; color: var(--text-faint); }
+.msg-text {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+.unread-dot {
+  position: absolute;
+  right: 0;
+  top: 36rpx;
+  width: 16rpx;
+  height: 16rpx;
+  background: var(--coral);
+  border-radius: 8rpx;
+}
+.more {
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--primary);
+}
+.pad { height: 160rpx; }
+
+/* ---- v4 设计稿对齐：分区 Tab ---- */
+.msg-tabs {
+  display: flex;
+  align-items: center;
+  gap: 48rpx;
+  padding: 8rpx 40rpx 24rpx;
+}
+.msg-tab {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-2);
+  padding-bottom: 10rpx;
+  border-bottom: 4rpx solid transparent;
+}
+.msg-tab.is-on { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+/* 未读角标（数据源 meList counts.*，即各 Tab 未读数） */
+.tab-badge {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  box-sizing: border-box;
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: 32rpx;
+  text-align: center;
+  color: var(--text-on-brand);
+  background: var(--coral);
+  border-radius: 16rpx;
+}

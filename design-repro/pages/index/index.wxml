@@ -1,0 +1,58 @@
+<!-- S1 首页 Home -->
+<view class="page home">
+
+  <!-- 自定义导航：左大标题，右侧预留胶囊 -->
+  <view class="nav" style="padding-top:{{statusBarHeight}}px;height:{{navBarHeight}}px">
+    <text class="nav__title title-font">校园分享</text>
+    <view class="nav-spacer"></view>
+  </view>
+
+  <!-- 搜索（假输入框，点击跳搜索页） -->
+  <view class="search" bindtap="goSearch">
+    <text class="search__icon">🔍</text>
+    <text class="search__ph">搜索好物 / 店铺 / 经验</text>
+  </view>
+
+  <!-- AI 引导卡 -->
+  <view class="ai-card" bindtap="goAsk">
+    <view class="ai-card__icon">✦</view>
+    <view class="ai-card__text">
+      <view class="ai-card__title title-font">问问同学都在推荐什么</view>
+      <view class="ai-card__sub">只回答本校的真实分享</view>
+    </view>
+    <text class="ai-card__chev">›</text>
+  </view>
+
+  <!-- 分类贴纸 -->
+  <view class="cats">
+    <view class="cat cat--life"  bindtap="goBoard" data-board="life"><text class="cat__emoji">🛍️</text><text class="cat__name">生活</text></view>
+    <view class="cat cat--study" bindtap="goBoard" data-board="study"><text class="cat__emoji">📚</text><text class="cat__name">学习</text></view>
+    <view class="cat cat--food"  bindtap="goBoard" data-board="food"><text class="cat__emoji">🍜</text><text class="cat__name">美食</text></view>
+  </view>
+
+  <text class="section-title title-font">最新分享</text>
+
+  <!-- 信息流 -->
+  <view wx:for="{{posts}}" wx:key="id" class="card post" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="post__top">
+      <text class="board-chip board-chip--{{item.board}}">{{item.boardName}}</text>
+      <text class="post__time">{{item.time}}</text>
+    </view>
+    <view class="post__title title-font">{{item.title}}</view>
+    <view class="post__body">{{item.body}}</view>
+    <view class="post__imgs" wx:if="{{item.imgs.length}}">
+      <view wx:for="{{item.imgs}}" wx:for-item="c" wx:key="*this" class="post__img" style="background:{{c}}"></view>
+    </view>
+    <view class="post__foot">
+      <view class="avatar" style="background:var(--avatar-1)">匿</view>
+      <text class="post__author">匿名 · {{item.time}}</text>
+      <view class="post__stats">
+        <text>♡ {{item.like}}</text><text>☆ {{item.fav}}</text><text>💬 {{item.comment}}</text>
+      </view>
+    </view>
+    <view wx:if="{{item.expired}}" class="expired-tag">可能已过期</view>
+  </view>
+
+  <!-- 悬浮发布 -->
+  <view class="fab" bindtap="goCreate">＋ 发一条</view>
+</view>

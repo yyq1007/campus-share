@@ -1,0 +1,50 @@
+<!-- S3 发帖页 Create -->
+<view class="page create">
+  <!-- 自定义导航：返回 + 居中标题 -->
+  <view class="nav" style="padding-top:{{statusBarHeight}}px;height:{{navBarHeight}}px">
+    <text class="nav__back" bindtap="goBack">‹</text>
+    <text class="nav__title title-font">发布</text>
+    <view class="nav-spacer"></view>
+  </view>
+
+  <view class="card">
+    <!-- 板块 -->
+    <view class="label">选择板块</view>
+    <view class="chips">
+      <text class="chip {{board==='life'?'chip--on':''}}" bindtap="pickBoard" data-b="life">生活</text>
+      <text class="chip {{board==='study'?'chip--on':''}}" bindtap="pickBoard" data-b="study">学习</text>
+      <text class="chip {{board==='food'?'chip--on':''}}" bindtap="pickBoard" data-b="food">美食</text>
+    </view>
+
+    <!-- 标题（选填） -->
+    <view class="label">一句话概括（选填）</view>
+    <input class="field" maxlength="40" value="{{title}}" bindinput="onTitle"
+           placeholder="例如：楼下炸鸡闭眼冲" />
+    <view class="counter">{{title.length}}/40</view>
+
+    <!-- 正文（必填 ≥5 字） -->
+    <view class="label">分享你的真实体验 <text class="req">*</text></view>
+    <textarea class="ta" maxlength="2000" value="{{content}}" bindinput="onContent"
+              placeholder="说点什么吧，真实的体验最有参考价值～" />
+    <view class="counter {{content.length<5?'counter--warn':''}}">{{content.length}}/2000</view>
+
+    <!-- 媒体网格（图片≤6 或 视频≤1，互斥） -->
+    <view class="label">图片 / 视频</view>
+    <view class="media">
+      <view wx:for="{{imgs}}" wx:key="*this" class="media__item" style="background:{{item}}">
+        <text class="media__del" catchtap="delImg" data-i="{{index}}">×</text>
+      </view>
+      <view wx:if="{{imgs.length<6 && !video}}" class="media__add" bindtap="pickMedia">＋</view>
+    </view>
+
+    <!-- 补充信息（按板块） -->
+    <view class="label">补充信息</view>
+    <input wx:for="{{fields}}" wx:key="k" class="field field--block" value="{{item.v}}"
+           data-k="{{item.k}}" bindinput="onField" placeholder="{{item.ph}}" />
+  </view>
+
+  <!-- 底部发布栏 -->
+  <view class="bar">
+    <button class="btn-primary bar__btn" disabled="{{content.length<5}}" bindtap="publish">发布</button>
+  </view>
+</view>

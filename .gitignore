@@ -1,0 +1,21 @@
+# 微信开发者工具自动生成（含上传私钥容器，勿共享）
+project.private.config.json
+
+# 依赖与构建产物
+node_modules/
+miniprogram/node_modules/
+cloudfunctions/*/node_modules/
+dist/
+.temp/
+.rn_temp/
+out/
+*.log
+npm-debug.log*
+
+# 本地/项目元数据
+.workbuddy/
+.DS_Store
+Thumbs.db
+
+# 已废弃的旧版云函数备份（项目约定：不要再部署）
+_cloudfunctions_old_backup/

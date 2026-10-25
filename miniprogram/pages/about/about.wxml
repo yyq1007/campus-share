@@ -1,0 +1,29 @@
+<!--关于页 -->
+<view class="page">
+  <view class="nav" style="padding-top:{{statusBarH}}px">
+    <view class="nav-inner" style="height:{{navH}}px">
+      <view class="nav-btn" bind:tap="onBack">
+        <image class="nav-btn-icon" src="/assets/icons/arrow-left.png" mode="aspectFit" />
+      </view>
+      <view class="nav-title">关于</view>
+      <view class="nav-ph" />
+    </view>
+  </view>
+
+  <view class="hero">
+    <image class="hero-deco" src="/assets/deco/cat.png" mode="aspectFit" />
+    <view class="hero-name">好物分享</view>
+    <view class="hero-desc">同学们自己的校园好物圈子</view>
+    <view class="hero-ver">{{version}}</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">社区守则</view>
+    <view class="rule-row" wx:for="{{rules}}" wx:key="*this">
+      <view class="rule-dot" />
+      <text class="rule-text">{{item}}</text>
+    </view>
+  </view>
+
+  <view class="foot-note">内容由社区同学创作，AI 问答仅供参考</view>
+</view>

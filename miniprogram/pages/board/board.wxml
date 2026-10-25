@@ -1,0 +1,52 @@
+<view class="page-bg"></view>
+
+<!-- 非法板块 -->
+<block wx:if="{{invalidBoard}}">
+  <nav-bar title="板块" back="{{true}}" />
+  <page-state state="empty" icon="empty-cloud" emptyText="板块不存在" btnText="回首页" bind:action="onBackHome" />
+</block>
+
+<block wx:else>
+  <nav-bar title="{{meta.label}}" back="{{true}}" />
+
+  <!-- 板块横幅：最新封面照片 + 淡紫渐变蒙版 + 圆形贴纸 -->
+  <view class="banner-wrap page-pad">
+    <view class="banner">
+      <image wx:if="{{list.length}}" class="banner-img" src="{{list[0].cover}}" mode="aspectFill" />
+      <view class="banner-mask"></view>
+      <view class="banner-sticker sticker sticker-{{meta.color}}">
+        <icon name="{{meta.sticker}}" size="52" />
+      </view>
+      <view class="banner-text">
+        <view class="banner-title font-title">{{meta.label}}</view>
+        <view class="banner-sub">{{total}} 条分享</view>
+      </view>
+    </view>
+
+    <!-- 板块声明 -->
+    <view class="declaration">板块内容均为同学个人体验分享</view>
+  </view>
+
+  <view class="page-pad">
+    <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}"
+      state="{{state}}" type="list"
+      emptyText="这个板块还空着" emptySub="来发第一条吧"
+      btnText="发布分享" bind:retry="onRetry" bind:action="onFab"
+    />
+    <block wx:else>
+      <post-card
+        wx:for="{{list}}" wx:key="id"
+        post="{{item}}"
+        bind:tap="onPostTap" bind:like="onLike" bind:fav="onFav"
+      />
+      <view wx:if="{{loadingMore}}" class="load-more">加载中…</view>
+      <view wx:if="{{!hasMore && list.length > 2}}" class="load-more">没有更多了</view>
+    </block>
+    <view class="safe-bottom"></view>
+  </view>
+
+  <view class="fab fab-page" bindtap="onFab">
+    <icon name="plus-white" size="32" />
+    <text>发一条</text>
+  </view>
+</block>

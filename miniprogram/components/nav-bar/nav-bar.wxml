@@ -1,0 +1,15 @@
+<view class="nav-wrap">
+  <view
+    class="nav-bg {{transparent ? 'nav-transparent' : ''}}"
+    style="padding-top:{{statusBarH}}px;height:{{navH}}px;opacity:{{transparent ? bgOpacity : 1}}"
+  ></view>
+  <view class="nav-inner" style="padding-top:{{statusBarH}}px;height:{{navH}}px;">
+    <view wx:if="{{back}}" class="nav-back {{transparent && bgOpacity < 0.5 ? 'nav-back-dark' : ''}}" bindtap="onBack">
+      <icon name="{{transparent && bgOpacity < 0.5 ? 'back-white' : 'chevron-left'}}" size="40"/>
+    </view>
+    <view
+      class="nav-title font-title {{transparent && bgOpacity < 0.5 ? 'nav-title-light' : ''}}"
+      style="margin-right:{{capsuleRight}}px;{{titleColor ? 'color:' + titleColor : ''}}"
+    >{{title}}</view>
+  </view>
+</view>

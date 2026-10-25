@@ -1,0 +1,20 @@
+<view class="tab-bar">
+  <view class="tab-item {{selected === 0 ? 'on' : ''}}" data-index="0" bindtap="switchTab">
+    <icon name="{{selected === 0 ? 'tab-home-on' : 'tab-home'}}" size="48"/>
+    <text class="tab-text">首页</text>
+  </view>
+  <view class="tab-item {{selected === 1 ? 'on' : ''}}" data-index="1" bindtap="switchTab">
+    <icon name="{{selected === 1 ? 'tab-ask-on' : 'tab-ask'}}" size="48"/>
+    <text class="tab-text">问答</text>
+  </view>
+  <view class="tab-item tab-publish-wrap" data-index="2" bindtap="switchTab">
+    <view class="tab-publish">
+      <icon name="tab-publish-line" size="48"/>
+    </view>
+    <text class="tab-text tab-publish-text">发布</text>
+  </view>
+  <view class="tab-item {{selected === 3 ? 'on' : ''}}" data-index="3" bindtap="switchTab">
+    <icon name="{{selected === 3 ? 'tab-me-on' : 'tab-me'}}" size="48"/>
+    <text class="tab-text">我的</text>
+  </view>
+</view>

@@ -1,0 +1,51 @@
+<!--搜索页：搜索框 + 历史/热词 + 结果流 -->
+<view class="page">
+  <view class="nav" style="padding-top:{{statusBarH}}px">
+    <view class="nav-inner" style="height:{{navH}}px;padding-right:{{capGap || 100}}px">
+      <view class="nav-btn" bind:tap="onBack">
+        <image class="nav-btn-icon" src="/assets/icons/arrow-left.png" mode="aspectFit" />
+      </view>
+      <view class="search-shell">
+        <image class="search-icon" src="/assets/icons/search.png" mode="aspectFit" />
+        <input
+          class="search-input" placeholder="搜好物、资料、窗口…" placeholder-class="ph"
+          value="{{keyword}}" focus confirm-type="search" bindinput="onInput" bindconfirm="onConfirm"
+        />
+      </view>
+      <view class="search-go" bind:tap="onConfirm">搜索</view>
+    </view>
+  </view>
+
+  <!-- 空闲：历史 + 热词 -->
+  <block wx:if="{{state === 'idle'}}">
+    <view wx:if="{{history.length}}" class="card">
+      <view class="card-head">
+        <text class="card-title">搜索历史</text>
+        <image class="card-clear" src="/assets/icons/trash.png" mode="aspectFit" bind:tap="onClearHistory" />
+      </view>
+      <view class="chip-row">
+        <view wx:for="{{history}}" wx:key="*this" class="chip" data-kw="{{item}}" bind:tap="onTagTap">{{item}}</view>
+      </view>
+    </view>
+    <view class="card">
+      <view class="card-head">
+        <text class="card-title">大家在搜</text>
+      </view>
+      <view class="chip-row">
+        <view wx:for="{{hotWords}}" wx:key="*this" class="chip chip-hot" data-kw="{{item}}" bind:tap="onTagTap">{{item}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 结果 -->
+  <block wx:else>
+    <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}" state="{{state}}" bind:retry="onConfirm" bind:action="onEmptyAction" />
+    <scroll-view wx:else scroll-y class="list" bindscrolltolower="loadMore">
+      <view class="feed">
+        <post-card wx:for="{{list}}" wx:key="id" post="{{item}}" bind:tap="onPostTap" />
+      </view>
+      <view wx:if="{{loadingMore || hasMore}}" class="list-foot">{{searching ? '加载中…' : ''}}</view>
+      <view class="pad" />
+    </scroll-view>
+  </block>
+</view>

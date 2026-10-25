@@ -1,0 +1,38 @@
+.ci { display: flex; gap: 20rpx; padding: 24rpx 0; }
+.ci-main { flex: 1; min-width: 0; }
+.ci-head { display: flex; align-items: center; gap: 12rpx; }
+.ci-name { font-size: 26rpx; font-weight: 600; color: var(--brand-800); }
+.ci-pending {
+  font-size: 22rpx;
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-radius: var(--radius-pill);
+  padding: 2rpx 12rpx;
+}
+.ci-time { font-size: 22rpx; color: var(--text-3); margin-left: auto; }
+.ci-content {
+  margin-top: 8rpx;
+  font-size: 30rpx;
+  line-height: 1.7;
+  color: var(--text-1);
+  word-break: break-all;
+}
+.ci-reply-btn { margin-top: 12rpx; font-size: 26rpx; color: var(--brand-800); }
+
+.ci-replies {
+  margin-top: 16rpx;
+  background: var(--brand-50);
+  border-left: 6rpx solid var(--brand-200);
+  border-radius: 24rpx;
+  padding: 16rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.ci-reply { display: flex; flex-direction: column; }
+.ci-reply-line { font-size: 26rpx; line-height: 1.6; color: var(--text-1); word-break: break-all; }
+.ci-reply-name { color: var(--brand-800); font-weight: 500; }
+.ci-reply-text { color: var(--text-3); }
+.ci-reply-content { color: var(--text-1); }
+.ci-reply-time { font-size: 22rpx; color: var(--text-3); margin-top: 4rpx; }
+.ci-expand { font-size: 24rpx; color: var(--brand-800); padding-top: 4rpx; }

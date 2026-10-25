@@ -1,0 +1,70 @@
+<!--S8 评论页：帖子摘要白卡 + 楼层流（匿名 #N）+ 楼中楼淡紫块 + 底部圆形纸飞机发送 -->
+<view class="page">
+  <!-- 导航：左箭头 + 左对齐标题 -->
+  <view class="nav" style="padding-top:{{statusBarH}}px">
+    <view class="nav-inner" style="height:{{navH}}px">
+      <view class="nav-back" bind:tap="onBack">
+        <image class="nav-back-icon" src="/assets/icons/chevron-left.png" mode="aspectFit" />
+      </view>
+      <text class="nav-title">评论 {{total}}</text>
+    </view>
+  </view>
+
+  <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}" state="{{state}}" bind:retry="onRetry" bind:action="onBack" actionText="返回" />
+
+  <block wx:else>
+    <scroll-view scroll-y class="list" bindscrolltolower="onMore">
+      <!-- 帖子摘要白卡 -->
+      <view class="post-card" bind:tap="onTapPost">
+        <view class="post-title">{{post.title}}</view>
+        <view class="post-meta">匿名 · {{post.timeText}} · {{post.commentCount}} 条评论 · {{post.likeCount}} 赞</view>
+      </view>
+
+      <!-- 一级评论流 -->
+      <view class="comments">
+        <view class="cmt" wx:for="{{comments}}" wx:key="id">
+          <view class="cmt-head">
+            <view class="cmt-avatar av-{{item.avatarIdx}}">匿</view>
+            <text class="cmt-name">匿名 #{{item.floor}}</text>
+            <text class="cmt-time">{{item.timeText}}</text>
+          </view>
+          <view class="cmt-text">{{item.content}}</view>
+          <view class="cmt-reply" data-floor="{{item.floor}}" data-id="{{item.id}}" catch:tap="onReplyTo">回复</view>
+
+          <!-- 楼中楼 -->
+          <view wx:if="{{item.replies.length}}" class="sub">
+            <view class="sub-row" wx:for="{{item.replies}}" wx:for-item="r" wx:key="id">
+              <text class="sub-name">匿名 #{{r.floor}}</text>
+              <text wx:if="{{r.replyToFloor}}" class="sub-at">回复 #{{r.replyToFloor}}:</text>
+              <text class="sub-text">{{r.content}}</text>
+            </view>
+            <view wx:if="{{item.replyCount > item.replies.length}}" class="sub-more" bind:tap="onExpand" data-floor="{{item.floor}}" data-id="{{item.id}}">
+              展开 {{item.replyCount - item.replies.length}} 条回复
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{hasMore}}" class="more" bind:tap="onMore">查看更多评论</view>
+        <view wx:if="{{!hasMore && comments.length}}" class="no-more">没有更多评论了</view>
+      </view>
+      <view class="pad" />
+    </scroll-view>
+
+    <!-- 底部输入条 -->
+    <view class="input-bar">
+      <view wx:if="{{replyTo}}" class="reply-tip">
+        回复 匿名 #{{replyTo.floor}}
+        <image class="reply-close" src="/assets/icons/close.png" mode="aspectFit" catch:tap="onCancelReply" />
+      </view>
+      <view class="input-row">
+        <input
+          class="input-field" placeholder="{{replyTo ? '回复 匿名 #' + replyTo.floor + '…' : '说点什么…'}}"
+          placeholder-class="ph" value="{{draft}}" confirm-type="send" maxlength="300"
+          bindinput="onInput" bindconfirm="onSend"
+        />
+        <view class="send-btn {{draft ? 'can-send' : ''}}" bind:tap="onSend">
+          <image class="send-icon" src="/assets/icons/send-plane.png" mode="aspectFit" />
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,31 @@
+<view class="pc card" bindtap="onTap">
+  <view class="pc-cover-wrap">
+    <image wx:if="{{post.cover}}" class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
+    <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">
+      <icon name="play-white" size="36"/>
+    </view>
+    <view wx:if="{{post.expired}}" class="pc-expired">可能已过期</view>
+    <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
+  </view>
+  <view class="pc-body">
+    <view class="pc-tags" wx:if="{{showBoard}}">
+      <view class="board-tag board-{{post.board}}">{{post.boardLabel}}</view>
+    </view>
+    <view wx:if="{{post.title}}" class="pc-title font-title">{{post.title}}</view>
+    <view class="pc-excerpt">{{post.excerpt}}</view>
+    <view class="pc-meta">
+      <text class="pc-meta-left">匿名 · {{timeText}}</text>
+      <view class="pc-actions">
+        <view wx:if="{{manageable === 'manage'}}" class="pc-act pc-act-danger" catchtap="onDelete">删除</view>
+        <view class="pc-act" catchtap="onLike">
+          <icon name="{{post.liked ? 'heart-on' : 'heart'}}" size="36"/>
+          <text class="pc-num {{post.liked ? 'pc-num-on' : ''}}">{{likeText}}</text>
+        </view>
+        <view class="pc-act" catchtap="onFav" wx:if="{{showFav}}">
+          <icon name="{{post.faved ? 'star-on' : 'star'}}" size="36"/>
+          <text class="pc-num {{post.faved ? 'pc-num-on' : ''}}">{{favText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

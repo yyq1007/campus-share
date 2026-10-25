@@ -1,0 +1,3 @@
+{
+ "_text": "Read 1 node(s) (29KB) — full data written to:\n  C:\\Users\\YQ\\AppData\\Local\\Temp\\.ardot\\reads\\batch_read-4_5-nj8q-20261024_211925409.jsonl\n\nJSONL, one JSON object per line: line 1 is metadata, then one line per requested node, then `_resolvedComponent` lines, then `_propertyMap` lines. Grep this file by node id for a single node, or read it with an offset/limit window.\n\nTop-level: 4:5 S5 AI问答 (FRAME)\nIssues:\n  - Some nodes do not have the specified properties will be omitted in the result"
+}

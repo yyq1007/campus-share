@@ -1,0 +1,167 @@
+<!--S4 详情页：白卡正文 + 轮播图集 + 字段卡 + 评论楼层 + 底部互动栏 -->
+<view class="page">
+  <!-- 自定义导航（返回 + 分享并排靠左，右侧留白避让微信系统胶囊） -->
+  <view class="nav" style="padding-top:{{statusBarH}}px">
+    <view class="nav-inner" style="height:{{navH}}px">
+      <view class="nav-btn" bind:tap="onBack">
+        <image class="nav-btn-icon" src="/assets/icons/arrow-left.png" mode="aspectFit" />
+      </view>
+      <view class="nav-btn nav-share">
+        <button class="share-btn" open-type="share" plain>
+          <image class="nav-btn-icon" src="/assets/icons/share.png" mode="aspectFit" />
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载 / 错误态 -->
+  <view wx:if="{{state === 'loading'}}" class="state-wrap">
+    <view class="skeleton card-skel" />
+    <view class="skeleton card-skel short" />
+  </view>
+  <view wx:elif="{{state === 'error'}}" class="state-wrap">
+    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <view class="state-text">加载失败了</view>
+    <button class="state-btn" bind:tap="onRetry">重试</button>
+  </view>
+  <view wx:elif="{{state === 'gone'}}" class="state-wrap">
+    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <view class="state-text">内容不存在或已删除</view>
+  </view>
+
+  <block wx:elif="{{post}}">
+    <!-- 图集（设计稿：全宽大图置顶） -->
+    <view class="gallery-wrap">
+      <!-- 图集：图片/视频同属一个轮播（高度随首图比例自适应，wx:key 用真实索引） -->
+      <swiper wx:if="{{post.mediaView.length > 1}}" class="gallery" style="{{post.galleryH ? 'height:' + post.galleryH + 'rpx' : ''}}" circular bindchange="onSwiperChange">
+        <swiper-item wx:for="{{post.mediaView}}" wx:key="index">
+          <image
+            wx:if="{{item.type === 'image'}}" class="gallery-img"
+            src="{{item.url}}" mode="aspectFill" data-idx="{{index}}" bind:tap="onPreview"
+          />
+          <video wx:else class="gallery-video" src="{{item.url}}" poster="{{item.poster}}" object-fit="contain" controls />
+        </swiper-item>
+      </swiper>
+      <block wx:if="{{post.mediaView.length === 1}}">
+        <image
+          wx:if="{{post.mediaView[0].type === 'image'}}"
+          class="gallery-img solo" src="{{post.mediaView[0].url}}" mode="widthFix"
+          data-idx="{{0}}" bind:tap="onPreview"
+        />
+        <video wx:else class="gallery-video" src="{{post.mediaView[0].url}}" poster="{{post.mediaView[0].poster}}" object-fit="contain" controls />
+      </block>
+      <view wx:if="{{post.mediaView.length > 1}}" class="gallery-dots">{{imgIdx + 1}}/{{post.mediaView.length}}</view>
+    </view>
+
+    <!-- 正文卡 -->
+    <view class="detail-card">
+      <view class="board-chip board-{{post.boardColor}}">
+        <icon name="{{post.boardSticker}}" size="26" />
+        <text>{{post.boardLabel}}</text>
+      </view>
+      <view class="detail-title">{{post.title}}</view>
+      <view class="detail-time">匿名 · {{post.timeText}}</view>
+
+      <!-- 正文 -->
+      <view class="detail-content">{{post.content}}</view>
+
+      <!-- 结构化字段（设计稿：浅紫底小标签） -->
+      <view wx:if="{{post.fieldChips.length}}" class="field-chips">
+        <view class="field-chip" wx:for="{{post.fieldChips}}" wx:key="label" data-value="{{item.value}}" bind:tap="onCopyField">{{item.label}}</view>
+      </view>
+      <view wx:if="{{post.fieldRows.length && false}}" class="field-card">
+        <view class="field-row" wx:for="{{post.fieldRows}}" wx:key="label" data-value="{{item.value}}" bind:tap="onCopyField">
+          <text class="field-label">{{item.label}}</text>
+          <text class="field-value">{{item.value}}</text>
+          <image class="field-copy" src="/assets/icons/copy.png" mode="aspectFit" />
+        </view>
+      </view>
+
+      <!-- 链接 -->
+      <view wx:if="{{post.link}}" class="link-card" bind:tap="onOpenLink">
+        <image class="link-card-icon" src="/assets/icons/link.png" mode="aspectFit" />
+        <view class="link-card-main">
+          <view class="link-card-host">{{post.linkHost}}</view>
+          <view class="link-card-tip">点击复制链接去浏览器打开</view>
+        </view>
+        <image class="link-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit" />
+      </view>
+      <!-- AI 引用卡（仅作者可见：别人的帖子不存在「你的分享」） -->
+      <view wx:if="{{post.isMine}}" class="ai-cite-card">
+        <icon name="ai-sparkle" size="30" />
+        <text class="ai-cite-text">你的分享被 AI 引用了 {{post.citedCount || 0}} 次</text>
+      </view>
+    </view>
+
+    <!-- 评论区 -->
+    <view class="comment-card">
+      <view class="comment-head">
+        <text class="comment-title">评论</text>
+        <text class="comment-num">{{commentTotal}}</text>
+      </view>
+      <view wx:if="{{!comments.length}}" class="comment-empty">还没有评论，来说第一句吧</view>
+      <view
+        wx:for="{{comments}}" wx:key="floor"
+        class="comment-row" data-floor="{{item.floor}}" data-id="{{item.id}}"
+        bind:longpress="onPickReply"
+      >
+        <view class="avatar avatar-{{item.avatarIdx}}">匿</view>
+        <view class="comment-main">
+          <view class="comment-meta">
+            <text class="comment-nick">匿名 #{{item.floor}}</text>
+            <text wx:if="{{item.mine}}" class="comment-mine">我</text>
+            <text class="comment-time">{{item.timeText}}</text>
+          </view>
+          <view class="comment-text">{{item.content}}</view>
+          <view class="comment-reply-btn" data-floor="{{item.floor}}" data-id="{{item.id}}" catch:tap="onPickReply">回复</view>
+          <!-- 二级回复 -->
+          <view wx:if="{{item.replies && item.replies.length}}" class="comment-replies">
+            <view class="comment-reply" wx:for="{{item.replies}}" wx:for-item="r" wx:key="id">
+              <view class="comment-reply-line">
+                <text class="comment-reply-name">匿名 #{{r.floor}}</text>
+                <text wx:if="{{r.replyToFloor}}" class="comment-reply-seg"> 回复 #{{r.replyToFloor}}：</text>
+                <text wx:else class="comment-reply-seg">：</text>
+                <text class="comment-reply-content">{{r.content}}</text>
+              </view>
+              <view class="comment-reply-time">{{r.timeText}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{commentHasMore}}" class="comment-more" bind:tap="onMoreComments">查看更多评论</view>
+    </view>
+    <view class="page-bottom-pad" />
+
+    <!-- 底部互动栏 -->
+    <view class="action-bar">
+      <view class="action-input">
+        <input
+          class="action-input-field" placeholder="说点什么…" placeholder-class="ph"
+          value="{{commentDraft}}" bindinput="onCommentInput"
+          confirm-type="send" bindconfirm="onSendComment"
+        />
+      </view>
+      <view class="action-item {{post.liked ? 'is-on' : ''}}" bind:tap="onLike">
+        <image class="action-icon" src="/assets/icons/{{post.liked ? 'heart-fill' : 'heart'}}.png" mode="aspectFit" />
+        <text class="action-num">{{post.likeShort}}</text>
+      </view>
+      <view class="action-item {{post.faved ? 'is-on-fav' : ''}}" bind:tap="onFav">
+        <image class="action-icon" src="/assets/icons/{{post.faved ? 'star-fill' : 'star'}}.png" mode="aspectFit" />
+        <text class="action-num">{{post.favShort}}</text>
+      </view>
+      <view wx:if="{{post.isMine}}" class="action-item" bind:tap="onDeletePost">
+        <image class="action-icon" src="/assets/icons/trash.png" mode="aspectFit" />
+      </view>
+      <view class="action-item" bind:tap="onReport">
+        <image class="action-icon" src="/assets/icons/flag.png" mode="aspectFit" />
+      </view>
+      <!-- 发送统一走键盘「发送」键（confirm-type=send + bindconfirm），不放第二个发送键 -->
+    </view>
+
+    <!-- 回复提示条 -->
+    <view wx:if="{{replyTo}}" class="reply-bar">
+      <text>回复 匿名 #{{replyTo.floor}}</text>
+      <image class="reply-close" src="/assets/icons/close.png" mode="aspectFit" bind:tap="onCancelReply" />
+    </view>
+  </block>
+</view>

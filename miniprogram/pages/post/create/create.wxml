@@ -1,0 +1,98 @@
+<!--S3 发帖页：软萌手账风。紫晕渐变底 + 白卡 48rpx + 胶囊按钮 + 板块糖果色 -->
+<view class="page">
+  <!-- 导航：取消 + 发布（并排靠左，右侧避让微信原生胶囊；间距 20rpx） -->
+  <view class="hero" style="padding-top:{{statusBarH}}px">
+    <view class="hero-nav" style="height:{{navH}}px">
+      <view class="nav-pill" bind:tap="onBack">取消</view>
+      <view class="nav-pill nav-pill-primary" bind:tap="onSubmit">{{submitting ? '发布中…' : '发布'}}</view>
+    </view>
+  </view>
+
+  <!-- 板块选择（设计稿：三个胶囊 chip，无卡片包裹） -->
+  <view class="board-pick">
+    <view class="board-row">
+      <view
+        wx:for="{{boards}}" wx:key="key"
+        class="board-pill board-{{item.color}} {{board === item.key ? 'is-on' : ''}}"
+        data-key="{{item.key}}" bind:tap="onBoardTap"
+      >{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 标题 + 正文 -->
+  <view class="card">
+    <view class="input-row">
+      <input
+        class="title-input" placeholder="标题"
+        placeholder-class="ph" value="{{title}}" maxlength="40"
+        bindinput="onTitle"
+      />
+      <text class="count {{titleCount >= 40 ? 'count-warn' : ''}}">{{titleCount}}/40</text>
+    </view>
+    <view class="divider" />
+    <textarea
+      class="content-input" placeholder="内容"
+      placeholder-class="ph" value="{{content}}" maxlength="2000"
+      auto-height bindinput="onContent"
+    />
+    <view wx:if="{{rejectMarks && rejectMarks.length}}" class="reject-tip">内容里有不允许发布的文字，请修改后再发布</view>
+    <view class="content-count">{{contentCount}}/2000</view>
+  </view>
+
+  <!-- 板块动态字段 -->
+  <view class="card" wx:if="{{fieldList.length}}">
+    <view class="card-title">补充信息 <text class="card-sub">（选填）</text></view>
+    <view class="field-row" wx:for="{{fieldList}}" wx:key="key">
+      <text class="field-label">{{item.label}}</text>
+      <input
+        class="field-input" type="{{item.type || 'text'}}"
+        placeholder="{{item.placeholder}}" placeholder-class="ph"
+        value="{{item.value}}" data-key="{{item.key}}" data-type="{{item.type}}"
+        bindinput="onField"
+      />
+    </view>
+  </view>
+
+  <!-- 链接（置于媒体卡之前：input 是原生组件层级最高，fixed 发布栏盖不住它，
+       放在页面末尾会穿透显示——页面最后必须是无原生组件的媒体卡） -->
+  <view class="card">
+    <view class="card-title">购买链接 <text class="card-sub">选填</text></view>
+    <view class="input-row">
+      <image class="link-icon" src="/assets/icons/link.png" mode="aspectFit" />
+      <input
+        class="field-input" placeholder="粘贴商品链接（http 开头）"
+        placeholder-class="ph" value="{{link}}" maxlength="200"
+        focus="{{linkFocus}}" bindinput="onLink" bindblur="onLinkBlur"
+      />
+    </view>
+  </view>
+
+  <!-- 媒体 -->
+  <view class="card">
+    <view class="card-title">图片 / 视频 <text class="card-sub">最多 6 张图，或 1 个视频</text></view>
+    <view class="media-grid">
+      <view class="media-cell" wx:for="{{media}}" wx:key="index">
+        <image
+          wx:if="{{item.type === 'image'}}" class="media-img"
+          src="{{item.localPath}}" mode="aspectFill"
+          data-idx="{{index}}" bind:tap="onPreviewImage"
+        />
+        <view wx:else class="media-video">
+          <image class="media-img" src="{{item.thumb}}" mode="aspectFill" />
+          <view class="video-duration">{{item.duration}}s</view>
+        </view>
+        <view class="media-remove" data-idx="{{index}}" catch:tap="onRemoveMedia">
+          <image class="media-remove-icon" src="/assets/icons/close.png" mode="aspectFit" />
+        </view>
+        <view wx:if="{{item.uploaded}}" class="media-uploaded">
+          <image class="media-ok-icon" src="/assets/icons/check.png" mode="aspectFit" />
+        </view>
+      </view>
+      <!-- 单一上传入口：点按后弹「图片 / 视频」选择 -->
+      <view wx:if="{{media.length < (mediaType === 'video' ? 1 : 6)}}" class="media-add" bind:tap="onAddMedia">
+        <image class="media-add-icon" src="/assets/icons/plus.png" mode="aspectFit" />
+        <text>添加图片 / 视频</text>
+      </view>
+    </view>
+  </view>
+</view>

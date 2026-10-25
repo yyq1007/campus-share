@@ -1,0 +1,90 @@
+/* 卡片自持样式（重要）：组件默认样式隔离，app.wxss 的 .card 类不生效——
+   白底/阴影必须在此显式声明，否则卡片透明、与页面渐变底无法区分。
+   3rpx 淡紫描边 + 白底 + 圆角 + 紫晕阴影，严格对齐参考图 */
+.pc {
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 2px solid var(--card-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 32rpx;
+}
+.pc-cover-wrap { position: relative; }
+.pc-cover {
+  width: 100%;
+  height: 446rpx;
+  display: block;
+  background: var(--bg-field);
+}
+.pc-play {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 96rpx; height: 96rpx;
+  border-radius: 50%;
+  background: var(--white-a90);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 8rpx;
+}
+.pc-expired {
+  position: absolute;
+  top: 20rpx; right: 20rpx;
+  background: var(--warn-bg);
+  color: var(--warn-fg, var(--warning-text));
+  font-size: 22rpx;
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+/* 状态角标（我的分享：审核中/已发布/已驳回/已下线） */
+.pc-status {
+  position: absolute;
+  top: 20rpx; left: 20rpx;
+  font-size: 22rpx;
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+.pc-status.st-published { background: var(--brand-100); color: var(--brand-700); }
+.pc-status.st-pending { background: var(--warn-bg); color: var(--warning-text); }
+.pc-status.st-rejected,
+.pc-status.st-hidden { background: var(--coral-bg); color: var(--coral-text); }
+.pc-status.st-expired { background: var(--warn-bg); color: var(--warning-text); }
+.pc-body { padding: 24rpx 28rpx 28rpx; }
+.pc-tags { margin-bottom: 12rpx; }
+.pc-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-1);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.pc-excerpt {
+  margin-top: 8rpx;
+  font-size: 30rpx;
+  line-height: 1.6;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.pc-meta {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pc-meta-left { font-size: 24rpx; color: var(--text-3); }
+.pc-actions { display: flex; gap: 32rpx; align-items: center; }
+.pc-act { display: flex; align-items: center; gap: 8rpx; }
+.pc-act-danger { font-size: 24rpx; color: var(--coral-text); }
+.pc-act-mute { font-size: 24rpx; color: var(--text-3); }
+.pc-num { font-size: 24rpx; color: var(--text-3); }
+.pc-num-on { color: var(--brand-700); font-weight: 600; }

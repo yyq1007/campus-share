@@ -1,0 +1,9 @@
+{
+  "name": "authDelete",
+  "version": "1.0.0",
+  "description": "账号注销（7 天冷静期，可撤销）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

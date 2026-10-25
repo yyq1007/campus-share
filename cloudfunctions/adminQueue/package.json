@@ -1,0 +1,9 @@
+{
+  "name": "adminQueue",
+  "version": "1.0.0",
+  "description": "审核台队列（待审/举报/已处理）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,262 @@
+@import "theme.wxss";
+
+/* ============================================================
+   全局样式 v4 软萌手账版
+   页面统一渐变底；标题圆体（KuaiLe，加载失败降级系统 600）
+   V-01：除 theme.wxss 外不出现十六进制色值
+   ============================================================ */
+page {
+  background: var(--bg-page);
+  min-height: 100vh;
+  font-size: 28rpx;
+  color: var(--text-1);
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+}
+
+/* 固定渐变背景层（background-attachment 在小程序无效，用固定层避免滚动不跟随） */
+.page-bg {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: var(--bg-gradient);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ---------- 标题字体 ---------- */
+.font-title {
+  font-family: "KuaiLe", -apple-system, "PingFang SC", sans-serif;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ---------- 页面通用 ---------- */
+.page-pad { padding: 0 40rpx; }
+.hairline { height: 1rpx; background: var(--border); }
+
+/* 大标题（首页页头 / 我的 / 邀请码） */
+.h-hero {
+  font-size: 44rpx;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-1);
+}
+/* 卡片标题 34rpx */
+.h-card {
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-1);
+}
+/* 列表行主文案 32rpx */
+.h-row {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-1);
+}
+/* 正文 30rpx */
+.p-body {
+  font-size: 30rpx;
+  line-height: 1.75;
+  color: var(--text-1);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+/* 摘要 30rpx 两行 */
+.p-excerpt {
+  font-size: 30rpx;
+  line-height: 1.6;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+/* 辅助信息 24rpx */
+.p-meta { font-size: 24rpx; color: var(--text-3); }
+
+/* ---------- 白卡 ---------- */
+.card {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card);
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow-card);
+}
+
+/* ---------- FAB「发一条」---------- */
+.fab {
+  position: fixed;
+  right: 32rpx;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112rpx;
+  height: 112rpx;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--brand-700);
+  color: var(--text-on-brand);
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: var(--shadow-fab);
+}
+.fab-tab { bottom: calc(196rpx + env(safe-area-inset-bottom)); }
+.fab-page { bottom: calc(48rpx + env(safe-area-inset-bottom)); }
+.fab-icon { width: 32rpx; height: 32rpx; }
+
+/* ---------- 骨架屏（--bg-field 圆角块，1.2s 呼吸） ---------- */
+.sk {
+  background: var(--bg-field);
+  border-radius: 32rpx;
+  animation: sk-breath 1.2s ease-in-out infinite;
+}
+@keyframes sk-breath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* ---------- 我的页菜单行 ---------- */
+.menu-cell {
+  display: flex;
+  align-items: center;
+  height: 104rpx;
+  padding: 0 32rpx;
+}
+.menu-cell-title { flex: 1; font-size: 30rpx; color: var(--text-1); font-weight: 500; }
+.menu-cell-value { font-size: 24rpx; color: var(--text-3); margin-right: 8rpx; }
+.menu-cell .arrow { width: 32rpx; height: 32rpx; }
+.cell-divider { height: 1rpx; background: var(--border); margin: 0 32rpx; }
+
+/* 红点 / 数字角标 */
+.dot {
+  width: 16rpx; height: 16rpx;
+  border-radius: 50%;
+  background: var(--coral);
+  margin-left: 12rpx;
+}
+.badge-num {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  border-radius: var(--radius-pill);
+  background: var(--coral-bg);
+  color: var(--coral-text);
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12rpx;
+}
+
+/* ---------- AI 对话气泡 ---------- */
+.bubble-ai {
+  background: var(--bg-elevated);
+  border: 1rpx solid var(--border);
+  border-radius: 24rpx;
+  border-top-left-radius: 8rpx;
+  padding: 24rpx 28rpx;
+  font-size: 30rpx;
+  line-height: 1.7;
+  color: var(--text-1);
+  box-shadow: var(--shadow-card);
+}
+.bubble-user {
+  background: var(--brand-700);
+  color: var(--text-on-brand);
+  border-radius: 24rpx;
+  border-top-right-radius: 8rpx;
+  padding: 20rpx 28rpx;
+  font-size: 30rpx;
+  line-height: 1.6;
+}
+
+/* 打字机三点动画 */
+.typing { display: flex; gap: 10rpx; padding: 8rpx 0; }
+.typing-dot {
+  width: 14rpx; height: 14rpx; border-radius: 50%;
+  background: var(--brand-300);
+  animation: typing-jump 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing-jump {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-10rpx); }
+}
+
+/* ---------- 站内消息卡 ---------- */
+.msg-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card);
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+.msg-card-unread { background: var(--brand-50); }
+.msg-unread-dot {
+  position: absolute;
+  top: 20rpx; right: 20rpx;
+  width: 14rpx; height: 14rpx;
+  border-radius: 50%;
+  background: var(--coral);
+}
+
+/* ---------- 板块贴纸（糖果色圆角块 + 白线图标） ---------- */
+.sticker {
+  width: 96rpx; height: 96rpx;
+  border-radius: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sticker-mint { background: var(--mint); }
+.sticker-coral { background: var(--coral); }
+.sticker-sun { background: var(--sun); }
+.sticker-sky { background: var(--sky); }
+.sticker .icon { width: 52rpx; height: 52rpx; }
+
+/* ---------- 板块标签 ---------- */
+.board-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 22rpx;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  padding: 6rpx 20rpx;
+}
+.board-life { background: var(--board-life-bg); color: var(--board-life-text); }
+.board-study { background: var(--board-study-bg); color: var(--board-study-text); }
+.board-food { background: var(--board-food-bg); color: var(--board-food-text); }
+
+/* ---------- 底部安全区 ---------- */
+.safe-bottom { padding-bottom: calc(48rpx + env(safe-area-inset-bottom)); }
+.tab-page-bottom { padding-bottom: calc(200rpx + env(safe-area-inset-bottom)); }
+
+/* ---------- 表单 ---------- */
+.field-area {
+  background: var(--bg-field);
+  border-radius: 32rpx;
+  padding: 24rpx;
+  font-size: 30rpx;
+  line-height: 1.7;
+  color: var(--text-1);
+  width: 100%;
+  box-sizing: border-box;
+}
+.input-placeholder { color: var(--text-3); }
+
+/* 离线提示条 */
+.offline-bar {
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: var(--warning-text);
+  background: var(--warning-bg);
+}

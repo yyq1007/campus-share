@@ -1,0 +1,33 @@
+.ps { padding: 32rpx; }
+.ps-center {
+  padding: 140rpx 64rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+.ps-main { font-size: 30rpx; font-weight: 600; color: var(--text-1); margin-top: 12rpx; }
+.ps-sub { font-size: 24rpx; color: var(--text-3); }
+.ps-btn { padding: 18rpx 56rpx; margin-top: 16rpx; }
+.ps-pad { padding: 32rpx; display: flex; flex-direction: column; gap: 20rpx; }
+
+/* 骨架 */
+.sk-cover { width: 100%; height: 400rpx; margin-bottom: 20rpx; }
+.sk-line { height: 32rpx; margin-top: 16rpx; }
+.sk-hero { width: 100%; height: 560rpx; border-radius: 0; }
+.sk-bubble { height: 88rpx; margin-bottom: 24rpx; }
+.sk-right { margin-left: auto; }
+
+/* 慢加载提示（loading 超 6s 显示） */
+.ps-slow { margin-top: 32rpx; text-align: center; }
+.ps-slow-text { font-size: 24rpx; color: var(--text-3); }
+.ps-slow-retry {
+  display: inline-block;
+  margin-top: 20rpx;
+  padding: 14rpx 44rpx;
+  font-size: 26rpx;
+  color: var(--primary);
+  background: var(--bg-elevated);
+  border-radius: 999rpx;
+  box-shadow: var(--shadow-soft);
+}

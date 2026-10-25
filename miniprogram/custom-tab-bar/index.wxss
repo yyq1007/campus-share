@@ -1,0 +1,30 @@
+.tab-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  /* 高度只含图标行；安全区只由 padding-bottom 承担一次（此前 height+padding 双算，
+     多出一截白底延伸到屏幕底外） */
+  height: 100rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+  /* custom-tab-bar 独立于页面渲染，page 上的 CSS 变量在部分环境拿不到：
+     全部 var() 带同值兜底（与 theme.wxss 同步），保证背景永远不透明 */
+  background: var(--bg-elevated, #FFFFFF);
+  box-shadow: 0 -8rpx 32rpx var(--brand-a06, rgba(108, 92, 231, 0.06));
+  z-index: 100;
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+}
+.tab-text {
+  font-size: 22rpx;
+  color: var(--text-2, #6B6780);
+}
+.tab-item.on .tab-text { color: var(--brand-800, #5A47C9); font-weight: 600; }
+/* 发布项与普通项一致（示意图：无凸起圆钮） */
+.tab-publish-text { color: var(--text-2, #6B6780); font-weight: 500; }

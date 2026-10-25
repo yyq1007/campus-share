@@ -1,0 +1,88 @@
+/* 邀请码页 —— v4 令牌（规格 6.10） */
+.page {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+}
+.nav-inner { display: flex; }
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 180rpx 64rpx 0;
+}
+.deco { width: 200rpx; height: 200rpx; }
+.title {
+  margin-top: 32rpx;
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.sub {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: var(--text-soft);
+  text-align: center;
+}
+.card {
+  width: 100%;
+  margin-top: 64rpx;
+  padding: 48rpx 40rpx;
+  background: var(--bg-elevated);
+  border-radius: 48rpx;
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+}
+.code-input {
+  height: 96rpx;
+  padding: 0 32rpx;
+  font-size: 36rpx;
+  font-weight: 600;
+  letter-spacing: 20rpx;
+  /* 字距使居中视觉偏右，用负缩进补偿最后一个字符的字距 */
+  text-indent: 20rpx;
+  text-align: center;
+  color: var(--text-strong);
+  background: var(--fill-soft);
+  border-radius: 32rpx;
+  box-sizing: border-box;
+}
+.ph { color: var(--text-faint); font-weight: 400; letter-spacing: 0; text-indent: 0; }
+.error {
+  height: 40rpx;
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  color: var(--coral);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.error.show { opacity: 1; }
+.submit-btn {
+  margin-top: 8rpx;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-on-brand);
+  background: var(--primary);
+  border-radius: 999rpx;
+  opacity: 0.45;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+.submit-btn.ready { opacity: 1; box-shadow: 0 12rpx 28rpx var(--brand-a35); }
+.submit-btn::after { border: none; }
+.shake { animation: shake-x 0.45s ease; }
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-16rpx); }
+  40% { transform: translateX(14rpx); }
+  60% { transform: translateX(-10rpx); }
+  80% { transform: translateX(6rpx); }
+}
+.about-link {
+  margin-top: 48rpx;
+  font-size: 22rpx;
+  color: var(--primary);
+}

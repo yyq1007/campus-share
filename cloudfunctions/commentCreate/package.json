@@ -1,0 +1,9 @@
+{
+  "name": "commentCreate",
+  "version": "1.0.0",
+  "description": "发表评论/回复（楼层原子自增）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

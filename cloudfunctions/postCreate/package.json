@@ -1,0 +1,9 @@
+{
+  "name": "postCreate",
+  "version": "1.0.0",
+  "description": "发帖（含 L1 敏感词拦截、内容安全、幂等）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,109 @@
+@import "theme.wxss";
+
+/* ============ 基础重置 ============ */
+view, text, input, textarea, scroll-view, image, button { box-sizing: border-box; }
+page {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  color: var(--text-1);
+  font-size: var(--fs-body);
+  background: linear-gradient(180deg, var(--bg-page) 0%, var(--bg-end) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+.title-font { font-family: "KuaiLe", -apple-system, "PingFang SC", sans-serif; font-weight: 600; }
+
+/* ============ 页面容器 ============ */
+.page {
+  min-height: 100vh;
+  padding: 0 var(--gap-page) calc(140rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* ============ 白卡 ============ */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  padding: 28rpx;
+}
+
+/* ============ 按钮（仅三种形态） ============ */
+.btn-primary {
+  height: 88rpx; line-height: 88rpx; border-radius: var(--r-chip);
+  background: var(--brand-700); color: #fff; font-size: var(--fs-body);
+  text-align: center; font-weight: 600; border: none;
+}
+.btn-primary[disabled] { background: var(--brand-200); color: #fff; }
+.btn-secondary {
+  height: 88rpx; line-height: 88rpx; border-radius: var(--r-chip);
+  background: #fff; color: var(--brand-800); font-size: var(--fs-body);
+  text-align: center; font-weight: 600; border: 2rpx solid var(--border-strong);
+}
+.text-btn { color: var(--brand-800); font-size: var(--fs-caption); background: none; }
+
+/* ============ Chip ============ */
+.chip {
+  display: inline-flex; align-items: center; height: 56rpx; padding: 0 28rpx;
+  border-radius: var(--r-chip); font-size: var(--fs-caption); line-height: 1;
+  background: var(--bg-field); color: var(--text-2); border: 2rpx solid var(--border-strong);
+}
+.chip--on {
+  background: var(--brand-700); color: #fff; border-color: var(--brand-700); font-weight: 600;
+}
+
+/* 板块标签（生活/学习/美食） */
+.board-chip {
+  display: inline-flex; align-items: center; height: 44rpx; padding: 0 20rpx;
+  border-radius: var(--r-chip); font-size: var(--fs-meta); line-height: 1; font-weight: 600;
+}
+.board-chip--life  { background: var(--board-life-bg);  color: var(--board-life-fg); }
+.board-chip--study { background: var(--board-study-bg); color: var(--board-study-fg); }
+.board-chip--food  { background: var(--board-food-bg);  color: var(--board-food-fg); }
+
+/* ============ 输入框 ============ */
+.field {
+  background: var(--bg-field); border-radius: var(--r-field);
+  padding: 0 28rpx; height: 96rpx; font-size: var(--fs-body); color: var(--text-1);
+}
+.field::placeholder { color: var(--text-disabled); }
+
+/* ============ 骨架屏 ============ */
+.skeleton {
+  background: var(--bg-field); border-radius: var(--r-img);
+  animation: sk 1.2s ease-in-out infinite;
+}
+@keyframes sk { 0%,100% { opacity: 1 } 50% { opacity: .5 } }
+
+/* ============ 空态 ============ */
+.empty { display: flex; flex-direction: column; align-items: center; padding: 120rpx 0; }
+.empty__icon { width: 200rpx; height: 200rpx; margin-bottom: 24rpx; opacity: .6; }
+.empty__title { font-size: var(--fs-body); color: var(--text-2); margin-bottom: 12rpx; }
+.empty__sub { font-size: var(--fs-meta); color: var(--text-3); }
+
+/* ============ 自定义导航占位 ============ */
+.nav-spacer { width: 180rpx; }  /* 右侧留给胶囊 */
+
+/* ============ 悬浮发布按钮 FAB ============ */
+.fab {
+  position: fixed; right: 32rpx;
+  bottom: calc(112rpx + env(safe-area-inset-bottom) + 16rpx);
+  height: 88rpx; padding: 0 36rpx; border-radius: var(--r-fab);
+  background: var(--brand-700); color: #fff; font-size: var(--fs-body); font-weight: 600;
+  display: flex; align-items: center; gap: 8rpx;
+  box-shadow: 0 12rpx 32rpx rgba(108, 92, 231, .35);
+  z-index: 50;
+}
+.fab--plain { bottom: calc(32rpx + env(safe-area-inset-bottom)); }
+
+/* ============ 匿名头像 ============ */
+.avatar {
+  width: 72rpx; height: 72rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 30rpx; font-weight: 600;
+}
+
+/* ============ 一屏一处主色提醒：除主按钮/FAB/选中态，其余用 brand-100 底 + brand-800 字 ============ */
+.soft-tag {
+  background: var(--brand-100); color: var(--brand-800);
+  border-radius: var(--r-chip); font-size: var(--fs-meta); padding: 6rpx 18rpx;
+}
