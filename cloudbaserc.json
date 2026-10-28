@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
+  "envId": "qqq-d7g05y68803d5476c",
+  "functionRoot": "cloudfunctions",
+  "functions": [
+    {
+      "name": "taskVectorize",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 定时任务（向量重建）"
+    }
+  ]
+}

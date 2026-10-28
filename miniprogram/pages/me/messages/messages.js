@@ -88,10 +88,13 @@ Page({
       const res = await api.messageReadAll()
       const list = this.data.list.map(m => ({ ...m, read: true }))
       const left = res.unread || 0
+      // ⚠️ 各 Tab 未读数用服务端返回的 counts，不要硬编码 0
+      // （服务端 meMessageRead 现在会返回 counts，口径与 meList 一致）
+      const counts = res.counts || { all: left, comment: 0, social: 0 }
       this.setData({
         list,
         unread: left,
-        counts: { all: left, comment: 0, social: 0 }
+        counts
       })
       toast('已全部标记已读')
     } catch (e) {
@@ -106,7 +109,12 @@ Page({
     if (!m.read) {
       this.setData({ [`list[${idx}].read`]: true })
       api.messageRead(m.id).then(res => {
-        this.setData({ unread: res.unread || 0 })
+        // 服务端返回分类未读数 → 同步更新角标（不再只更总数）
+        const left = res.unread || 0
+        this.setData({
+          unread: left,
+          counts: res.counts || { all: left, comment: 0, social: 0 }
+        })
       }).catch(() => {})
     }
     // 环境契约：跳转用 refId（非 postId）

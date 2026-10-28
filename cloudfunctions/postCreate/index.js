@@ -136,8 +136,12 @@ exports.main = withAuth(async (event, ctx) => {
     }
     if (!old || old.authorUid !== ctx.uid) return fail(40301);
 
-    (old.media || []).forEach((m) => incRef(m.fileId, -1));
-    cleanMedia.forEach((m) => incRef(m.fileId, 1));
+    // ⚠️ 必须 await：SCF 返回后容器会冻结，未 await 的异步调用可能丢失执行，
+    //    导致 refCount 没加上去 → 帖子图片被 taskCleanup 当垃圾删掉（线上裂图）
+    await Promise.all([
+      ...(old.media || []).map((m) => incRef(m.fileId, -1)),
+      ...cleanMedia.map((m) => incRef(m.fileId, 1)),
+    ]);
 
     await coll(COL.posts).doc(editPostId).update({
       data: Object.assign({}, payload, {
@@ -145,6 +149,9 @@ exports.main = withAuth(async (event, ctx) => {
         publishedAt: status === 'published' ? now : old.publishedAt,
         rejectReason: '',
         hideReason: '',
+        // ⚠️ 内容改了 → 旧向量失效，重置标记让 taskVectorize 重新向量化（B12）
+        embedded: false,
+        aiStructured: false,
       }),
     });
     return ok({ postId: editPostId, shortId: old.shortId, status, riskLevel: payload.risk.level });
@@ -162,12 +169,17 @@ exports.main = withAuth(async (event, ctx) => {
     publishedAt: status === 'published' ? now : null,
     createdAt: db.serverDate(),
     aiStructured: false,
+    // ⚠️ 向量化状态标记（B12）：aiEmbed 成功后置 true。
+    // taskVectorize 靠它定位「还没向量化」的帖子，
+    // 否则已向量化的帖子会一直占着扫描名额 → 旧帖子永远轮不到。
+    embedded: false,
   });
 
   const add = await coll(COL.posts).add({ data: doc });
   const postId = add._id;
 
-  cleanMedia.forEach((m) => incRef(m.fileId, 1));
+  // ⚠️ 必须 await（原因同编辑分支）：否则 refCount 加不上 → 图片被误删
+  await Promise.all(cleanMedia.map((m) => incRef(m.fileId, 1)));
 
   // 待审入队
   if (status === 'pending') {

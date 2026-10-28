@@ -136,6 +136,20 @@ Page({
     try {
       await this.fetchList(false)
     } catch (e) {
+      // ⚠️ 这里不动 state：保持 'success' 才能让用户再次触底时继续重试。
+      // 失败提示条做成了可点击（onLoadMoreRetry），文案与实际重试方式保持一致。
+      this.setData({ loadMoreError: true })
+    }
+    this.setData({ loadingMore: false })
+  },
+
+  /** 点击「加载失败」提示条 → 立即重试加载下一页 */
+  async onLoadMoreRetry() {
+    if (this.data.loadingMore || !this.data.hasMore) return
+    this.setData({ loadingMore: true, loadMoreError: false })
+    try {
+      await this.fetchList(false)
+    } catch (e) {
       this.setData({ loadMoreError: true })
     }
     this.setData({ loadingMore: false })

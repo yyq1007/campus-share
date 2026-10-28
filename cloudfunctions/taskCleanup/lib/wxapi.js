@@ -12,9 +12,10 @@ function isUnavailable(err) {
 }
 
 function strictMode() {
-  // 未拿到已开通内容安全能力的 AppID 前，默认 lenient：
-  // 接口不可用不误伤作者，risk.source 记为 local；上线前必须改为 strict。
-  return String(process.env.MODERATION_MODE || 'lenient') === 'strict';
+  // 默认 strict：内容安全接口不可用时转人工复核（review），不直接放行。
+  // 如需临时放宽（如尚未开通内容安全能力的开发阶段），
+  // 在云函数环境变量里设 MODERATION_MODE=lenient 即可覆盖。
+  return String(process.env.MODERATION_MODE || 'strict') === 'strict';
 }
 
 /** 文本检测：pass / review / risky */

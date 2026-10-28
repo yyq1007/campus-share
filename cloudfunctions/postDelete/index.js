@@ -1,5 +1,5 @@
 /** postDelete（9.7）：软删 + 评论一并置删 + 媒体引用计数回收 */
-const { coll, _, COL, db } = require('./lib/db');
+const { coll, _, COL, db, batchUpdate } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth } = require('./lib/auth');
 const { incRef } = require('./lib/mediahelper');
@@ -23,7 +23,9 @@ exports.main = withAuth(async (event, ctx) => {
   });
 
   try {
-    await coll(COL.comments).where({ postId }).update({ data: { status: 'deleted' } });
+    // ⚠️ 单次 where().update() 上限约 100 条 → 热门帖评论超 100 条时
+    // 剩下的评论不会被置删（删了帖但评论还挂着）。改用分批更新。
+    await batchUpdate(COL.comments, { postId }, { status: 'deleted' });
   } catch (e) { /* ignore */ }
 
   await Promise.all((post.media || []).map((m) => incRef(m.fileId, -1).catch(() => {})));

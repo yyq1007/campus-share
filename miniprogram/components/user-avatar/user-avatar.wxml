@@ -1,9 +1,0 @@
-<view class="ua" style="width:{{size}}rpx;height:{{size}}rpx" bindtap="onTap">
-  <image wx:if="{{avatar}}" class="ua-img" src="{{avatar}}" mode="aspectFill" />
-  <view wx:else class="ua-default ua-{{idx}}">
-    <text class="ua-char" style="font-size:{{size * 0.44}}rpx">匿</text>
-  </view>
-  <view wx:if="{{editable}}" class="ua-edit" style="width:{{size * 0.3}}rpx;height:{{size * 0.3}}rpx">
-    <icon name="camera-white" size="{{size * 0.18}}"/>
-  </view>
-</view>

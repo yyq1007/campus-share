@@ -4,8 +4,6 @@
     <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">
       <icon name="play-white" size="36"/>
     </view>
-    <view wx:if="{{post.expired}}" class="pc-expired">可能已过期</view>
-    <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
   </view>
   <view class="pc-body">
     <view class="pc-tags" wx:if="{{showBoard}}">
@@ -28,4 +26,8 @@
       </view>
     </view>
   </view>
+  <!-- 状态角标：挂在卡片层（不是封面层）→ 无封面图时也不会压到标题上 -->
+  <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
+  <!-- 过期提示：同样挂卡片层，且在状态角标左侧（避免两个角标重叠） -->
+  <view wx:if="{{post.expired}}" class="pc-expired">可能已过期</view>
 </view>

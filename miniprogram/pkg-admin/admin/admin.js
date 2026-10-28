@@ -71,7 +71,11 @@ Page({
     const list = raw.map(x => {
       const first = (x.media || [])[0] || {}
       const cover = coverMap[first.fileId] || coverMap[first.posterFileId] || ''
-      const aiText = AI_LABEL[x.aiLabel] || (x.aiLabel === '用户举报' ? '用户举报' : '') || x.doneText
+      // ⚠️ 兜底文案要用本地方法 this.doneText(x) 算，
+      // 不能用 x.doneText —— 那是云函数出参里的字段，不存在时恒为 undefined，
+      // 写成 `|| x.doneText` 等于没兜底（aiTag 会是空串）。
+      const doneText = this.doneText(x)
+      const aiText = AI_LABEL[x.aiLabel] || (x.aiLabel === '用户举报' ? '用户举报' : '') || doneText
       return {
         ...x,
         id: x.queueId,
@@ -81,7 +85,7 @@ Page({
         aiTag: aiText,
         reportReason: x.reporterReason || '',
         timeText: timeAgo(this.data.tab === 'done' ? (x.handledAt || x.createdAt) : x.createdAt),
-        doneText: this.doneText(x)
+        doneText
       }
     })
     this.setData({
@@ -126,12 +130,17 @@ Page({
     const id = e.currentTarget.dataset.id
     // 举报 Tab：驳回 = 举报不成立（内容保留）→ action=ignore
     const isReport = this.data.tab === 'report'
-    const res = await new Promise(r => {
+    // ⚠️ 变量名不能与外层 Promise 的 resolve 同名：
+    //    写成 success: r => r(...) 会用 showModal 的 result 遮蔽 resolve，
+    //    调用时抛 "r is not a function" → Promise 永不 settle → await 永久挂起
+    //    → 表现为「点了驳回没反应、多次点都没用」。
+    const res = await new Promise(resolve => {
       wx.showModal({
         title: isReport ? '驳回举报理由' : '驳回原因',
         editable: true,
         placeholderText: isReport ? '说明举报不成立的原因' : '填写驳回原因（仅审核可见）',
-        success: r => r(r.confirm ? (r.content || (isReport ? '举报不成立' : '不符合社区规范')) : false)
+        success: (r) => resolve(r.confirm ? (r.content || (isReport ? '举报不成立' : '不符合社区规范')) : false),
+        fail: () => resolve(false)
       })
     })
     if (res === false) return
@@ -140,12 +149,14 @@ Page({
 
   async onHide(e) {
     const id = e.currentTarget.dataset.id
-    const res = await new Promise(r => {
+    // 同 onReject：变量名不能遮蔽 resolve
+    const res = await new Promise(resolve => {
       wx.showModal({
         title: '下线原因',
         editable: true,
         placeholderText: '填写下线原因（将通知作者）',
-        success: r => r(r.confirm ? (r.content || '违反社区规范') : false)
+        success: (r) => resolve(r.confirm ? (r.content || '违反社区规范') : false),
+        fail: () => resolve(false)
       })
     })
     if (res === false) return
@@ -154,10 +165,21 @@ Page({
 
   async act(action, queueId, okMsg, reason) {
     if (this.data.acting) return
+    if (!queueId) {
+      // 队列 ID 丢了（data-id 没绑上 / 字段名不对）→ 明确报错，别静默失败
+      toast('缺少审核项 ID，操作失败')
+      return
+    }
     this.setData({ acting: true })
     try {
-      await api.adminReview(queueId, action, reason)
-      toast(okMsg)
+      const res = await api.adminReview(queueId, action, reason)
+      // 云函数在「队列已改、目标内容更新失败」时返回 ok 但带 warning，
+      // 这里必须提示出来，否则界面会以为处理成功而实际没生效
+      if (res && res.ok === false && res.warning) {
+        toast(res.warning)
+      } else {
+        toast(okMsg)
+      }
       // 本地移除并扣减计数
       const list = this.data.list.filter(x => x.queueId !== queueId)
       const counts = { ...this.data.counts }
@@ -166,6 +188,8 @@ Page({
       this.setData({ list, counts, state: list.length ? 'success' : 'empty' })
     } catch (err) {
       toast((err && err.msg) || '操作失败')
+      // 失败后重新拉一次队列：可能已被别人处理过，本地列表是脏的
+      this.fetchList(true).catch(() => {})
     } finally {
       this.setData({ acting: false })
     }

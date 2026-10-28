@@ -7,7 +7,7 @@ const { cloud, coll, COL, db, _ } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth } = require('./lib/auth');
 const { imgSecCheck } = require('./lib/wxapi');
-const { belongsTo, isAvatar, registerMedia } = require('./lib/mediahelper');
+const { belongsTo, isAvatar, registerMedia, deriveCheckFileId } = require('./lib/mediahelper');
 const { getConfig } = require('./lib/config');
 const rate = require('./lib/rate');
 const msg = require('./lib/msg');
@@ -45,7 +45,14 @@ exports.main = withAuth(async (event, ctx) => {
   if (!fileId) return fail(40001, '缺少头像文件');
   if (!belongsTo(fileId, ctx.uid) || !isAvatar(fileId)) return fail(40401, '头像文件不存在或不属于你');
 
-  const checkFileId = String(event.checkFileId || '').trim() || fileId;
+  // ⚠️ 送审图由服务端从 fileId 推导，不接受客户端传的 checkFileId。
+  //    客户端若可指定送审图，就能拿干净图骗过审核、把违规头像放行。
+  //    推导规则与前端上传约定一致（miniprogram/utils/media.js）：
+  //      帖子图片 p/{ym}/{uid}/{rand}.jpg  → p/{ym}/{uid}/{rand}_c.jpg
+  //      头像     avatar/{uid}/{ts}.jpg   → 只有一张，没有 _c 版本
+  //    头像场景没有 _c 文件 → 推导结果退回审原图（下面 download 失败会兜底）。
+  const derived = deriveCheckFileId(fileId, 'image');
+  const checkFileId = derived || fileId;
 
   // 先写 pending，保证前端立即可见
   // ⚠️ 必须用 _.set 整体替换：avatar 现值可能是 null，嵌套展开写法（avatar.fileId）
@@ -59,9 +66,20 @@ exports.main = withAuth(async (event, ctx) => {
     console.error('[meUpdateProfile] pending write failed', e && (e.errMsg || e.message));
     return fail(50001, '服务异常:' + (e && (e.errMsg || e.message) || '写库失败'));
   }
-  await registerMedia({ fileId, uid: ctx.uid, type: 'image', checkStatus: 'pending', checkSource: 'avatar' });
+  await registerMedia({ fileId, uid: ctx.uid, type: 'image', checkStatus: 'pending', checkSource: 'avatar', inUse: true });
 
-  const buf = await download(checkFileId);
+  // 送审图下载失败时退回审原图（头像只有一张图，没有 _c 版本）
+  let buf = null;
+  try {
+    buf = await download(checkFileId);
+  } catch (e) {
+    console.warn('[meUpdateProfile] 送审图下载失败，退回审原图:', e && (e.errMsg || e.message));
+    try {
+      buf = await download(fileId);
+    } catch (e2) {
+      console.error('[meUpdateProfile] 原图也读不到', e2 && (e2.errMsg || e2.message));
+    }
+  }
   if (!buf || !buf.length || buf.length > MAX_BYTES) {
     // 读不到/超限：保留 pending，不阻断使用
     return ok({ avatar: { fileId, status: 'pending' }, degraded: true });
@@ -78,7 +96,7 @@ exports.main = withAuth(async (event, ctx) => {
       // 二次更新失败不阻断：头像已 pending 可见，等待下次复审/重试
       console.error('[meUpdateProfile] pass write failed', e && (e.errMsg || e.message));
     }
-    await registerMedia({ fileId, uid: ctx.uid, type: 'image', size: buf.length, checkStatus: 'pass', checkSource: 'wx' });
+    await registerMedia({ fileId, uid: ctx.uid, type: 'image', size: buf.length, checkStatus: 'pass', checkSource: 'wx', inUse: true });
     return ok({ avatar: { fileId, status: 'pass' } });
   }
 

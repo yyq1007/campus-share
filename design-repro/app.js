@@ -46,8 +46,8 @@ App({
       { id: 'p2', board: 'study', boardName: '学习', title: '高数期末抱佛脚指南',
         body: '把近三年真题按题型拆开刷，计算题每天 2 套，最后三天只背公式卡。',
         imgs: ['#E7F1FF'], time: '1天前', like: 28, fav: 9, comment: 5, expired: false },
-      { id: 'p3', board: 'food',  boardName: '美食', title: '宿舍楼下新开的炸鸡，
-        闭眼冲', body: '蒜香无骨鸡柳绝了，15 块一大份，一个人吃撑。', imgs: [],
+      { id: 'p3', board: 'food',  boardName: '美食', title: '宿舍楼下新开的炸鸡，闭眼冲',
+        body: '蒜香无骨鸡柳绝了，15 块一大份，一个人吃撑。', imgs: [],
         time: '5小时前', like: 6, fav: 1, comment: 0, expired: false }
     ];
   }

@@ -1,0 +1,89 @@
+/* 协议页样式：沿用 theme.wxss 令牌，零硬编码色值 */
+.page {
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+
+/* ---------- 导航 ---------- */
+.nav {
+  width: 100%;
+  background: var(--bg-elevated);
+  box-shadow: var(--brand-a04);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24rpx;
+}
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+}
+.nav-btn-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+.nav-title {
+  font-size: var(--fs-h4);
+  font-weight: 600;
+  color: var(--text-1);
+}
+.nav-ph {
+  width: 64rpx;
+}
+
+/* ---------- 正文 ---------- */
+.doc-meta {
+  padding: 24rpx 32rpx 8rpx;
+  font-size: var(--fs-caption);
+  color: var(--text-faint);
+}
+
+.doc-card {
+  margin: 16rpx 24rpx 24rpx;
+}
+
+.doc-h {
+  font-size: var(--fs-body-l);
+  font-weight: 600;
+  color: var(--text-1);
+  margin-top: 32rpx;
+  margin-bottom: 12rpx;
+  line-height: 1.5;
+}
+
+.doc-p {
+  font-size: var(--fs-body-m);
+  color: var(--text-body);
+  line-height: 1.8;
+  margin-bottom: 16rpx;
+  word-break: break-word;
+}
+
+/* 首个标题不额外上间距 */
+.doc-card .doc-h:first-child {
+  margin-top: 0;
+}
+
+.foot-note {
+  text-align: center;
+  font-size: var(--fs-caption);
+  color: var(--text-faint);
+  padding: 8rpx 0 24rpx;
+}
+
+.doc-actions {
+  padding: 8rpx 32rpx 0;
+}
+.agree-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  font-weight: 600;
+}

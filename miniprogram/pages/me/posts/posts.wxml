@@ -20,7 +20,7 @@
     </view>
   </scroll-view>
 
-  <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}" state="{{state}}" bind:retry="onRetry" bind:action="onFab" actionText="去发一条" />
+  <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}" state="{{state}}" bind:retry="onRetry" bind:action="onFab" btnText="去发一条" />
 
   <scroll-view wx:else scroll-y class="list" bindscrolltolower="onMore">
     <view class="feed">

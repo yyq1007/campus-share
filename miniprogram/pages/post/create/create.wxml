@@ -71,7 +71,7 @@
   <view class="card">
     <view class="card-title">图片 / 视频 <text class="card-sub">最多 6 张图，或 1 个视频</text></view>
     <view class="media-grid">
-      <view class="media-cell" wx:for="{{media}}" wx:key="index">
+      <view class="media-cell" wx:for="{{media}}" wx:key="lid">
         <image
           wx:if="{{item.type === 'image'}}" class="media-img"
           src="{{item.localPath}}" mode="aspectFill"

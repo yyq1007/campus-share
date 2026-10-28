@@ -18,6 +18,7 @@ const DEFAULTS = {
     maxVideoMB: 30,
     videoSeconds: 60,
     avatarPerHour: 3,
+    loginPer10min: 5,
   },
   hot: { like: 3, fav: 4, comment: 5, cite: 6, gravity: 1.5, expireDays: 90 },
   ai: { model: 'local-rag', topK: 5, minScore: 0.18, dailyBudget: 500, enabled: false },

@@ -49,24 +49,49 @@ Page({
   },
 
   async fetchList(reset) {
-    if (reset) this.setData({ cursor: null })
+    // 请求序号：快速切 tab 会并发多个请求，只有最后一次的结果才该落地，
+    // 否则先发的请求后到 → 用旧 tab 的数据覆盖当前 tab（列表与 tab 不一致）
+    this._reqSeq = (this._reqSeq || 0) + 1
+    const seq = this._reqSeq
+
+    if (reset) this.setData({ cursor: null, list: [] })
     // 服务端只区分 pending 与「非 deleted」；其余状态在本地按 status 过滤
+    const needFilter = this.data.tab !== 'pending' && this.data.tab !== 'all'
     const serverTab = this.data.tab === 'pending' ? 'pending' : 'all'
-    const res = await api.myPosts({
-      tab: serverTab,
-      pageSize: 10,
-      cursor: this.data.cursor || undefined
-    })
-    let list = reset ? res.list : this.data.list.concat(res.list)
-    // published/rejected/expired 走本地过滤；hasMore 仍以服务端分页为准
-    if (this.data.tab !== 'pending' && this.data.tab !== 'all') {
-      list = list.filter(p => p.status === this.data.tab)
+
+    let matched = reset ? [] : (this.data.list || []).slice()
+    let cursor = this.data.cursor || undefined
+    let hasMore = true
+    let rounds = 0
+
+    // ⚠️ 本地过滤可能整页都匹配不上（服务端并不按这些状态分页）。
+    //    若此时直接置空态，wxml 的 wx:if 会把 scroll-view 整个换掉 →
+    //    bindscrolltolower 永不触发 → 后续分页里的匹配帖永远翻不到。
+    //    所以：一页没匹配上但服务端还有数据时，自动继续翻页去找。
+    while (rounds < 20) {
+      rounds += 1
+      const res = await api.myPosts({
+        tab: serverTab,
+        pageSize: 10,
+        cursor
+      })
+      // 请求已过期（用户又切了 tab）→ 丢弃这次结果
+      if (seq !== this._reqSeq) return
+      let batch = res.list || []
+      if (needFilter) batch = batch.filter(p => p.status === this.data.tab)
+      matched = matched.concat(batch)
+      cursor = res.nextCursor
+      hasMore = res.hasMore
+      if (matched.length || !hasMore) break
+      // 一页没匹配上，但服务端还有更多 → 继续翻下一页
     }
+
+    if (seq !== this._reqSeq) return
     this.setData({
-      list,
-      cursor: res.nextCursor,
-      hasMore: res.hasMore,
-      state: list.length ? 'success' : 'empty'
+      list: matched,
+      cursor,
+      hasMore,
+      state: matched.length ? 'success' : 'empty'
     })
   },
 
