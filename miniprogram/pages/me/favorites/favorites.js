@@ -1,6 +1,7 @@
 // 我的收藏：收藏流（meList type=favorites）
 const api = require('../../../utils/api')
 const { guard } = require('../../../utils/auth')
+const { collectPatches } = require('../../../utils/post-sync')
 
 Page({
   data: {
@@ -34,8 +35,23 @@ Page({
     }
   },
 
+  onShow() {
+    // 详情页里点赞/取消收藏的变更：取消收藏的直接移出列表
+    const { updates, removedIds } = collectPatches(this.data.list, this._syncAt || 0)
+    this._syncAt = Date.now()
+    if (removedIds.length) {
+      const list = this.data.list.filter(x => removedIds.indexOf(x.id) === -1)
+      this.setData({ list, state: list.length ? 'success' : 'empty' })
+    } else if (Object.keys(updates).length) {
+      this.setData(updates)
+    }
+  },
+
   async fetchList(reset) {
-    if (reset) this.setData({ cursor: null })
+    if (reset) {
+      this.setData({ cursor: null })
+      this._syncAt = Date.now()
+    }
     const res = await api.myFavorites({
       pageSize: 10,
       cursor: this.data.cursor || undefined

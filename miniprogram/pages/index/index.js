@@ -2,6 +2,7 @@
 const api = require('../../utils/api')
 const { guard } = require('../../utils/auth')
 const { CATEGORY_STICKERS } = require('../../utils/config')
+const { collectPatches } = require('../../utils/post-sync')
 
 Page({
   data: {
@@ -35,7 +36,16 @@ Page({
     if (app.globalData.feedDirty && this.data.state !== 'loading') {
       app.globalData.feedDirty = false
       this.refresh()
+    } else {
+      this.applyPostPatches()
     }
+  },
+
+  // 详情页里点赞/收藏的变更补到卡片上
+  applyPostPatches() {
+    const { updates } = collectPatches(this.data.list, this._syncAt || 0)
+    this._syncAt = Date.now()
+    if (Object.keys(updates).length) this.setData(updates)
   },
 
   async firstLoad() {
@@ -56,7 +66,10 @@ Page({
   },
 
   async fetchList(reset) {
-    if (reset) this.setData({ cursor: null, hasMore: true, loadMoreError: false })
+    if (reset) {
+      this.setData({ cursor: null, hasMore: true, loadMoreError: false })
+      this._syncAt = Date.now()
+    }
     const params = { pageSize: 10, sort: 'latest' }
     if (this.data.board !== 'all') params.board = this.data.board
     if (this.data.cursor) params.cursor = this.data.cursor

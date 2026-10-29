@@ -5,6 +5,7 @@ const { guard } = require('../../../utils/auth')
 const { BOARDS } = require('../../../utils/config')
 const { timeAgo, countShort, linkHost, randId } = require('../../../utils/format')
 const { getTempUrls } = require('../../../utils/media')
+const { patchPost } = require('../../../utils/post-sync')
 
 Page({
   data: {
@@ -179,7 +180,8 @@ Page({
         commentDraft: '',
         replyTo: null
       })
-      this.setData({ 'post.commentCount': (this.data.post.commentCount || 0) + 1 })
+      const commentCount = (this.data.post.commentCount || 0) + 1
+      this.setData({ 'post.commentCount': commentCount, 'post.commentShort': countShort(commentCount) })
       toast('已发布')
     } catch (e) {
       if (e && e.code === 40010) {
@@ -196,31 +198,37 @@ Page({
   async onLike() {
     const p = this.data.post
     const active = !p.liked
+    const likeCount = Math.max(0, (p.likeCount || 0) + (active ? 1 : -1))
     this.setData({
       'post.liked': active,
-      'post.likeCount': Math.max(0, p.likeCount + (active ? 1 : -1))
+      'post.likeCount': likeCount,
+      'post.likeShort': countShort(likeCount)
     })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
       await api.interactionToggle(this.postId, 'like')
+      patchPost(this.postId, { liked: active, likeCount })
     } catch (e) {
-      this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount })
+      this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount, 'post.likeShort': p.likeShort })
     }
   },
 
   async onFav() {
     const p = this.data.post
     const active = !p.faved
+    const favCount = Math.max(0, (p.favCount || 0) + (active ? 1 : -1))
     this.setData({
       'post.faved': active,
-      'post.favCount': Math.max(0, p.favCount + (active ? 1 : -1))
+      'post.favCount': favCount,
+      'post.favShort': countShort(favCount)
     })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
       await api.interactionToggle(this.postId, 'fav')
+      patchPost(this.postId, { faved: active, favCount })
       if (active) toast('已收藏')
     } catch (e) {
-      this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount })
+      this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount, 'post.favShort': p.favShort })
     }
   },
 

@@ -1,6 +1,7 @@
 // S2 板块页：板块横幅 + 声明 + 卡片流（含"可能已过期"角标）
 const api = require('../../utils/api')
 const { BOARDS } = require('../../utils/config')
+const { collectPatches } = require('../../utils/post-sync')
 
 Page({
   data: {
@@ -25,8 +26,18 @@ Page({
     this.fetchList(true).catch(() => this.setData({ state: 'error' }))
   },
 
+  onShow() {
+    // 详情页里点赞/收藏的变更补到卡片上
+    const { updates } = collectPatches(this.data.list, this._syncAt || 0)
+    this._syncAt = Date.now()
+    if (Object.keys(updates).length) this.setData(updates)
+  },
+
   async fetchList(reset) {
-    if (reset) this.setData({ cursor: null, hasMore: true, list: [], state: 'loading' })
+    if (reset) {
+      this.setData({ cursor: null, hasMore: true, list: [], state: 'loading' })
+      this._syncAt = Date.now()
+    }
     const params = { board: this.data.board, pageSize: 10, sort: 'latest' }
     if (this.data.cursor) params.cursor = this.data.cursor
     const res = await api.postList(params)

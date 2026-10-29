@@ -82,14 +82,18 @@ exports.main = withAuth(async (event, ctx) => {
   const t = await db.startTransaction();
   try {
     const p = await t.collection(COL.posts).doc(postId).get();
-    const seq = ((p.data && p.data.commentSeq) || 0) + 1;
+    const postPatch = { 'stats.commentCount': (p.data.stats && p.data.stats.commentCount || 0) + 1 };
 
-    let nextFloor = seq;
-    if (parent) nextFloor = parent.floor; // 二级回复不取号
+    // 二级回复沿用父楼层号，不推进 commentSeq，否则下一条一级评论会跳号
+    let nextFloor;
+    if (parent) {
+      nextFloor = parent.floor;
+    } else {
+      nextFloor = ((p.data && p.data.commentSeq) || 0) + 1;
+      postPatch.commentSeq = nextFloor;
+    }
 
-    await t.collection(COL.posts).doc(postId).update({
-      data: { commentSeq: seq, 'stats.commentCount': (p.data.stats && p.data.stats.commentCount || 0) + 1 },
-    });
+    await t.collection(COL.posts).doc(postId).update({ data: postPatch });
 
     const add = await t.collection(COL.comments).add({
       data: {

@@ -57,7 +57,7 @@ exports.main = async (event) => {
   // 过期标记：幂等写入，单次最多 200 条
   try {
     const res = await coll(COL.posts)
-      .where({ status: 'published', publishedAt: _.lt(expireBefore) })
+      .where({ status: 'published', publishedAt: _.lt(expireBefore), expired: _.neq(true) })
       .field({ _id: true })
       .limit(200)
       .get();
