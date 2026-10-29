@@ -1,0 +1,18 @@
+<!--隐私协议门禁：未同意时全屏遮罩，阻断内容访问 -->
+<view wx:if="{{visible}}" class="pg-mask">
+  <view class="pg-card">
+    <view class="pg-title">欢迎来到好物分享</view>
+    <view class="pg-text">开始使用前，请阅读并同意《用户协议》与《隐私政策》。不同意将无法使用本小程序。</view>
+    <view class="pg-points">
+      <view class="pg-point">· 我们仅收集 openid、昵称、头像与您主动发布的内容</view>
+      <view class="pg-point">· 帖子与评论会展示给其他同学，内容会经机器审核</view>
+      <view class="pg-point">· 不会将您的信息用于广告投放，也不会出售给第三方</view>
+    </view>
+    <view class="pg-actions">
+      <view class="btn-primary pg-btn" bind:tap="onRead">阅读协议</view>
+      <view class="pg-btn pg-btn-ghost" bind:tap="onAgree">同意并继续</view>
+    </view>
+    <view class="pg-note" bind:tap="onDismiss">暂不（将退出小程序）</view>
+    <view class="pg-note">完整正文在「我的 → 关于」中随时可查</view>
+  </view>
+</view>

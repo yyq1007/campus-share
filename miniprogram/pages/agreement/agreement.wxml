@@ -1,4 +1,4 @@
-<!--协议页 -->
+<!--协议页：可展示一份或两份协议正文 -->
 <view class="page">
   <view class="nav" style="padding-top:{{statusBarH}}px">
     <view class="nav-inner" style="height:{{navH}}px">
@@ -10,14 +10,16 @@
     </view>
   </view>
 
-  <view class="doc-meta">更新于 {{updatedAt}}</view>
+  <block wx:for="{{sections}}" wx:for-item="sec" wx:key="title">
+    <view class="doc-meta">{{sec.title}} · 更新于 {{sec.updatedAt}}</view>
 
-  <view class="card doc-card">
-    <block wx:for="{{blocks}}" wx:key="index">
-      <view wx:if="{{item.type === 'h'}}" class="doc-h">{{item.text}}</view>
-      <view wx:else class="doc-p">{{item.text}}</view>
-    </block>
-  </view>
+    <view class="card doc-card">
+      <block wx:for="{{sec.blocks}}" wx:for-item="b" wx:key="index">
+        <view wx:if="{{b.type === 'h'}}" class="doc-h">{{b.text}}</view>
+        <view wx:else class="doc-p">{{b.text}}</view>
+      </block>
+    </view>
+  </block>
 
   <view class="doc-actions">
     <view class="btn-primary agree-btn" bind:tap="onAgree">同意并继续</view>

@@ -1,0 +1,81 @@
+/* 隐私协议门禁遮罩：沿用 theme.wxss 令牌，零硬编码色值
+   用不透明底色（页面底色）而非半透明 scrim —— 未同意时内容完全不可见 */
+.pg-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-page);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 48rpx;
+}
+
+.pg-card {
+  width: 100%;
+  max-width: 620rpx;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card);
+  padding: 40rpx 36rpx 28rpx;
+  box-shadow: var(--shadow-card);
+}
+
+.pg-title {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--text-1);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.pg-text {
+  margin-top: 16rpx;
+  font-size: var(--fs-body-m);
+  color: var(--text-body);
+  line-height: 1.7;
+  text-align: center;
+}
+
+.pg-points {
+  margin-top: 24rpx;
+  padding: 20rpx 22rpx;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-input);
+}
+
+.pg-point {
+  font-size: var(--fs-body-s);
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.pg-actions {
+  margin-top: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.pg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  font-weight: 600;
+}
+
+.pg-btn-ghost {
+  background: var(--bg-elevated);
+  color: var(--brand-800);
+  border: 1rpx solid var(--border-strong);
+}
+
+.pg-note {
+  margin-top: 20rpx;
+  text-align: center;
+  font-size: var(--fs-micro);
+  color: var(--text-faint);
+}

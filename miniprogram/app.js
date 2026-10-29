@@ -1,12 +1,9 @@
 const { CLOUD_ENV, FONT_FAMILY } = require('./utils/config')
-const { PRIVACY_VERSION } = require('./utils/agreements')
+const { PRIVACY_VERSION, hasAgreed, markAgreed } = require('./utils/privacy')
 
 // 标题圆体：base64 Data URL（wx.loadFontFace 的 source 仅支持 https 或 Data URL，
 // 包内路径不被支持、云端 URL 被 CORS 挡——见 tools/build-font-data.js）
 const FONT_DATA_URL = require('./utils/font-data')
-
-// 隐私协议同意状态的本地缓存键
-const PRIVACY_AGREE_KEY = 'privacy_agreed_version'
 
 App({
   onLaunch() {
@@ -24,13 +21,10 @@ App({
     wx.onNetworkStatusChange(res => {
       this.globalData.network = res.isConnected ? 'online' : 'offline'
     })
-
   },
 
   onShow() {
     this.__hidden = false
-    // 未同意协议不允许使用：每次回到前台都检查（onShow 在启动时也会触发）
-    this.ensurePrivacyAgreement()
   },
 
   onHide() {
@@ -41,37 +35,42 @@ App({
    * 隐私协议授权入口。
    * 微信在用户触发隐私接口（如 chooseMedia）且此前未同意时回调此钩子，
    * 开发者需引导用户阅读协议并再次授权。
-   * 协议正文页：pages/agreement/agreement?type=privacy
+   * 协议正文页：pages/agreement/agreement?type=both
+   *
+   * ⚠️ 关于「暂不」：这里不能 resolve({event:'disagree'})。
+   * 微信收到 disagree 会判定用户拒绝隐私协议并中断接口调用，
+   * 但表现不稳定（部分基础库会直接关小程序）。
+   * 我们改为统一走 exitMiniProgram() 主动关闭，行为可控。
    */
   onNeedPrivacyAuthorization(resolve) {
     this.__privacyResolve = resolve
     const goAgreement = () => {
       wx.navigateTo({
-        url: '/pages/agreement/agreement?type=privacy',
-        fail: () => { this.__privacyFallback() }
+        url: '/pages/agreement/agreement?type=both',
+        fail: () => { this.__privacyReject() }
       })
     }
     wx.showModal({
       title: '隐私保护指引',
-      content: '发布内容需要使用你的相册/相机，并会在云端保存用于展示。请阅读并同意《隐私政策》后继续。',
+      content: '发布内容需要使用你的相册/相机，并会在云端保存用于展示。请阅读并同意《用户协议》与《隐私政策》后继续。',
       confirmText: '去阅读',
       cancelText: '暂不',
       success: (r) => {
         if (r.confirm) {
           goAgreement()
         } else {
-          this.__privacyFallback()
+          // 暂不 = 不同意 → 直接关闭小程序，不放行任何内容
+          this.__privacyReject()
         }
       },
-      fail: () => { this.__privacyFallback() }
+      // 弹窗本身失败（如页面栈异常）时，直接带去协议页，避免流程卡死
+      fail: () => { goAgreement() }
     })
   },
 
   /** 用户在协议页点了「同意」后调用：放行本次隐私接口并记住版本 */
   grantPrivacyAuthorization() {
-    try {
-      wx.setStorageSync(PRIVACY_AGREE_KEY, PRIVACY_VERSION)
-    } catch (e) { /* ignore */ }
+    markAgreed()
     const resolve = this.__privacyResolve
     this.__privacyResolve = null
     if (typeof resolve === 'function') {
@@ -81,33 +80,44 @@ App({
     return false
   },
 
-  /** 用户拒绝时的兜底：按「不同意」处理，微信侧会中断本次隐私接口调用 */
-  __privacyFallback() {
-    const resolve = this.__privacyResolve
+  /**
+   * 用户点「暂不」/ 拒绝：不等同意，关闭小程序。
+   * 不调 resolve({event:'disagree'}) —— 那个会让微信自行中断并可能误关，
+   * 这里统一由 exitMiniProgram 控制退出行为。
+   */
+  __privacyReject() {
     this.__privacyResolve = null
-    if (typeof resolve === 'function') {
-      resolve({ event: 'disagree' })
-    }
-  },
-
-  hasAgreedPrivacy() {
-    try {
-      return wx.getStorageSync(PRIVACY_AGREE_KEY) === PRIVACY_VERSION
-    } catch (e) {
-      return false
-    }
+    wx.exitMiniProgram({
+      fail: () => {
+        // 开发者工具里 exitMiniProgram 不真正退出：退到首页并保持门禁拦截，
+        // 未同意的用户依然进不去内容
+        this.__regate()
+      }
+    })
   },
 
   /**
-   * 检查是否已同意当前版本协议，未同意则弹窗拦截：
-   * - 去阅读 → 协议页（gate 模式：不同意就返回会再次拦截）
-   * - 暂不 → 退出小程序；退出失败（开发者工具/低版本）则继续弹窗，不放行使用
+   * 是否已同意当前版本协议。
+   * 首启同意由页面级组件 privacy-gate 承担（onLaunch 阶段页面尚未创建，
+   * 页面级 API 在那里调用会静默失败），此方法仅供各页查询。
+   */
+  hasPrivacyAgreement () {
+    return hasAgreed()
+  },
+
+  /**
+   * 兜底拦截：正常流程由 privacy-gate 组件负责（首页与邀请码页都挂了组件）。
+   * 这里只兜住「组件没挂上的页面」——例如协议页返回时不该放行。
+   *
+   * ⚠️ 组件已在页面上时（privacyGateActive）不再弹 modal，
+   * 否则会和组件的全屏遮罩双重弹窗。
    */
   ensurePrivacyAgreement() {
-    if (this.hasAgreedPrivacy() || this.__gateShowing) return
+    if (hasAgreed() || this.__gateShowing) return
+    // 组件正在接管（页面上有全屏遮罩）→ 由组件负责交互，这里不重复弹
+    if (this.privacyGateActive) return
     this.__gateShowing = true
 
-    // 延后一点，等首页渲染完成再弹，避免与页面初始化抢资源
     setTimeout(() => {
       wx.showModal({
         title: '欢迎来到好物分享',
@@ -117,14 +127,13 @@ App({
         success: (r) => {
           if (r.confirm) {
             wx.navigateTo({
-              url: '/pages/agreement/agreement?type=user&gate=1',
+              url: '/pages/agreement/agreement?type=both&gate=1',
               success: () => { this.__gateShowing = false },
               fail: () => { this.__regate() }
             })
           } else {
-            // 开发者工具里 exitMiniProgram 会走 success 但不真正退出，所以不论结果都重新拦截；
-            // 真机已退到后台时 __regate 只复位，等下次 onShow 再拦
-            wx.exitMiniProgram({ complete: () => { this.__regate() } })
+            // 暂不 = 不同意 → 关闭小程序
+            this.__privacyReject()
           }
         },
         fail: () => { this.__regate() }

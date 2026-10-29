@@ -1,5 +1,6 @@
 // S2 板块页：板块横幅 + 声明 + 卡片流（含"可能已过期"角标）
 const api = require('../../utils/api')
+const { guard } = require('../../utils/auth')
 const { BOARDS } = require('../../utils/config')
 const { collectPatches } = require('../../utils/post-sync')
 
@@ -23,7 +24,10 @@ Page({
       return
     }
     this.setData({ board, meta: BOARDS[board] })
-    this.fetchList(true).catch(() => this.setData({ state: 'error' }))
+    // guard 拦截未同意隐私协议的请求
+    guard()
+      .then(() => this.fetchList(true))
+      .catch(() => this.setData({ state: 'error' }))
   },
 
   onShow() {

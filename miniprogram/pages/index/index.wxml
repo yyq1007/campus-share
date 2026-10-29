@@ -65,3 +65,6 @@
 <view class="fab fab-tab" bindtap="onFab">
   <icon name="plus-white" size="40" />
 </view>
+
+<!-- 隐私协议门禁（未同意时全屏遮罩） -->
+<privacy-gate />

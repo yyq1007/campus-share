@@ -41,7 +41,8 @@
     "nav-bar": "/components/nav-bar/nav-bar",
     "post-card": "/components/post-card/post-card",
     "page-state": "/components/page-state/page-state",
-    "icon": "/components/icon/icon"
+    "icon": "/components/icon/icon",
+    "privacy-gate": "/components/privacy-gate/privacy-gate"
   },
   "lazyCodeLoading": "requiredComponents",
   "sitemapLocation": "sitemap.json"
