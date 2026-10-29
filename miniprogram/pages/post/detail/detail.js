@@ -213,13 +213,12 @@ Page({
   async onLike() {
     const p = this.data.post
     const active = !p.liked
-    this.setData({
-      'post.liked': active,
-      'post.likeCount': Math.max(0, p.likeCount + (active ? 1 : -1))
-    })
+    const likeCount = Math.max(0, p.likeCount + (active ? 1 : -1))
+    this.setData({ 'post.liked': active, 'post.likeCount': likeCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
       await api.interactionToggle(this.postId, 'like')
+      this.patchInteraction({ liked: active, likeCount })
     } catch (e) {
       this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount })
     }
@@ -228,17 +227,24 @@ Page({
   async onFav() {
     const p = this.data.post
     const active = !p.faved
-    this.setData({
-      'post.faved': active,
-      'post.favCount': Math.max(0, p.favCount + (active ? 1 : -1))
-    })
+    const favCount = Math.max(0, p.favCount + (active ? 1 : -1))
+    this.setData({ 'post.faved': active, 'post.favCount': favCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
       await api.interactionToggle(this.postId, 'fav')
       if (active) toast('已收藏')
+      this.patchInteraction({ faved: active, favCount })
     } catch (e) {
       this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount })
     }
+  },
+
+  /** 把点赞/收藏最新状态写入全局补丁，列表页 onShow 时局部同步（不清列表、不丢滚动位置） */
+  patchInteraction(patch) {
+    const app = getApp()
+    const patches = app.globalData.interactionPatches || (app.globalData.interactionPatches = {})
+    const cur = patches[this.postId] || {}
+    patches[this.postId] = { ...cur, ...patch }
   },
 
   // ---------- 媒体 ----------

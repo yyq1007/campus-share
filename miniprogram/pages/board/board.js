@@ -25,6 +25,20 @@ Page({
     this.fetchList(true).catch(() => this.setData({ state: 'error' }))
   },
 
+  onShow() {
+    // 同步详情页带回的点赞/收藏变更：局部 patch 对应卡片，不清列表、不丢滚动位置
+    const patches = getApp().globalData.interactionPatches
+    if (patches && Object.keys(patches).length) {
+      const updates = {}
+      this.data.list.forEach((item, idx) => {
+        const pt = patches[item.id]
+        if (pt) Object.keys(pt).forEach(k => { updates[`list[${idx}].${k}`] = pt[k] })
+      })
+      if (Object.keys(updates).length) this.setData(updates)
+      getApp().globalData.interactionPatches = {}
+    }
+  },
+
   async fetchList(reset) {
     if (reset) this.setData({ cursor: null, hasMore: true, list: [], state: 'loading' })
     const params = { board: this.data.board, pageSize: 10, sort: 'latest' }
