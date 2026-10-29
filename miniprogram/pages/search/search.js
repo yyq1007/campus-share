@@ -24,9 +24,7 @@ Page({
       const win = wx.getWindowInfo()
       const cap = wx.getMenuButtonBoundingClientRect()
       const sb = win.statusBarHeight || 40
-      // 胶囊右缘到屏幕右侧的距离：导航栏右内边距避让系统胶囊
-      const capGap = Math.max(0, win.windowWidth - (cap.right || 0)) + 8
-      this.setData({ statusBarH: sb, navH: (cap.top - sb) * 2 + cap.height, capGap })
+      this.setData({ statusBarH: sb, navH: (cap.top - sb) * 2 + cap.height })
     } catch (e) { /* 兜底 */ }
     this.setData({ history: this.readHistory() })
     if (query.kw) {

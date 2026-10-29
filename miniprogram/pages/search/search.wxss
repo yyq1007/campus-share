@@ -1,10 +1,20 @@
 /* 搜索页 —— v4 令牌 */
 .page {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* 内容区：恢复统一渐变底 */
   background: var(--bg-gradient);
 }
-.nav { padding-bottom: 8rpx; }
-.nav-inner {
+/* 顶部导航：胶囊行留空，返回键+搜索框+按钮在胶囊下方一行；顶栏浅紫底（用户指定） */
+.nav {
+  position: relative;
+  z-index: 10;
+  background: var(--brand-100);
+  box-shadow: 0 8rpx 24rpx var(--brand-a04);
+  padding-bottom: 20rpx;
+}
+.search-row {
   display: flex;
   align-items: center;
   gap: 20rpx;
@@ -17,8 +27,8 @@
   align-items: center;
   justify-content: center;
   background: var(--bg-elevated);
-  border-radius: 32rpx;
   box-shadow: var(--shadow-soft);
+  border-radius: 32rpx;
   flex-shrink: 0;
 }
 .nav-btn-icon { width: 32rpx; height: 32rpx; }
@@ -37,10 +47,15 @@
 .search-input { flex: 1; font-size: 26rpx; color: var(--text-body); }
 .ph { color: var(--text-faint); }
 .search-go {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--primary-deep);
   flex-shrink: 0;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 30rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-on-brand, #FFFFFF);
+  background: var(--primary);
+  border-radius: 32rpx;
 }
 
 .card {
@@ -68,7 +83,7 @@
 }
 .chip-hot { color: var(--primary-deep); background: var(--primary-tint); }
 
-.list { height: calc(100vh - 160rpx); }
+.list { flex: 1; min-height: 0; }
 .feed { padding: 24rpx 32rpx 0; }
 .list-foot {
   padding: 20rpx 0;

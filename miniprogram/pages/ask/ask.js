@@ -66,14 +66,43 @@ Page({
     this.setData({ question: e.detail.value })
   },
 
+  // 抢跑：focus 早于键盘动画开始，立刻用上次记住的键盘高度让输入条先就位，
+  // 键盘随后滑上来正好托住——观感同步（heightchange 回调本身晚于键盘动画，跟随必慢半拍）
+  onKbShow() {
+    if (this._lastKb) {
+      this.setData({ kbH: Math.max(0, this._lastKb - (this._kbLift || 0) + (this._kbFix || 0)) })
+    }
+  },
+
   // 键盘高度跟随：adjust-position 已关，页面不动，输入条上浮正好贴住键盘顶部
   // （扣除输入条原位置下方的 aigc-tip + TabBar 空隙，避免键盘与输入条间露出一截空白）
   onKbHeight(e) {
     const kb = (e.detail && e.detail.height) || 0
-    this.setData({ kbH: Math.max(0, kb - (this._kbLift || 0)) })
+    if (kb) this._lastKb = kb
+    this.setData({ kbH: Math.max(0, kb - (this._kbLift || 0) + (this._kbFix || 0)) }, () => this._calibrate(kb))
+  },
+
+  // 实测校准：键盘动画结束后量输入条底边与键盘顶部的残差
+  // （机型差异：iOS 键盘回调高度不含底部安全区、TabBar 异步挂载等都会造成固定推算不准）
+  // 残差 >2px 就补进 _kbFix；同一键盘高度只校准一次，防止渐变回调叠加修正
+  _calibrate(kb) {
+    if (!kb || this._lastCal === kb) return
+    this._lastCal = kb
+    setTimeout(() => {
+      wx.createSelectorQuery().select('.input-bar').boundingClientRect(rect => {
+        if (!rect || !wx.getWindowInfo) return
+        const win = wx.getWindowInfo()
+        const gap = Math.round(rect.bottom - (win.windowHeight - kb))
+        if (Math.abs(gap) > 2) {
+          this._kbFix = (this._kbFix || 0) + gap
+          this.setData({ kbH: Math.max(0, kb - (this._kbLift || 0) + this._kbFix) })
+        }
+      }).exec()
+    }, 300)
   },
 
   onKbHide() {
+    this._lastCal = 0
     this.setData({ kbH: 0 })
   },
 

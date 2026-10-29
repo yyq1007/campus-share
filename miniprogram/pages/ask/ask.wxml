@@ -62,7 +62,7 @@
         value="{{question}}" focus="{{inputFocus}}" confirm-type="send"
         adjust-position="{{false}}"
         maxlength="100" bindinput="onInput" bindconfirm="onSend"
-        bindkeyboardheightchange="onKbHeight" bindblur="onKbHide"
+        bindkeyboardheightchange="onKbHeight" bindfocus="onKbShow" bindblur="onKbHide"
       />
     </view>
   </view>

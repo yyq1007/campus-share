@@ -5,7 +5,7 @@
  * reject ：给作者发 review_result 消息（附原因）；评论驳回需回退 commentCount
  * banUser：封禁作者并批量隐藏其内容
  */
-const { coll, _, COL, db, excerpt } = require('./lib/db');
+const { coll, _, COL, db, excerpt, batchUpdate } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth, audit } = require('./lib/auth');
 const { tokenize } = require('./lib/tokenize');
@@ -185,9 +185,12 @@ exports.main = withAuth(async (event, ctx) => {
           data: { status: 'banned', bannedAt: now, banReason: reason, updatedAt: db.serverDate() },
         });
         try {
-          await coll(COL.posts).where({ authorUid, status: 'published' }).update({
-            data: { status: 'hidden', hideReason: `作者封禁：${reason}`, updatedAt: db.serverDate() },
+          // ⚠️ 单次 where().update() 上限约 100 条，用户发过 >100 篇时
+          // 剩下的帖子仍公开可见 → 封禁形同虚设。改用分批更新。
+          const hidden = await batchUpdate(COL.posts, { authorUid, status: 'published' }, {
+            status: 'hidden', hideReason: `作者封禁：${reason}`, updatedAt: db.serverDate(),
           });
+          if (hidden) console.log('[adminReview] 封禁作者，已隐藏帖子', hidden);
         } catch (e) { /* 批量隐藏失败不阻断 */ }
         await audit(ctx.uid, 'ban', 'user', authorUid, { status: 'active' }, { status: 'banned' }, reason);
       }

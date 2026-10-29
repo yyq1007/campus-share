@@ -19,3 +19,10 @@ Thumbs.db
 
 # 已废弃的旧版云函数备份（项目约定：不要再部署）
 _cloudfunctions_old_backup/
+
+# 一次性工具：从线上拉源码的带签名链接（含腾讯云 AKID，不可外传）
+tools/env-links.json
+tools/fetch-env-src.js
+
+# 数据库备份（含真实用户 openid 等敏感数据）
+.db-backup/

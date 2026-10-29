@@ -27,6 +27,14 @@ function countChars(str) {
   return str ? Array.from(str).length : 0
 }
 
+/** 按字符数截断（与 countChars 同口径：Array.from，不会把 emoji 劈成乱码） */
+function clipChars(str, max) {
+  if (!str) return ''
+  const arr = Array.from(str)
+  if (arr.length <= max) return str
+  return arr.slice(0, max).join('')
+}
+
 /** 连续空白压缩为 1 个 + 首尾 trim（提交时处理） */
 function normalizeText(str) {
   return (str || '').replace(/\s+/g, ' ').trim()
@@ -55,11 +63,25 @@ function linkHost(s) {
   return m ? m[1] : ''
 }
 
-/** 头像糖果色序号：uid 取模 */
+/** 头像糖果色序号：uid 取模（个人主页头像，按人取色是合理的） */
 function avatarIndex(uid) {
   if (!uid) return 1
   let h = 0
   for (const ch of String(uid)) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return (h % 5) + 1
+}
+
+/**
+ * 评论头像糖果色序号：按楼层号取模。
+ * 与 avatarIndex 同算法但入参不同 —— 评论头像按楼层取色而非按作者取色：
+ * 若按作者取色，同一作者所有评论同色 → 等于用颜色重建作者画像，破坏匿名定位。
+ * 与服务端 present.js 的 avatarIndex(floor) 同口径。
+ */
+function commentAvatarIndex(floor) {
+  const n = Number(floor) || 0
+  if (!n) return 1
+  let h = 0
+  for (const ch of String(n)) h = (h * 31 + ch.charCodeAt(0)) >>> 0
   return (h % 5) + 1
 }
 
@@ -70,4 +92,4 @@ function randId(len = 16) {
   return s
 }
 
-module.exports = { timeAgo, countShort, countChars, normalizeText, cleanContent, validLink, linkHost, avatarIndex, randId }
+module.exports = { timeAgo, countShort, countChars, clipChars, normalizeText, cleanContent, validLink, linkHost, avatarIndex, commentAvatarIndex, randId }

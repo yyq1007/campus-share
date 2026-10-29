@@ -99,14 +99,16 @@ Page({
   },
 
   onPostTap(e) {
-    const p = e.detail.post
+    const p = e.detail && e.detail.post
+    if (!p || !p.id) return
     wx.navigateTo({ url: `/pages/post/detail/detail?id=${p.id}` })
   },
 
-  async onLike(e) { await this.toggleInteraction(e.detail.post, 'like') },
-  async onFav(e) { await this.toggleInteraction(e.detail.post, 'fav') },
+  async onLike(e) { await this.toggleInteraction(e.detail && e.detail.post, 'like') },
+  async onFav(e) { await this.toggleInteraction(e.detail && e.detail.post, 'fav') },
 
   async toggleInteraction(post, type) {
+    if (!post || !post.id) return
     const key = type === 'like' ? 'liked' : 'faved'
     const countKey = type === 'like' ? 'likeCount' : 'favCount'
     const idx = this.data.list.findIndex(x => x.id === post.id)
@@ -145,6 +147,20 @@ Page({
 
   async onReachBottom() {
     if (!this.data.hasMore || this.data.loadingMore || this.data.state !== 'success') return
+    this.setData({ loadingMore: true, loadMoreError: false })
+    try {
+      await this.fetchList(false)
+    } catch (e) {
+      // ⚠️ 这里不动 state：保持 'success' 才能让用户再次触底时继续重试。
+      // 失败提示条做成了可点击（onLoadMoreRetry），文案与实际重试方式保持一致。
+      this.setData({ loadMoreError: true })
+    }
+    this.setData({ loadingMore: false })
+  },
+
+  /** 点击「加载失败」提示条 → 立即重试加载下一页 */
+  async onLoadMoreRetry() {
+    if (this.data.loadingMore || !this.data.hasMore) return
     this.setData({ loadingMore: true, loadMoreError: false })
     try {
       await this.fetchList(false)

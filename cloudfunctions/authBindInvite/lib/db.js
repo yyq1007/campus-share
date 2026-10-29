@@ -106,6 +106,58 @@ function decodeCursor(str) {
   }
 }
 
+/**
+ * 批量更新（分批执行，绕开单次 100 条上限）
+ *
+ * ⚠️ 云开发里 where().update() 单次最多影响约 100 条。
+ * 直接调用时，超出部分不会被更新 —— 表现为「封禁了但老帖子还公开可见」。
+ *
+ * 做法（不依赖「更新字段出现在 where 条件里」这种脆弱前提）：
+ *   1. 按 where 扫出 _id（分页，每页 scanLimit 条）
+ *   2. 每 100 个 id 一组，用 where({_id: _.in(ids)}) 执行 update
+ *   3. 翻页直到扫完或达到 maxRounds
+ *
+ * @param {string} colName 集合名
+ * @param {object} where 查询条件
+ * @param {object} data 更新字段
+ * @param {object} [opts] { batchSize=100, scanLimit=500, maxRounds=40 }
+ * @returns {Promise<number>} 实际更新条数
+ */
+async function batchUpdate(colName, where, data, opts = {}) {
+  const batchSize = opts.batchSize || 100;
+  const scanLimit = opts.scanLimit || 500;
+  const maxRounds = opts.maxRounds || 40;
+  let total = 0;
+  let scanned = 0;
+
+  for (let round = 0; round < maxRounds; round += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const res = await coll(colName)
+      .where(where)
+      .field({ _id: true })
+      .skip(scanned)
+      .limit(scanLimit)
+      .get();
+    const ids = (res.data || []).map((r) => r._id);
+    if (!ids.length) break;
+    scanned += ids.length;
+
+    for (let i = 0; i < ids.length; i += batchSize) {
+      const chunk = ids.slice(i, i + batchSize);
+      // eslint-disable-next-line no-await-in-loop
+      const r = await coll(colName).where({ _id: _.in(chunk) }).update({ data });
+      total += (r && r.stats && r.stats.updated) || 0;
+    }
+
+    if (ids.length < scanLimit) break; // 扫完了
+  }
+
+  if (scanned >= scanLimit * maxRounds) {
+    console.warn('[batchUpdate] 达到最大扫描轮次，可能仍有未处理数据:', colName, JSON.stringify(where));
+  }
+  return total;
+}
+
 module.exports = {
   cloud,
   db,
@@ -124,4 +176,5 @@ module.exports = {
   dayKey,
   encodeCursor,
   decodeCursor,
+  batchUpdate,
 };

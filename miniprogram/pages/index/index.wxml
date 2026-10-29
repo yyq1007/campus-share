@@ -54,7 +54,7 @@
       bind:tap="onPostTap" bind:like="onLike" bind:fav="onFav"
     />
     <view wx:if="{{loadingMore}}" class="load-more">加载中…</view>
-    <view wx:if="{{loadMoreError}}" class="load-more load-more-err">加载失败，下拉重试</view>
+    <view wx:if="{{loadMoreError}}" class="load-more load-more-err" bind:tap="onLoadMoreRetry">加载失败，点击重试</view>
     <view wx:if="{{!hasMore && list.length > 2}}" class="load-more">没有更多了</view>
   </block>
 

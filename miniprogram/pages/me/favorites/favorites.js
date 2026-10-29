@@ -92,5 +92,9 @@ Page({
   },
 
   onRetry() { this.firstLoad() },
+
+  /** 空态「去逛逛」→ 回首页看内容 */
+  onEmptyAction() { wx.switchTab({ url: '/pages/index/index' }) },
+
   onBack() { wx.navigateBack() }
 })

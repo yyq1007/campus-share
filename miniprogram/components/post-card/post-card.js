@@ -18,6 +18,8 @@ Component({
     statusText: ''
   },
   observers: {
+    // ⚠️ 必须同时监听 manageable：它是控制角标显不显示的开关，
+    //    只监听 post 的话，post 先到、manageable 后设就永远不触发重算
     post(p) {
       if (!p || !p.id) return
       this.setData({
@@ -26,7 +28,16 @@ Component({
         favText: countShort(p.favCount),
         // 状态角标仅在管理态（我的分享）显示：首页/收藏流的帖子 status 恒为
         // published，显示「已发布」没有信息量，且绝对定位会压住标题首字
-        statusText: p.manageable ? this.statusText(p.status) : ''
+        // ⚠️ 用 this.data.manageable（组件自身的 prop），
+        //    不能用 p.manageable —— 帖子对象上没有这个字段，恒为 undefined
+        statusText: this.data.manageable ? this.statusText(p.status) : ''
+      })
+    },
+    manageable() {
+      const p = this.data.post
+      if (!p || !p.id) return
+      this.setData({
+        statusText: this.data.manageable ? this.statusText(p.status) : ''
       })
     }
   },

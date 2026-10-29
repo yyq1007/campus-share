@@ -3,7 +3,7 @@ const api = require('../../../utils/api')
 const { toast } = require('../../../utils/cloud')
 const { guard } = require('../../../utils/auth')
 const { BOARDS } = require('../../../utils/config')
-const { timeAgo, countShort, linkHost, randId } = require('../../../utils/format')
+const { timeAgo, countShort, linkHost, randId, commentAvatarIndex } = require('../../../utils/format')
 const { getTempUrls } = require('../../../utils/media')
 const { patchPost } = require('../../../utils/post-sync')
 
@@ -42,13 +42,15 @@ Page({
       // 图片临时链接
       // 视频：url 必须是视频本体（fileId），poster 才是封面图（posterFileId）——此前误用封面当播放源导致 00:00 黑屏
       const fileIds = []
-      post.media.forEach(m => {
+      // ⚠️ media 可能是 undefined/null（老数据或接口缺字段），
+      //    直接 forEach 会抛错并把整页转成 error 态 → 正文都看不到
+      ;(post.media || []).forEach(m => {
         if (m.fileId) fileIds.push(m.fileId)
         if (m.posterFileId) fileIds.push(m.posterFileId)
       })
       if (fileIds.length) {
         const map = await getTempUrls(fileIds)
-        post.mediaView = post.media.map(m => ({
+        post.mediaView = (post.media || []).map(m => ({
           type: m.type,
           url: map[m.fileId] || '',
           poster: m.type === 'video' ? (map[m.posterFileId] || '') : '',
@@ -69,6 +71,9 @@ Page({
       this.setData({ post, state: 'success' })
       this.loadComments(true)
     } catch (e) {
+      // ⚠️ silent 错误 = 正在跳转邀请码页/登录态刷新，不该把页面打成 error 态
+      //    （会闪一下错误页，然后被 reLaunch 覆盖，体验很糟）
+      if (e && e.silent) return
       console.error('[detail:firstLoad]', e)
       this.setData({ state: e && e.code === 40402 ? 'gone' : 'error' })
     }
@@ -144,10 +149,22 @@ Page({
         payload.replyToFloor = this.data.replyTo.floor
       }
       const res = await api.commentCreate(payload)
+      // ⚠️ 云函数没返回 commentId/floor 时不能硬塞 undefined：
+      //    detail.wxml 的评论列表用 wx:key="floor"，floor 为 undefined 会导致
+      //    key 重复 → 列表渲染错乱（评论串行/覆盖）。
+      //    这里做兜底：拿不到有效值就提示失败并重新拉取列表。
+      if (!res || !res.commentId) {
+        this.setData({ sending: false })
+        toast('评论已提交，正在刷新列表')
+        this.loadComments(true).catch(() => {})
+        return
+      }
+      const floor = Number(res.floor) || 0
       // 出参无 comment 对象，前端自行构造一条展示
       const c = {
         id: res.commentId,
-        floor: res.floor,
+        floor,
+        avatarIdx: commentAvatarIndex(floor),
         content,
         createdAt: Date.now(),
         status: res.status,
@@ -236,9 +253,22 @@ Page({
   onSwiperChange(e) { this.setData({ imgIdx: e.detail.current }) },
 
   onPreview(e) {
-    const idx = e.currentTarget.dataset.idx
-    const urls = this.data.post.mediaView.map(m => m.url)
-    wx.previewImage({ urls, current: urls[idx] })
+    const idx = Number(e.currentTarget.dataset.idx)
+    // ⚠️ previewImage 只能预览图片：mediaView 里混着视频项（url 是视频本体），
+    //    全部传进去会导致该张预览失败。
+    //    dataset.idx 是 mediaView 的下标（swiper 遍历 mediaView），
+    //    这里换算成「只含图片」的子集下标。
+    const view = this.data.post.mediaView || []
+    const images = view.filter(m => m.type === 'image')
+    const urls = images.map(m => m.url)
+    if (!urls.length) return
+    // 第 idx 项在 mediaView 里是图片 → 它在 images 里的位置就是前面图片的数量
+    let safeIdx = 0
+    if (view[idx] && view[idx].type === 'image') {
+      safeIdx = view.slice(0, idx).filter(m => m.type === 'image').length
+    }
+    safeIdx = Math.max(0, Math.min(safeIdx, urls.length - 1))
+    wx.previewImage({ urls, current: urls[safeIdx] })
   },
 
   onCopyLink() {
