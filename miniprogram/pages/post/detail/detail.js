@@ -37,7 +37,17 @@ Page({
     this.setData({ state: 'loading' })
     try {
       await guard()
-      const post = this.decorate(await api.postDetail(this.postId))
+      let post = await api.postDetail(this.postId)
+      // 在途同步：若 5 秒内在列表页操作过点赞/收藏（服务端可能还没写完），
+      // 以本地补丁为准渲染，避免详情页显示旧状态（补丁由乐观更新瞬间写入）
+      const pt = (getApp().globalData.interactionPatches || {})[this.postId]
+      if (pt && Date.now() - (pt.ts || 0) < 5000) {
+        post.liked = !!pt.liked
+        post.faved = !!pt.faved
+        if (typeof pt.likeCount === 'number') post.likeCount = pt.likeCount
+        if (typeof pt.favCount === 'number') post.favCount = pt.favCount
+      }
+      post = this.decorate(post)
       // 图片临时链接
       // 视频：url 必须是视频本体（fileId），poster 才是封面图（posterFileId）——此前误用封面当播放源导致 00:00 黑屏
       const fileIds = []
@@ -217,6 +227,8 @@ Page({
     const active = !p.liked
     const likeCount = Math.max(0, (p.likeCount || 0) + (active ? 1 : -1))
     this.setData({ 'post.liked': active, 'post.likeCount': likeCount, 'post.likeShort': countShort(likeCount) })
+    // 补丁在乐观更新瞬间就写入：用户立刻返回列表页也能拿到最新状态，不等网络
+    this.patchInteraction({ liked: active, likeCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
       const res = await api.interactionToggle(this.postId, 'like')
@@ -225,6 +237,7 @@ Page({
       this.patchInteraction({ liked: active, likeCount: count })
     } catch (e) {
       this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount, 'post.likeShort': p.likeShort })
+      this.patchInteraction({ liked: p.liked, likeCount: p.likeCount })
     }
   },
 
@@ -233,6 +246,7 @@ Page({
     const active = !p.faved
     const favCount = Math.max(0, (p.favCount || 0) + (active ? 1 : -1))
     this.setData({ 'post.faved': active, 'post.favCount': favCount, 'post.favShort': countShort(favCount) })
+    this.patchInteraction({ faved: active, favCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
       const res = await api.interactionToggle(this.postId, 'fav')
@@ -242,6 +256,7 @@ Page({
       this.patchInteraction({ faved: active, favCount: count })
     } catch (e) {
       this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount, 'post.favShort': p.favShort })
+      this.patchInteraction({ faved: p.faved, favCount: p.favCount })
     }
   },
 
@@ -250,7 +265,7 @@ Page({
     const app = getApp()
     const patches = app.globalData.interactionPatches || (app.globalData.interactionPatches = {})
     const cur = patches[this.postId] || {}
-    patches[this.postId] = { ...cur, ...patch }
+    patches[this.postId] = { ...cur, ...patch, ts: Date.now() }
   },
 
   // ---------- 媒体 ----------

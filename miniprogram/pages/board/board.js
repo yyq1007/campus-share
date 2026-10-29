@@ -1,6 +1,7 @@
 // S2 板块页：板块横幅 + 声明 + 卡片流（含"可能已过期"角标）
 const api = require('../../utils/api')
 const { BOARDS } = require('../../utils/config')
+const { writePatch, gcPatches } = require('../../utils/feed-patch')
 
 Page({
   data: {
@@ -26,16 +27,16 @@ Page({
   },
 
   onShow() {
-    // 同步详情页带回的点赞/收藏变更：局部 patch 对应卡片，不清列表、不丢滚动位置
+    // 同步详情页带回的点赞/收藏变更：局部 patch 对应卡片（补丁保留给详情页 5s 在途窗口，GC 过期清理）
     const patches = getApp().globalData.interactionPatches
     if (patches && Object.keys(patches).length) {
       const updates = {}
       this.data.list.forEach((item, idx) => {
         const pt = patches[item.id]
-        if (pt) Object.keys(pt).forEach(k => { updates[`list[${idx}].${k}`] = pt[k] })
+        if (pt) Object.keys(pt).forEach(k => { if (k !== 'ts') updates[`list[${idx}].${k}`] = pt[k] })
       })
       if (Object.keys(updates).length) this.setData(updates)
-      getApp().globalData.interactionPatches = {}
+      gcPatches()
     }
   },
 
@@ -68,18 +69,25 @@ Page({
     if (idx < 0) return
     const item = this.data.list[idx]
     const active = !item[key]
+    const nextCount = Math.max(0, (item[countKey] || 0) + (active ? 1 : -1))
     this.setData({
       [`list[${idx}].${key}`]: active,
-      [`list[${idx}].${countKey}`]: Math.max(0, (item[countKey] || 0) + (active ? 1 : -1))
+      [`list[${idx}].${countKey}`]: nextCount
     })
+    writePatch(post.id, { [key]: active, [countKey]: nextCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      await api.interactionToggle(post.id, type)
+      const res = await api.interactionToggle(post.id, type)
+      if (res && typeof res.count === 'number' && res.count !== nextCount) {
+        this.setData({ [`list[${idx}].${countKey}`]: res.count })
+        writePatch(post.id, { [key]: !!res.active, [countKey]: res.count })
+      }
     } catch (err) {
       this.setData({
         [`list[${idx}].${key}`]: item[key],
         [`list[${idx}].${countKey}`]: item[countKey]
       })
+      writePatch(post.id, { [key]: item[key], [countKey]: item[countKey] })
       wx.showToast({ title: '操作失败', icon: 'none' })
     }
   },
