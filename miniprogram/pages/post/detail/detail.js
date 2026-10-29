@@ -210,32 +210,38 @@ Page({
   },
 
   // ---------- 互动 ----------
+  // ⚠️ wxml 计数显示的是 likeShort/favShort（countShort 格式化），乐观更新必须同步这两个字段，
+  //    否则出现「图标点亮但数字不动」；成功后以服务端返回的 {active,count} 真值校正
   async onLike() {
     const p = this.data.post
     const active = !p.liked
-    const likeCount = Math.max(0, p.likeCount + (active ? 1 : -1))
-    this.setData({ 'post.liked': active, 'post.likeCount': likeCount })
+    const likeCount = Math.max(0, (p.likeCount || 0) + (active ? 1 : -1))
+    this.setData({ 'post.liked': active, 'post.likeCount': likeCount, 'post.likeShort': countShort(likeCount) })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      await api.interactionToggle(this.postId, 'like')
-      this.patchInteraction({ liked: active, likeCount })
+      const res = await api.interactionToggle(this.postId, 'like')
+      const count = res && typeof res.count === 'number' ? res.count : likeCount
+      this.setData({ 'post.likeCount': count, 'post.likeShort': countShort(count) })
+      this.patchInteraction({ liked: active, likeCount: count })
     } catch (e) {
-      this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount })
+      this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount, 'post.likeShort': p.likeShort })
     }
   },
 
   async onFav() {
     const p = this.data.post
     const active = !p.faved
-    const favCount = Math.max(0, p.favCount + (active ? 1 : -1))
-    this.setData({ 'post.faved': active, 'post.favCount': favCount })
+    const favCount = Math.max(0, (p.favCount || 0) + (active ? 1 : -1))
+    this.setData({ 'post.faved': active, 'post.favCount': favCount, 'post.favShort': countShort(favCount) })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      await api.interactionToggle(this.postId, 'fav')
+      const res = await api.interactionToggle(this.postId, 'fav')
+      const count = res && typeof res.count === 'number' ? res.count : favCount
+      this.setData({ 'post.favCount': count, 'post.favShort': countShort(count) })
       if (active) toast('已收藏')
-      this.patchInteraction({ faved: active, favCount })
+      this.patchInteraction({ faved: active, favCount: count })
     } catch (e) {
-      this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount })
+      this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount, 'post.favShort': p.favShort })
     }
   },
 
