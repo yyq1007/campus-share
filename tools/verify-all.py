@@ -48,8 +48,8 @@ print('=== 3. 配置一致性 ===')
 pc = json.load(open(os.path.join(ROOT, 'project.config.json'), encoding='utf-8'))
 pp = json.load(open(os.path.join(ROOT, 'project.private.config.json'), encoding='utf-8'))
 cfg = open(os.path.join(ROOT, 'miniprogram', 'utils', 'config.js'), encoding='utf-8').read()
-ENV = 'qqq-d7g05y68803d5476c'
-APPID = 'wx871271445ba93093'
+ENV = 'yyq-d6g1dv0kgf893afe8'
+APPID = 'wxb354543de577f74b'
 check('project.config.json appid', pc.get('appid') == APPID, pc.get('appid'))
 check('project.private.config.json appid', pp.get('appid') == APPID, pp.get('appid'))
 check('config.js CLOUD_ENV', f"CLOUD_ENV: '{ENV}'" in cfg)

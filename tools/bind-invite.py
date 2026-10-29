@@ -19,7 +19,7 @@ import sys
 
 NODE = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
 CLI = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_modules\@cloudbase\cli\dist\standalone\cli.js"
-ENV = 'qqq-d7g05y68803d5476c'
+ENV = 'yyq-d6g1dv0kgf893afe8'
 
 # 与 cloudfunctions/*/lib/db.js 的 BASE32 一致（去掉 I/L/O/0/1 等易混字符）
 BASE32 = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'

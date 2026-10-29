@@ -16,7 +16,7 @@ CLI = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_mo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CF = os.path.join(ROOT, 'cloudfunctions')
-ENV = 'qqq-d7g05y68803d5476c'
+ENV = 'yyq-d6g1dv0kgf893afe8'
 
 # 运行时：与作者线上保持一致（Nodejs18.15），支持云端安装依赖
 RUNTIME = 'Nodejs18.15'

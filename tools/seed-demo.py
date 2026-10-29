@@ -15,7 +15,7 @@ import time
 
 NODE = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
 CLI = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_modules\@cloudbase\cli\dist\standalone\cli.js"
-ENV = 'qqq-d7g05y68803d5476c'
+ENV = 'yyq-d6g1dv0kgf893afe8'
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
