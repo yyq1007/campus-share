@@ -11,6 +11,14 @@ const { getConfig } = require('./lib/config');
 
 const MAX_PAGE = 20;
 
+// interactions.type → 出参字段名。
+// 数据库里存的是 'like' / 'fav'，但 present.postBrief 读的是 'liked' / 'faved'
+//（与 postDetail 的 myInteraction、meList 的收藏列表口径一致）。
+// 之前 postList 直接用 it.type 当键名，差一个字母 d → 永远对不上，
+// 恒返回 liked=false / faved=false：前端刷新后以为没点赞过，
+// 再点一次变成「取消点赞」，计数互相抵消。
+const INTER_KEY = { like: 'liked', fav: 'faved' };
+
 async function loadInteractions(uid, ids) {
   const map = {};
   if (!uid || !ids.length) return map;
@@ -20,8 +28,10 @@ async function loadInteractions(uid, ids) {
       .limit(100)
       .get();
     (res.data || []).forEach((it) => {
+      const key = INTER_KEY[it.type];
+      if (!key) return;
       map[it.targetId] = map[it.targetId] || {};
-      map[it.targetId][it.type] = true;
+      map[it.targetId][key] = true;
     });
   } catch (e) { /* ignore */ }
   return map;

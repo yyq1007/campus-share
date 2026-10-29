@@ -2,7 +2,7 @@
 const api = require('../../utils/api')
 const { guard } = require('../../utils/auth')
 const { BOARDS } = require('../../utils/config')
-const { collectPatches } = require('../../utils/post-sync')
+const { collectPatches, patchPost } = require('../../utils/post-sync')
 
 Page({
   data: {
@@ -69,13 +69,16 @@ Page({
     if (idx < 0) return
     const item = this.data.list[idx]
     const active = !item[key]
+    const nextCount = Math.max(0, (item[countKey] || 0) + (active ? 1 : -1))
     this.setData({
       [`list[${idx}].${key}`]: active,
-      [`list[${idx}].${countKey}`]: Math.max(0, (item[countKey] || 0) + (active ? 1 : -1))
+      [`list[${idx}].${countKey}`]: nextCount
     })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
       await api.interactionToggle(post.id, type)
+      // 记补丁：进详情页再返回时用云端真值覆盖本地乐观值
+      patchPost(post.id, { [key]: active, [countKey]: nextCount })
     } catch (err) {
       this.setData({
         [`list[${idx}].${key}`]: item[key],

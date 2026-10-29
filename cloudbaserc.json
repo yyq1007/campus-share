@@ -1,8 +1,296 @@
 {
   "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
-  "envId": "yyq-d6g1dv0kgf893afe8",
+  "envId": "qqq-d7g05y68803d5476c",
   "functionRoot": "cloudfunctions",
   "functions": [
+    {
+      "name": "adminQueue",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 管理队列（审核台拉取待处理项）"
+    },
+    {
+      "name": "adminReview",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 审核裁决（通过/驳回/下线）"
+    },
+    {
+      "name": "aiEmbed",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · AI 向量化（内容入向量库）"
+    },
+    {
+      "name": "aiStructure",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · AI 结构化（内容字段抽取）"
+    },
+    {
+      "name": "askQuery",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · AI 问答检索"
+    },
+    {
+      "name": "authBindInvite",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 邀请码绑定"
+    },
+    {
+      "name": "authDelete",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 账号注销"
+    },
+    {
+      "name": "authLogin",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 登录/建号（openid 无感登录）"
+    },
+    {
+      "name": "clientLog",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 客户端异常上报"
+    },
+    {
+      "name": "commentCreate",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 评论发布"
+    },
+    {
+      "name": "commentList",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 评论列表"
+    },
+    {
+      "name": "interactionToggle",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 点赞/收藏切换"
+    },
+    {
+      "name": "meList",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 我的列表（帖子/收藏）"
+    },
+    {
+      "name": "meMessageRead",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 消息已读"
+    },
+    {
+      "name": "meOverview",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 我的概览（统计/未读）"
+    },
+    {
+      "name": "meUpdateProfile",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 资料更新"
+    },
+    {
+      "name": "mediaCheck",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 内容安全检测（文本/图片）"
+    },
+    {
+      "name": "postCreate",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 发帖"
+    },
+    {
+      "name": "postDelete",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 删帖"
+    },
+    {
+      "name": "postDetail",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 帖子详情"
+    },
+    {
+      "name": "postList",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 帖子列表（首页/板块/搜索）"
+    },
+    {
+      "name": "reportCreate",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 举报"
+    },
+    {
+      "name": "taskCleanup",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 定时任务（过期扫描/临时文件清理）"
+    },
+    {
+      "name": "taskHotScore",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 定时任务（热度分数刷新）"
+    },
     {
       "name": "taskVectorize",
       "timeout": 20,
@@ -14,6 +302,18 @@
         "WX_ENV_VERSION": "release"
       },
       "description": "校园分享 · 定时任务（向量重建）"
+    },
+    {
+      "name": "wxacodeGen",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 小程序码生成"
     }
   ]
 }
