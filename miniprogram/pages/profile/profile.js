@@ -26,10 +26,19 @@ Page({
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 3 })
+      this.syncTabUnread()
     }
     // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）
     syncTabBarLock()
     this.load()
+  },
+
+  /** 把 globalData.unread 同步到自定义 TabBar 的「我的」红点 */
+  syncTabUnread() {
+    const app = getApp()
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ unread: app.globalData.unread || 0 })
+    }
   },
 
   async load() {
@@ -39,6 +48,7 @@ Page({
       const res = await api.meOverview()
       // avatar 为 {fileId,status} 对象，需换成可展示的临时链接
       const avatarUrl = await this.resolveAvatar(res.avatar)
+      getApp().globalData.unread = res.unread || 0
       this.setData({
         profile: {
           ...res,
@@ -49,6 +59,7 @@ Page({
         isAdmin: res.role === 'admin' || res.role === 'reviewer',
         state: 'success'
       })
+      this.syncTabUnread()
     } catch (e) {
       if (e && e.silent) return
       if (!this.data.profile) this.setData({ state: 'error' })

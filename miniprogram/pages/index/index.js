@@ -33,8 +33,9 @@ Page({
   },
 
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 0 })
+    const tabBar = typeof this.getTabBar === 'function' ? this.getTabBar() : null
+    if (tabBar) {
+      tabBar.setData({ selected: 0, unread: app.globalData.unread || 0 })
     }
     // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）
     syncTabBarLock()

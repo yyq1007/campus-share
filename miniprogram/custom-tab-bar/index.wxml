@@ -14,7 +14,10 @@
     <text class="tab-text tab-publish-text">发布</text>
   </view>
   <view class="tab-item {{selected === 3 ? 'on' : ''}}" data-index="3" bindtap="switchTab">
-    <icon name="{{selected === 3 ? 'tab-me-on' : 'tab-me'}}" size="48"/>
+    <view class="tab-ico-wrap">
+      <icon name="{{selected === 3 ? 'tab-me-on' : 'tab-me'}}" size="48"/>
+      <view wx:if="{{unread > 0}}" class="tab-badge" />
+    </view>
     <text class="tab-text">我的</text>
   </view>
 

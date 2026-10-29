@@ -9,6 +9,7 @@ Component({
   data: {
     selected: 0,
     locked: false,
+    unread: 0,           // 站内消息未读数：由 globalData.unread 同步，驱动「我的」红点
     list: [
       { key: 'index', path: '/pages/index/index', text: '首页', icon: 'tab-home', iconOn: 'tab-home-on' },
       { key: 'ask', path: '/pages/ask/ask', text: '问答', icon: 'tab-ask', iconOn: 'tab-ask-on' },

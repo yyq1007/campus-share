@@ -1,0 +1,37 @@
+request_id: 20261029-1331-zuopin-doc
+entry_type: full_pipeline
+created_at: '2026-10-29 13:31'
+intent_summary: 比赛作品介绍文档（校园分享小程序「好物分享」），覆盖比赛 7 项要求，输出 docx
+current_stage: stage3
+output_docx_path: E:\workbuddy\good finds WeChat\campus-share\docs\作品介绍文档.docx
+output_docx_user_specified: true
+stage_1:
+  status: completed
+  completed_at: '2026-10-29 13:40'
+  output_path: stage1/final_draft.md
+  genre: general
+  expert_used: general-writer
+  route_tag: general_writing
+stage_2:
+  status: completed
+  completed_at: '2026-10-29 13:50'
+  route: html
+  html_sub: template
+  output_path: stage2/formatted-作品介绍文档.html
+  output_format: html
+  skills_invoked: [design-token, doc-typeset, html-review]
+  html_review_attempts: 0
+stage_3:
+  status: completed
+  completed_at: '2026-10-29 13:55'
+  executor: doc-converter
+  input_format: html
+  html_output_path: stage2/formatted-作品介绍文档.html
+  output_path: E:\workbuddy\good finds WeChat\campus-share\docs\作品介绍文档.docx
+  skill_used: [html-to-doc]
+  present_files_opened: true
+  fallback: false
+  fallback_used: false
+  fallback_reason: null
+  chunks: null
+consistency_check: S1 general-writer 90 分通过；S2 html-template business-modern，review 一次通过；S3 preflight passed（require-page-furniture），转换成功，成品已 present。
