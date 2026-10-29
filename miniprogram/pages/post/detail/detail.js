@@ -7,6 +7,12 @@ const { timeAgo, countShort, linkHost, randId, commentAvatarIndex } = require('.
 const { getTempUrls } = require('../../../utils/media')
 const { patchPost } = require('../../../utils/post-sync')
 
+// 楼中楼身份：楼主 / 层主 / 其他匿名同学（tag 由 commentList 计算）
+const REPLY_NICK = { op: '楼主', layer: '层主' }
+function decorateReply(r) {
+  return { ...r, mine: !!r.isMine, nick: REPLY_NICK[r.tag] || '匿名同学', timeText: timeAgo(r.createdAt) }
+}
+
 Page({
   data: {
     statusBarH: 40,
@@ -104,13 +110,14 @@ Page({
   // ---------- 评论 ----------
   async loadComments(reset) {
     if (reset) this.setData({ commentCursor: null })
-    const res = await api.commentList(this.postId)
-    const list = (res.list || []).map(c => ({
+    const res = await api.commentList(this.postId, '', reset ? '' : this.data.commentCursor)
+    const page = (res.list || []).map(c => ({
       ...c,
       mine: !!c.isMine,
       timeText: timeAgo(c.createdAt),
-      replies: (c.replies || []).map(r => ({ ...r, mine: !!r.isMine, timeText: timeAgo(r.createdAt) }))
+      replies: (c.replies || []).map(decorateReply)
     }))
+    const list = reset ? page : this.data.comments.concat(page)
     this.setData({
       comments: list,
       commentCursor: res.nextCursor,
@@ -120,8 +127,28 @@ Page({
   },
 
   onMoreComments() {
-    if (!this.data.commentHasMore) return
-    this.loadComments(false).catch(() => toast('加载失败'))
+    if (!this.data.commentHasMore || this._loadingComments) return
+    this._loadingComments = true
+    this.loadComments(false)
+      .catch(() => toast('加载失败'))
+      .then(() => { this._loadingComments = false })
+  },
+
+  /** 展开某条一级评论下的全部回复（列表里默认只内嵌 3 条） */
+  async onExpandReplies(e) {
+    const { id } = e.currentTarget.dataset
+    try {
+      const res = await api.commentList(this.postId, id)
+      const replies = (res.list || []).map(decorateReply)
+      const idx = this.data.comments.findIndex(c => c.id === id)
+      if (idx < 0) return
+      this.setData({
+        [`comments[${idx}].replies`]: replies,
+        [`comments[${idx}].replyCount`]: replies.length
+      })
+    } catch (err) {
+      toast('加载失败')
+    }
   },
 
   onCommentInput(e) { this.setData({ commentDraft: e.detail.value }) },
@@ -172,6 +199,7 @@ Page({
         replyCount: 0,
         replies: [],
         mine: res.isMine !== false,
+        tag: this.data.post && this.data.post.isMine ? 'op' : '',
         timeText: '刚刚'
       }
       const comments = this.data.comments.slice()
@@ -187,9 +215,10 @@ Page({
             break
           }
         }
-        if (!hit) comments.push(c)
+        if (!hit) comments.unshift(c)
       } else {
-        comments.push(c)
+        // 列表按楼层倒序（新的在上），新评论放最上面
+        comments.unshift(c)
       }
       this.setData({
         comments,
@@ -292,6 +321,7 @@ Page({
     if (!confirmed) return
     try {
       await api.postDelete(this.postId)
+      patchPost(this.postId, { deleted: true })
       toast('已删除')
       getApp().globalData.feedDirty = true
       setTimeout(() => wx.navigateBack(), 800)

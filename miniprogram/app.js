@@ -25,8 +25,16 @@ App({
       this.globalData.network = res.isConnected ? 'online' : 'offline'
     })
 
-    // 首次启动：请求隐私协议授权（微信要求实现 onNeedPrivacyAuthorization）
+  },
+
+  onShow() {
+    this.__hidden = false
+    // 未同意协议不允许使用：每次回到前台都检查（onShow 在启动时也会触发）
     this.ensurePrivacyAgreement()
+  },
+
+  onHide() {
+    this.__hidden = true
   },
 
   /**
@@ -82,33 +90,53 @@ App({
     }
   },
 
+  hasAgreedPrivacy() {
+    try {
+      return wx.getStorageSync(PRIVACY_AGREE_KEY) === PRIVACY_VERSION
+    } catch (e) {
+      return false
+    }
+  },
+
   /**
-   * 启动时检查是否已同意当前版本协议，未同意则拉起协议页。
-   * 不阻塞启动流程：用户在协议页同意后调 grantPrivacyAuthorization() 放行。
+   * 检查是否已同意当前版本协议，未同意则弹窗拦截：
+   * - 去阅读 → 协议页（gate 模式：不同意就返回会再次拦截）
+   * - 暂不 → 退出小程序；退出失败（开发者工具/低版本）则继续弹窗，不放行使用
    */
   ensurePrivacyAgreement() {
-    let agreed = ''
-    try {
-      agreed = wx.getStorageSync(PRIVACY_AGREE_KEY) || ''
-    } catch (e) { /* ignore */ }
-    if (agreed === PRIVACY_VERSION) return
+    if (this.hasAgreedPrivacy() || this.__gateShowing) return
+    this.__gateShowing = true
 
     // 延后一点，等首页渲染完成再弹，避免与页面初始化抢资源
     setTimeout(() => {
       wx.showModal({
         title: '欢迎来到好物分享',
-        content: '开始使用前请阅读并同意《用户协议》与《隐私政策》。',
+        content: '开始使用前请阅读并同意《用户协议》与《隐私政策》。不同意将无法使用本小程序。',
         confirmText: '去阅读',
         cancelText: '暂不',
         success: (r) => {
-          if (!r.confirm) return
-          wx.navigateTo({
-            url: '/pages/agreement/agreement?type=user',
-            fail: () => { /* ignore */ }
-          })
-        }
+          if (r.confirm) {
+            wx.navigateTo({
+              url: '/pages/agreement/agreement?type=user&gate=1',
+              success: () => { this.__gateShowing = false },
+              fail: () => { this.__regate() }
+            })
+          } else {
+            // 开发者工具里 exitMiniProgram 会走 success 但不真正退出，所以不论结果都重新拦截；
+            // 真机已退到后台时 __regate 只复位，等下次 onShow 再拦
+            wx.exitMiniProgram({ complete: () => { this.__regate() } })
+          }
+        },
+        fail: () => { this.__regate() }
       })
     }, 800)
+  },
+
+  /** 重新弹出协议拦截 */
+  __regate() {
+    this.__gateShowing = false
+    if (this.__hidden) return
+    this.ensurePrivacyAgreement()
   },
 
   /** 圆体标题字：Data URL 直载（零网络零 CORS），失败降级系统 600（不允许布局跳动，标题行高已固定） */

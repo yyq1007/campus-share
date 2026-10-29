@@ -109,6 +109,7 @@
         <view class="comment-main">
           <view class="comment-meta">
             <text class="comment-nick">匿名 #{{item.floor}}</text>
+            <text wx:if="{{item.tag === 'op'}}" class="comment-mine">楼主</text>
             <text wx:if="{{item.mine}}" class="comment-mine">我</text>
             <text class="comment-time">{{item.timeText}}</text>
           </view>
@@ -118,13 +119,16 @@
           <view wx:if="{{item.replies && item.replies.length}}" class="comment-replies">
             <view class="comment-reply" wx:for="{{item.replies}}" wx:for-item="r" wx:key="id">
               <view class="comment-reply-line">
-                <text class="comment-reply-name">匿名 #{{r.floor}}</text>
-                <text wx:if="{{r.replyToFloor}}" class="comment-reply-seg"> 回复 #{{r.replyToFloor}}：</text>
-                <text wx:else class="comment-reply-seg">：</text>
+                <text class="comment-reply-name">{{r.mine ? '我' : r.nick}}</text>
+                <text class="comment-reply-seg">：</text>
                 <text class="comment-reply-content">{{r.content}}</text>
               </view>
               <view class="comment-reply-time">{{r.timeText}}</view>
             </view>
+            <view
+              wx:if="{{item.replyCount > item.replies.length}}"
+              class="comment-more" data-id="{{item.id}}" catch:tap="onExpandReplies"
+            >展开全部 {{item.replyCount}} 条回复</view>
           </view>
         </view>
       </view>

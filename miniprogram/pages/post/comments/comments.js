@@ -132,9 +132,10 @@ Page({
             break
           }
         }
-        if (!hit) comments.push(c)
+        if (!hit) comments.unshift(c)
       } else {
-        comments.push(c)
+        // 列表按楼层倒序（新的在上），新评论放最上面
+        comments.unshift(c)
       }
       this.setData({
         comments,

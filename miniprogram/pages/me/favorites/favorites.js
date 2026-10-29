@@ -37,10 +37,11 @@ Page({
 
   onShow() {
     // 详情页里点赞/取消收藏的变更：取消收藏的直接移出列表
-    const { updates, removedIds } = collectPatches(this.data.list, this._syncAt || 0)
+    const { updates, removedIds, deletedIds } = collectPatches(this.data.list, this._syncAt || 0)
     this._syncAt = Date.now()
-    if (removedIds.length) {
-      const list = this.data.list.filter(x => removedIds.indexOf(x.id) === -1)
+    const gone = removedIds.concat(deletedIds)
+    if (gone.length) {
+      const list = this.data.list.filter(x => gone.indexOf(x.id) === -1)
       this.setData({ list, state: list.length ? 'success' : 'empty' })
     } else if (Object.keys(updates).length) {
       this.setData(updates)

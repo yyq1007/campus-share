@@ -17,6 +17,8 @@ Page({
   },
 
   onLoad (query) {
+    // gate=1：启动拦截进入，未同意就离开本页会再次拦截
+    this.gate = !!(query && query.gate)
     const doc = DOCS[(query && query.type) || 'user'] || USER_AGREEMENT
     this.setData({
       title: doc.title,
@@ -33,8 +35,13 @@ Page({
 
   onBack () { wx.navigateBack() },
 
+  onUnload () {
+    if (this.gate && !this.agreed) getApp().ensurePrivacyAgreement()
+  },
+
   /** 点击「同意并继续」：记录版本并放行被拦的隐私接口 */
   onAgree () {
+    this.agreed = true
     const app = getApp()
     const granted = app && typeof app.grantPrivacyAuthorization === 'function'
       ? app.grantPrivacyAuthorization()

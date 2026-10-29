@@ -78,6 +78,29 @@ async function toggleOnce(id, uid, targetType, targetId, type) {
   }
 }
 
+/**
+ * 撤回/修正合并消息：帖子计数归零 → 删除消息；否则把正文里的人数改成当前计数
+ * （msg.js 在 25 个云函数里各有一份，撤回逻辑只此处需要，故写在这里）
+ */
+async function retractMessage(dedupeKey, post, isLike, count) {
+  const res = await coll(COL.messages).where({ dedupeKey, toUid: post.authorUid }).limit(1).get();
+  const m = res.data && res.data[0];
+  if (!m) return;
+  if (count <= 0) {
+    await coll(COL.messages).doc(m._id).remove();
+    return;
+  }
+  const title = excerpt(post.title || post.content || '你的分享', 20);
+  await coll(COL.messages).doc(m._id).update({
+    data: {
+      count: Math.max(1, (m.count || 1) - 1),
+      body: isLike
+        ? `《${title}》等 ${count} 人赞了你的分享`
+        : `《${title}》等 ${count} 人收藏了你的分享`,
+    },
+  });
+}
+
 exports.main = withAuth(async (event, ctx) => {
   const targetType = String(event.targetType || 'post');
   const targetId = String(event.targetId || '').trim();
@@ -127,6 +150,17 @@ exports.main = withAuth(async (event, ctx) => {
         dedupeKey: isLike ? msg.likeDedupeKey(targetId) : msg.favDedupeKey(targetId),
       })
       .catch(() => {});
+  }
+
+  // 取消赞/藏：撤回当天合并的那条消息，否则「点了又取消」后帖子 0 赞却留着「有人赞了你」
+  if (!result.active && result.post.authorUid && result.post.authorUid !== ctx.uid) {
+    const isLike = type === 'like';
+    await retractMessage(
+      isLike ? msg.likeDedupeKey(targetId) : msg.favDedupeKey(targetId),
+      result.post,
+      isLike,
+      result.count
+    ).catch(() => {});
   }
 
   return ok({ active: result.active, count: result.count });
