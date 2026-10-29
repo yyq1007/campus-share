@@ -80,6 +80,27 @@
   line-height: 1.7;
   color: var(--text-body);
 }
+
+/* 协议入口行 */
+.link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-top: 1rpx solid var(--border);
+}
+.link-row:last-child { border-top: none; }
+.link-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-body);
+}
+.link-arrow {
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+}
+
 .foot-note {
   margin-top: 48rpx;
   text-align: center;

@@ -2,7 +2,7 @@
 const api = require('../../../utils/api')
 const { toast } = require('../../../utils/cloud')
 const { guard } = require('../../../utils/auth')
-const { timeAgo, countShort, randId } = require('../../../utils/format')
+const { timeAgo, countShort, randId, commentAvatarIndex } = require('../../../utils/format')
 
 Page({
   data: {
@@ -97,9 +97,19 @@ Page({
         payload.replyToFloor = this.data.replyTo.floor
       }
       const res = await api.commentCreate(payload)
+      // ⚠️ 拿不到 commentId/floor 不能硬塞 undefined：
+      //    comments.wxml 用 wx:key="floor"，floor 为 undefined 会让 key 重复 → 渲染错乱。
+      if (!res || !res.commentId) {
+        this.setData({ sending: false })
+        toast('评论已提交，正在刷新列表')
+        this.fetchList(true).catch(() => {})
+        return
+      }
+      const floor = Number(res.floor) || 0
       const c = {
         id: res.commentId,
-        floor: res.floor,
+        floor,
+        avatarIdx: commentAvatarIndex(floor),
         content,
         createdAt: Date.now(),
         status: res.status,

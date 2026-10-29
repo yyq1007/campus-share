@@ -56,7 +56,7 @@ exports.main = async (event) => {
   if (!vec) {
     console.error('[aiEmbed] failed', lastErr && lastErr.message);
     try {
-      await coll(COL.posts).doc(postId).update({ data: { embedFailed: true } });
+      await coll(COL.posts).doc(postId).update({ data: { embedFailed: true, embedded: false } });
     } catch (e) { /* ignore */ }
     return { ok: false, msg: 'embed failed' };
   }
@@ -80,10 +80,13 @@ exports.main = async (event) => {
         },
       });
     }
-    await coll(COL.posts).doc(postId).update({ data: { embedFailed: false } }).catch(() => {});
+    // ⚠️ embedded 标记：taskVectorize 用它定位「还没向量化」的帖子（B12）。
+    // 没有这个标记，taskVectorize 只能查最新 100 条再过滤，
+    // 已向量化的帖子会一直占着名额 → 旧帖子永远轮不到。
+    await coll(COL.posts).doc(postId).update({ data: { embedFailed: false, embedded: true } }).catch(() => {});
   } catch (e) {
     console.error('[aiEmbed] write failed', e && e.message);
-    await coll(COL.posts).doc(postId).update({ data: { embedFailed: true } }).catch(() => {});
+    await coll(COL.posts).doc(postId).update({ data: { embedFailed: true, embedded: false } }).catch(() => {});
     return { ok: false, msg: 'write failed' };
   }
 

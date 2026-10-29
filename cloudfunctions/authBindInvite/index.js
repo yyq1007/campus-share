@@ -3,6 +3,12 @@
  * 数据模型：invites 集合一码多人用（code / disabled / maxUses / usedCount / lastUsedAt）
  * 归一化：库内统一大写存储，输入侧 toUpperCase 后精确匹配（用户输 gxnu2026 → GXNU2026）
  * 并发安全：乐观锁 update where usedCount < maxUses + $inc，只有未超额的请求能成功
+ *
+ * ⚠️ 顺序约束（B18 修复）：邀请码校验与扣减必须全部排在「建号」之前。
+ * 原实现先建号再校验邀请码 → 随便输一个错码也能注册成功，
+ * users 表里留下大量脏账号，邀请制被绕过。
+ * 现在：校验格式 → 查码 → 乐观锁扣减 →（都成功才）建号 → 绑定。
+ * 扣减是原子闸门，扣减失败就不会建号。
  */
 const { coll, COL, db, _ } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
@@ -20,17 +26,57 @@ exports.main = async (event) => {
     if (r.ctx) uid = r.ctx.uid;
     else if (r.error && r.error.code !== 40101) return r.error;
 
+    // openid：已注册用户用不上，未注册用户建号时需要
+    const { cloud, randomBase32 } = require('./lib/db');
+    const wxContext = cloud.getWXContext();
+    let openid = wxContext.OPENID || '';
+    if (!openid && process.env.DEV_OPENID) openid = process.env.DEV_OPENID;
+    if (!uid && !openid) return fail(40100);
+
+    // ---- 1. 先校验邀请码格式（错码直接返回，不碰数据库）----
+    const code = String((event && event.code) || '').trim().toUpperCase();
+    if (!CODE_RE.test(code)) return fail(40001, '邀请码格式不正确');
+
+    // ---- 2. 未注册：查是否已有账号（有就直接用，不重复建）----
     if (!uid) {
-      // 未注册用户：先建号再绑定
-      const { cloud } = require('./lib/db');
-      const wxContext = cloud.getWXContext();
-      let openid = wxContext.OPENID || '';
-      if (!openid && process.env.DEV_OPENID) openid = process.env.DEV_OPENID;
-      if (!openid) return fail(40100);
       const exist = await coll(COL.users).where({ openid }).limit(1).get();
       if (exist.data && exist.data.length) uid = exist.data[0]._id;
-      else {
-        const { randomBase32 } = require('./lib/db');
+    }
+
+    // ---- 3. 已绑定过：幂等成功（并补齐个人邀请码）----
+    if (uid) {
+      const me = await coll(COL.users).doc(uid).get();
+      if (me.data && me.data.inviteCode) {
+        const myCode = await ensureUserCode(me.data);
+        return ok({ uid, stats: me.data.stats || { posts: 0, favs: 0, cited: 0 }, inviteCode: myCode, already: true });
+      }
+    }
+
+    // ---- 4. 校验邀请码可用性 ----
+    const inv = await coll(COL.invites).where({ code }).limit(1).get();
+    if (!inv.data || !inv.data.length) return fail(40401, '邀请码无效');
+    const inv0 = inv.data[0];
+    if (inv0.disabled) return fail(40304, '邀请码已停用');
+    const maxUses = Number(inv0.maxUses) || 0;
+    if ((Number(inv0.usedCount) || 0) >= maxUses) return fail(40903, '邀请码已达使用上限');
+
+    // ---- 5. 乐观锁扣减（原子闸门）：失败 → 不建号 ----
+    const upd = await coll(COL.invites)
+      .where({ code, disabled: false, usedCount: _.lt(maxUses) })
+      .update({ data: { usedCount: _.inc(1), lastUsedAt: db.serverDate() } });
+
+    if (!upd.stats || upd.stats.updated !== 1) {
+      // 并发临界点被他人抢先：再查一次给出准确原因
+      const re = await coll(COL.invites).where({ code }).limit(1).get();
+      const d = re.data && re.data[0];
+      if (!d) return fail(40401, '邀请码无效');
+      if (d.disabled) return fail(40304, '邀请码已停用');
+      return fail(40903, '邀请码刚达到使用上限，请稍后再试');
+    }
+
+    // ---- 6. 扣减成功后才建号（此前绝不写 users 表）----
+    if (!uid) {
+      try {
         const add = await coll(COL.users).add({
           data: {
             openid,
@@ -46,38 +92,14 @@ exports.main = async (event) => {
           },
         });
         uid = add._id;
+      } catch (e) {
+        // 建号失败：把刚扣掉的使用次数还回去，避免白白消耗名额
+        try {
+          await coll(COL.invites).where({ code }).update({ data: { usedCount: _.inc(-1) } });
+        } catch (e2) { /* ignore */ }
+        console.error('[authBindInvite] 建号失败，已归还邀请码名额:', e && (e.message || e));
+        return fail(50001);
       }
-    }
-
-    const code = String((event && event.code) || '').trim().toUpperCase();
-    if (!CODE_RE.test(code)) return fail(40001, '邀请码格式不正确');
-
-    // 已绑定过：幂等成功（并补齐个人邀请码）
-    const me = await coll(COL.users).doc(uid).get();
-    if (me.data && me.data.inviteCode) {
-      const myCode = await ensureUserCode(me.data);
-      return ok({ uid, stats: me.data.stats || { posts: 0, favs: 0, cited: 0 }, inviteCode: myCode, already: true });
-    }
-
-    // 一码多人用：先取码校验可用性，再用乐观锁扣减次数
-    const inv = await coll(COL.invites).where({ code }).limit(1).get();
-    if (!inv.data || !inv.data.length) return fail(40401, '邀请码无效');
-    const inv0 = inv.data[0];
-    if (inv0.disabled) return fail(40304, '邀请码已停用');
-    const maxUses = Number(inv0.maxUses) || 0;
-    if ((Number(inv0.usedCount) || 0) >= maxUses) return fail(40903, '邀请码已达使用上限');
-
-    const upd = await coll(COL.invites)
-      .where({ code, disabled: false, usedCount: _.lt(maxUses) })
-      .update({ data: { usedCount: _.inc(1), lastUsedAt: db.serverDate() } });
-
-    if (!upd.stats || upd.stats.updated !== 1) {
-      // 并发临界点被他人抢先：再查一次给出准确原因
-      const re = await coll(COL.invites).where({ code }).limit(1).get();
-      const d = re.data && re.data[0];
-      if (!d) return fail(40401, '邀请码无效');
-      if (d.disabled) return fail(40304, '邀请码已停用');
-      return fail(40903, '邀请码刚达到使用上限，请稍后再试');
     }
 
     // 绑定成功后同时发放个人邀请码（用于分享给同学）

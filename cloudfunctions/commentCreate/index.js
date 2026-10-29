@@ -1,6 +1,10 @@
 /**
  * commentCreate（9.9）
  * 楼层号由 posts.commentSeq 事务自增产生（C-08）；二级回复不取号
+ *
+ * ⚠️ 事务写冲突必须重试（B11）：楼层号 + 计数的读改写在事务里，
+ * 高互动帖子下多人同时评论会撞写冲突。原实现直接 rollback + fail(50001)，
+ * 表现为「用户随机评论失败」。现在参照 interactionToggle 的退避重试。
  */
 const { coll, _, COL, db, charLen, normalizeText } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
@@ -12,6 +16,62 @@ const { msgSecCheck } = require('./lib/wxapi');
 const msg = require('./lib/msg');
 
 const EXPIRE_WORDS = ['关了', '没了', '倒闭', '搬走', '拆了', '失效', '停业'];
+
+// 事务写冲突重试次数（与 interactionToggle 一致）
+const MAX_RETRY = 2;
+
+/**
+ * 执行一次「楼层号 + 评论 + 计数」的事务。
+ * 事务对象不可跨次重试复用，所以每次都要新开事务。
+ * @returns {Promise<{commentId:string, floor:number}>}
+ * @throws 事务冲突等异常，由外层重试
+ */
+async function createCommentOnce(postId, parentId, replyToFloor, clientReqId, ctx, content, status, lexRes, wxRes) {
+  const parent = parentId ? (await coll(COL.comments).doc(parentId).get()).data : null;
+  const t = await db.startTransaction();
+  try {
+    const p = await t.collection(COL.posts).doc(postId).get();
+    const seq = ((p.data && p.data.commentSeq) || 0) + 1;
+
+    let nextFloor = seq;
+    if (parent) nextFloor = parent.floor; // 二级回复不取号
+
+    await t.collection(COL.posts).doc(postId).update({
+      data: { commentSeq: seq, 'stats.commentCount': (p.data.stats && p.data.stats.commentCount || 0) + 1 },
+    });
+
+    const add = await t.collection(COL.comments).add({
+      data: {
+        postId,
+        authorUid: ctx.uid,
+        floor: nextFloor,
+        parentId: parentId || '',
+        replyToFloor: replyToFloor || 0,
+        replyCount: 0,
+        content,
+        status,
+        risk: { level: status === 'published' ? 'pass' : 'review', source: wxRes.degraded ? 'local' : 'wx', labels: lexRes.categories, checkedAt: new Date() },
+        likeCount: 0,
+        clientReqId,
+        createdAt: new Date(),
+      },
+    });
+
+    if (parent) {
+      await t.collection(COL.comments).doc(parentId).update({
+        data: { replyCount: (parent.replyCount || 0) + 1 },
+      });
+    }
+
+    await t.commit();
+    return { commentId: add._id, floor: nextFloor, parent };
+  } catch (e) {
+    try {
+      await t.rollback();
+    } catch (e2) { /* ignore */ }
+    throw e;
+  }
+}
 
 exports.main = withAuth(async (event, ctx) => {
   const postId = String(event.postId || '');
@@ -76,52 +136,26 @@ exports.main = withAuth(async (event, ctx) => {
   const wxRes = await msgSecCheck(content, ctx.openid);
   if (lexRes.review || wxRes.suggest !== 'pass') status = 'pending';
 
-  // 事务：楼层号 + 计数
-  let floor = 0;
+  // 事务：楼层号 + 计数（写冲突时退避重试，避免并发评论随机失败）
   let commentId = '';
-  const t = await db.startTransaction();
-  try {
-    const p = await t.collection(COL.posts).doc(postId).get();
-    const seq = ((p.data && p.data.commentSeq) || 0) + 1;
-
-    let nextFloor = seq;
-    if (parent) nextFloor = parent.floor; // 二级回复不取号
-
-    await t.collection(COL.posts).doc(postId).update({
-      data: { commentSeq: seq, 'stats.commentCount': (p.data.stats && p.data.stats.commentCount || 0) + 1 },
-    });
-
-    const add = await t.collection(COL.comments).add({
-      data: {
-        postId,
-        authorUid: ctx.uid,
-        floor: nextFloor,
-        parentId: parentId || '',
-        replyToFloor: replyToFloor || 0,
-        replyCount: 0,
-        content,
-        status,
-        risk: { level: status === 'published' ? 'pass' : 'review', source: wxRes.degraded ? 'local' : 'wx', labels: lexRes.categories, checkedAt: new Date() },
-        likeCount: 0,
-        clientReqId,
-        createdAt: new Date(),
-      },
-    });
-    commentId = add._id;
-    floor = nextFloor;
-
-    if (parent) {
-      await t.collection(COL.comments).doc(parentId).update({
-        data: { replyCount: (parent.replyCount || 0) + 1 },
-      });
-    }
-
-    await t.commit();
-  } catch (e) {
+  let floor = 0;
+  let lastErr = null;
+  for (let i = 0; i <= MAX_RETRY; i += 1) {
     try {
-      await t.rollback();
-    } catch (e2) { /* ignore */ }
-    console.error('[commentCreate tx]', e && (e.message || e));
+      // eslint-disable-next-line no-await-in-loop
+      const r = await createCommentOnce(postId, parentId, replyToFloor, clientReqId, ctx, content, status, lexRes, wxRes);
+      commentId = r.commentId;
+      floor = r.floor;
+      break;
+    } catch (e) {
+      lastErr = e;
+      // 事务写冲突：短暂退避后重试
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((r) => setTimeout(r, 60 * (i + 1)));
+    }
+  }
+  if (!commentId) {
+    console.error('[commentCreate tx]', lastErr && (lastErr.message || lastErr));
     return fail(50001);
   }
 

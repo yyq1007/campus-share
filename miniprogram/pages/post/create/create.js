@@ -4,7 +4,7 @@ const { toast } = require('../../../utils/cloud')
 const { guard, getUid } = require('../../../utils/auth')
 const { BOARDS, BOARD_KEYS, LIMITS } = require('../../../utils/config')
 const { chooseImages, chooseVideo, uploadImage, uploadVideo, uploadFile } = require('../../../utils/media')
-const { countChars, normalizeText, cleanContent, validLink, randId } = require('../../../utils/format')
+const { countChars, clipChars, normalizeText, cleanContent, validLink, randId } = require('../../../utils/format')
 
 const DRAFT_KEY = 'draft_post_'
 
@@ -107,14 +107,29 @@ Page({
   // ---------- 输入 ----------
   onTitle(e) {
     const v = e.detail.value
-    if (countChars(v) > LIMITS.titleMax) return
-    this.setData({ title: v, titleCount: countChars(v) })
+    const n = countChars(v)
+    if (n > LIMITS.titleMax) {
+      // ⚠️ 不能直接 return：那会让输入框里显示的字和 data.title 不一致
+      //    （用户看到超了字，但计数器停在上限、提交时又被服务端拒）
+      //    截断到上限并提示，让输入框与 data 保持一致。
+      //    截断要用 Array.from（与 countChars 同口径，按 code point 计），
+      //    直接 slice 会把 emoji 劈成乱码。
+      toast(`标题最多 ${LIMITS.titleMax} 字`)
+      this.setData({ title: clipChars(v, LIMITS.titleMax), titleCount: LIMITS.titleMax })
+      return
+    }
+    this.setData({ title: v, titleCount: n })
   },
 
   onContent(e) {
     const v = e.detail.value
-    if (countChars(v) > LIMITS.contentMax) return
-    this.setData({ content: v, contentCount: countChars(v) })
+    const n = countChars(v)
+    if (n > LIMITS.contentMax) {
+      toast(`正文最多 ${LIMITS.contentMax} 字`)
+      this.setData({ content: clipChars(v, LIMITS.contentMax), contentCount: LIMITS.contentMax })
+      return
+    }
+    this.setData({ content: v, contentCount: n })
   },
 
   onLink(e) {
@@ -169,6 +184,9 @@ Page({
     try {
       const items = await chooseImages(remain)
       const media = this.data.media.concat(items.map(it => ({
+        // 本地唯一 id：用作 wx:key。删除中间项后 index 会前移，
+        // 用 index 当 key 会漂移（复用错位），用稳定 id 才安全。
+        lid: randId(8),
         type: 'image', localPath: it.localPath, size: it.size, w: it.w, h: it.h,
         uploaded: false, fileId: '', progress: 0
       })))
@@ -184,7 +202,7 @@ Page({
     try {
       const items = await chooseVideo()
       this.setData({
-        media: items.map(it => ({ type: 'video', localPath: it.localPath, thumb: it.thumb, size: it.size, duration: it.duration, uploaded: false, fileId: '', progress: 0 })),
+        media: items.map(it => ({ lid: randId(8), type: 'video', localPath: it.localPath, thumb: it.thumb, size: it.size, duration: it.duration, uploaded: false, fileId: '', progress: 0 })),
         mediaType: 'video'
       })
     } catch (e) {

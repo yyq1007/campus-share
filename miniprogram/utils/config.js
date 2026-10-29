@@ -3,13 +3,15 @@
  * 部署时唯一需要核对的文件：CLOUD_ENV 必须与云开发控制台一致
  */
 module.exports = {
-  CLOUD_ENV: 'yyq-d6g1dv0kgf893afe8',
+  CLOUD_ENV: 'qqq-d7g05y68803d5476c',
 
   /**
    * 图标统一引用（云存储优先，本地包内副本兜底）
-   * 部署后由 tools/upload-assets 上传至云存储 assets/icons/
+   * 实际渲染一律走包内路径（见 utils/icons.js：cloud:// fileID 不能直接用作
+   * <image src>，cloudIcon() 已废弃禁止用于渲染）。云存储副本仅作兼容备份，
+   * 由 tools/upload-assets.py 上传。
    */
-  ICON_CLOUD_BASE: 'cloud://yyq-d6g1dv0kgf893afe8.assets/icons/',
+  ICON_CLOUD_BASE: 'cloud://qqq-d7g05y68803d5476c.icons/',
   ICON_LOCAL_BASE: '/assets/icons/',
 
   /**

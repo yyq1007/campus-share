@@ -1,11 +1,16 @@
-// 关于页：产品说明 + 社区守则 + 版本
+// 关于页：产品说明 + 社区守则 + 协议入口 + 版本
 const { VERSION } = require('../../utils/config')
+const { USER_AGREEMENT, PRIVACY_POLICY } = require('../../utils/agreements')
 
 Page({
   data: {
     statusBarH: 40,
     navH: 44,
     version: VERSION,
+    agreements: [
+      { type: 'user', title: USER_AGREEMENT.title },
+      { type: 'privacy', title: PRIVACY_POLICY.title }
+    ],
     rules: [
       '仅限本校同学分享真实好物、学习资料与美食体验',
       '禁止发布广告、刷单、代购拉群等营销内容',
@@ -22,6 +27,11 @@ Page({
       const sb = win.statusBarHeight || 40
       this.setData({ statusBarH: sb, navH: (cap.top - sb) * 2 + cap.height })
     } catch (e) { /* 兜底 */ }
+  },
+
+  onAgreementTap(e) {
+    const type = (e.currentTarget && e.currentTarget.dataset.type) || 'user'
+    wx.navigateTo({ url: `/pages/agreement/agreement?type=${type}` })
   },
 
   onBack() { wx.navigateBack() }

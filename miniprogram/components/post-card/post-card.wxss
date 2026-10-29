@@ -9,6 +9,8 @@
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   margin-bottom: 32rpx;
+  /* 状态角标的定位参照（角标挂在卡片层，不在封面层） */
+  position: relative;
 }
 .pc-cover-wrap { position: relative; }
 .pc-cover {
@@ -31,7 +33,8 @@
 }
 .pc-expired {
   position: absolute;
-  top: 20rpx; right: 20rpx;
+  top: 20rpx; left: 20rpx;
+  z-index: 2;
   background: var(--warn-bg);
   color: var(--warn-fg, var(--warning-text));
   font-size: 22rpx;
@@ -39,10 +42,13 @@
   border-radius: var(--radius-pill);
   font-weight: 500;
 }
-/* 状态角标（我的分享：审核中/已发布/已驳回/已下线） */
+/* 状态角标（我的分享：审核中/已发布/已驳回/已下线）
+   定位在卡片右上角（不是封面左上角）：
+   无封面图时封面容器高度为 0，角标若挂在封面层会溢出压到标题上。 */
 .pc-status {
   position: absolute;
-  top: 20rpx; left: 20rpx;
+  top: 20rpx; right: 20rpx;
+  z-index: 2;
   font-size: 22rpx;
   padding: 8rpx 20rpx;
   border-radius: var(--radius-pill);

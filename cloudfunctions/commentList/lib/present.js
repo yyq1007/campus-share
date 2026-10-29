@@ -1,6 +1,20 @@
 /** 出参整形：字段裁剪与脱敏（16.4） */
 const { ms } = require('./db');
 
+/**
+ * 糖果色头像序号（1-5），按 floor 派生。
+ * 与前端 utils/format.js 的 avatarIndex 同算法，但入参不同：
+ *   前端用 uid（个人主页头像，按人取色是合理的）
+ *   这里用 floor（评论头像，按楼层取色 → 不同评论不同色，不可关联作者）
+ */
+function avatarIndex(floor) {
+  const n = Number(floor) || 0;
+  if (!n) return 1;
+  let h = 0;
+  for (const ch of String(n)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return (h % 5) + 1;
+}
+
 function postBrief(p, inter) {
   const media = p.media || [];
   const first = media[0] || {};
@@ -68,11 +82,16 @@ function postFull(p, isMine) {
 /**
  * 评论出参（匿名化：不下发 authorUid）
  * 第二个参数为当前用户 uid，用于计算 isMine 标记
+ *
+ * ⚠️ avatarIdx 是「糖果色头像」的序号（1-5），按 floor 派生而非按作者派生：
+ *   若按作者算，同一作者所有评论同色 → 等于用颜色重建作者画像，破坏匿名。
+ *   按楼层号算则每个评论独立取色，视觉上照样有色彩变化，但不可关联。
  */
 function commentItem(c, replies, uid) {
   return {
     id: c._id,
     floor: c.floor,
+    avatarIdx: avatarIndex(c.floor),
     content: c.status === 'deleted' ? '该评论已删除' : c.content,
     createdAt: ms(c.createdAt),
     status: c.status === 'deleted' ? 'deleted' : c.status,
@@ -81,6 +100,7 @@ function commentItem(c, replies, uid) {
     replies: (replies || []).map((r) => ({
       id: r._id,
       floor: r.floor,
+      avatarIdx: avatarIndex(r.floor),
       replyToFloor: r.replyToFloor || 0,
       content: r.status === 'deleted' ? '该评论已删除' : r.content,
       createdAt: ms(r.createdAt),
