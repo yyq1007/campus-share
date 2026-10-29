@@ -81,17 +81,22 @@ App({
   },
 
   /**
-   * 用户点「暂不」/ 拒绝：不等同意，关闭小程序。
+   * 用户点「拒绝」/「暂不」：不等同意，关闭小程序。
    * 不调 resolve({event:'disagree'}) —— 那个会让微信自行中断并可能误关，
    * 这里统一由 exitMiniProgram 控制退出行为。
    */
   __privacyReject() {
     this.__privacyResolve = null
     wx.exitMiniProgram({
-      fail: () => {
-        // 开发者工具里 exitMiniProgram 不真正退出：退到首页并保持门禁拦截，
-        // 未同意的用户依然进不去内容
-        this.__regate()
+      complete: () => {
+        // 真机上小程序已关闭，onHide 会置 __hidden=true；
+        // 开发者工具里 exitMiniProgram 不会真的退出（只走 complete 不触发 onHide），
+        // 这时给一句反馈，否则用户点了像没反应。
+        setTimeout(() => {
+          if (!this.__hidden) {
+            wx.showToast({ title: '需同意协议后才能使用', icon: 'none' })
+          }
+        }, 300)
       }
     })
   },

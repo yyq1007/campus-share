@@ -52,7 +52,7 @@ Component({
     },
 
     /**
-     * 暂不 = 不同意：关闭小程序。
+     * 拒绝 = 不同意：关闭小程序。
      * 不落同意标记；真机上小程序直接关闭，开发者工具里退不出去，
      * 此时遮罩保持可见 —— 未同意的人一律进不去内容。
      */
@@ -63,7 +63,9 @@ Component({
         return
       }
       wx.exitMiniProgram({
-        fail: () => { this.setData({ visible: true }) }
+        complete: () => {
+          wx.showToast({ title: '需同意协议后才能使用', icon: 'none' })
+        }
       })
     }
   }

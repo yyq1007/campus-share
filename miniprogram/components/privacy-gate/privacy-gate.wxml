@@ -12,7 +12,7 @@
       <view class="btn-primary pg-btn" bind:tap="onRead">阅读协议</view>
       <view class="pg-btn pg-btn-ghost" bind:tap="onAgree">同意并继续</view>
     </view>
-    <view class="pg-note" bind:tap="onDismiss">暂不（将退出小程序）</view>
+    <view class="pg-reject" bind:tap="onDismiss">拒绝</view>
     <view class="pg-note">完整正文在「我的 → 关于」中随时可查</view>
   </view>
 </view>

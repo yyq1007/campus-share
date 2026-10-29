@@ -73,6 +73,19 @@
   border: 1rpx solid var(--border-strong);
 }
 
+.pg-reject {
+  margin-top: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  font-size: var(--fs-body-m);
+  font-weight: 500;
+  color: var(--text-soft);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-input);
+}
+
 .pg-note {
   margin-top: 20rpx;
   text-align: center;

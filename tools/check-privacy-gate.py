@@ -53,7 +53,7 @@ check('同意标记与版本号绑定（版本升级需重新同意）',
 
 print()
 print('=' * 68)
-print('行为 2：点「暂不」→ 关闭小程序')
+print('行为 2：点「拒绝」→ 关闭小程序')
 print('=' * 68)
 
 check('组件 onDismiss 调用 __privacyReject()',
@@ -62,13 +62,17 @@ check('app.__privacyReject 调用 wx.exitMiniProgram()',
       re.search(r'__privacyReject\s*\(\)\s*\{.*?wx\.exitMiniProgram', app, re.S) is not None)
 check('__privacyReject 不调 resolve({event:disagree})（避免微信自行误关）',
       re.search(r'__privacyReject\s*\(\)\s*\{[^}]*event:\s*[\'"]disagree', app, re.S) is None)
-check('app 层 showModal 的「暂不」分支也走 __privacyReject',
+check('app 层 showModal 的「暂不」分支也走 __privacyReject（弹窗兜底）',
       re.search(r'cancelText:\s*[\'"]暂不[\'"].*?__privacyReject', app, re.S) is not None)
 check('暂不路径不写同意标记（下次冷启动仍拦截）',
       'markAgreed' not in re.search(r'onDismiss\s*\(\)\s*\{(.*?)\n  \}\n\}', gate, re.S).group(1)
       if re.search(r'onDismiss\s*\(\)\s*\{(.*?)\n  \}\n\}', gate, re.S) else False)
-check('暂不按钮文案说明会退出',
-      '暂不（将退出小程序）' in gate_wxml)
+check('拒绝按钮文案为「拒绝」且无括号后缀',
+      '拒绝' in gate_wxml and '（将退出小程序）' not in gate_wxml)
+check('拒绝按钮用独立可点样式（pg-reject，不复用 pg-note 小字）',
+      'pg-reject' in gate_wxml and 'pg-reject' in gate_wxss)
+check('开发者工具里点拒绝有可见反馈（complete 里 toast）',
+      'complete' in app and '需同意协议后才能使用' in app)
 
 print()
 print('=' * 68)
