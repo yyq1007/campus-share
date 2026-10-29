@@ -59,8 +59,11 @@ Page({
       ? app.grantPrivacyAuthorization()
       : false
     if (!granted) {
-      // 没有待放行的隐私接口（如首启同意场景），仍要落库同意标记
+      // 没有待放行的隐私接口（如首启同意场景），仍要落库同意标记并广播
       markAgreed()
+      if (app && typeof app.emitPrivacyStateChanged === 'function') {
+        app.emitPrivacyStateChanged()
+      }
     }
     wx.showToast({ title: '已同意', icon: 'success' })
     setTimeout(() => { wx.navigateBack() }, 800)

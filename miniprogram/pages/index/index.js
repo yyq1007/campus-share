@@ -3,6 +3,7 @@ const api = require('../../utils/api')
 const { guard } = require('../../utils/auth')
 const { CATEGORY_STICKERS } = require('../../utils/config')
 const { collectPatches } = require('../../utils/post-sync')
+const { syncTabBarLock } = require('../../utils/privacy')
 
 Page({
   data: {
@@ -32,6 +33,8 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 0 })
     }
+    // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）
+    syncTabBarLock()
     const app = getApp()
     if (app.globalData.feedDirty && this.data.state !== 'loading') {
       app.globalData.feedDirty = false

@@ -42,4 +42,31 @@ function preserveAcrossClear () {
   }
 }
 
-module.exports = { AGREE_KEY, PRIVACY_VERSION, hasAgreed, markAgreed, preserveAcrossClear }
+/**
+ * 同步 custom-tab-bar 的锁定状态。
+ * custom-tab-bar 由框架渲染在页面内容层之上，页面内的 privacy-gate 遮罩盖不住它，
+ * 所以它自己维护 locked 状态。
+ *
+ * @param {boolean} [all] true = 同步页面栈里所有 tab 页（同意/拒绝后用）；
+ *                        不传 = 只同步当前页（tab 页 onShow 里用）。
+ */
+function syncTabBarLock (all) {
+  try {
+    const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : []
+    const targets = all ? pages : [pages[pages.length - 1]]
+    targets.forEach(p => {
+      if (!p || typeof p.getTabBar !== 'function') return
+      const tb = p.getTabBar()
+      if (tb && typeof tb.syncLock === 'function') tb.syncLock()
+    })
+  } catch (e) { /* ignore */ }
+}
+
+module.exports = {
+  AGREE_KEY,
+  PRIVACY_VERSION,
+  hasAgreed,
+  markAgreed,
+  preserveAcrossClear,
+  syncTabBarLock
+}

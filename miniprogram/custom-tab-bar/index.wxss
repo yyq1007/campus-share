@@ -28,3 +28,22 @@
 .tab-item.on .tab-text { color: var(--brand-800, #5A47C9); font-weight: 600; }
 /* 发布项与普通项一致（示意图：无凸起圆钮） */
 .tab-publish-text { color: var(--text-2, #6B6780); font-weight: 500; }
+
+/* 未同意隐私协议：整条 bar 锁定 */
+.tab-bar.is-locked .tab-item { opacity: .35; }
+.tab-bar.is-locked .tab-text { color: var(--text-3, #9A96AC); }
+.tab-lock {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 不透明底，盖住图标与文字，避免看起来还能点 */
+  background: var(--bg-elevated, #FFFFFF);
+  z-index: 2;
+}
+.tab-lock-text {
+  font-size: 24rpx;
+  color: var(--text-2, #6B6780);
+}

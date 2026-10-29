@@ -68,3 +68,6 @@
   </view>
   <view class="aigc-tip">内容由 AI 生成，仅供参考</view>
 </view>
+
+<!-- 隐私协议门禁（未同意时全屏遮罩） -->
+<privacy-gate />

@@ -1,5 +1,5 @@
 const { CLOUD_ENV, FONT_FAMILY } = require('./utils/config')
-const { PRIVACY_VERSION, hasAgreed, markAgreed } = require('./utils/privacy')
+const { PRIVACY_VERSION, hasAgreed, markAgreed, syncTabBarLock } = require('./utils/privacy')
 
 // 标题圆体：base64 Data URL（wx.loadFontFace 的 source 仅支持 https 或 Data URL，
 // 包内路径不被支持、云端 URL 被 CORS 挡——见 tools/build-font-data.js）
@@ -20,6 +20,52 @@ App({
     // 网络状态监听：离线提示条由各页消费
     wx.onNetworkStatusChange(res => {
       this.globalData.network = res.isConnected ? 'online' : 'offline'
+    })
+
+    this.installNavGuard()
+  },
+
+  /**
+   * 全局导航拦截：未同意隐私协议时，所有页面跳转一律拦住。
+   *
+   * 为什么需要这一层：
+   *   1) custom-tab-bar 由框架渲染在页面内容层之上，页面内的 privacy-gate 遮罩盖不住它；
+   *   2) 导航入口散落在 40+ 处（首页贴纸、搜索、帖子卡、tabBar…），
+   *      逐个加判断容易漏；拦截器是一处兜住全部。
+   *
+   * 放行的目标：协议页（要看正文）、邀请码页（要用邀请码进）、
+   * 关于页（协议入口）、首页自身。
+   */
+  installNavGuard() {
+    if (typeof wx.addInterceptor !== 'function') return
+    const ALLOW = [
+      '/pages/agreement/agreement',
+      '/pages/about/about',
+      '/pages/auth/invite/invite'
+    ]
+    const allow = (url) => {
+      if (!url) return false
+      const path = String(url).split('?')[0]
+      if (path === '/pages/index/index') return true
+      return ALLOW.some(p => path === p)
+    }
+    const apis = ['navigateTo', 'redirectTo', 'switchTab', 'reLaunch']
+    apis.forEach(api => {
+      try {
+        wx.addInterceptor({
+          api,
+          invoke (args) {
+            if (hasAgreed() || allow(args && args.url)) return args
+            // 拦住：提示 + 拉起门禁，不执行原始跳转
+            wx.showToast({ title: '请先同意协议', icon: 'none' })
+            const app = getApp()
+            if (app && typeof app.ensurePrivacyAgreement === 'function') {
+              app.ensurePrivacyAgreement()
+            }
+            throw new Error('privacy-not-agreed')
+          }
+        })
+      } catch (e) { /* 单个 API 拦截失败不影响其它 */ }
     })
   },
 
@@ -73,11 +119,56 @@ App({
     markAgreed()
     const resolve = this.__privacyResolve
     this.__privacyResolve = null
+    this.emitPrivacyStateChanged()
     if (typeof resolve === 'function') {
       resolve({ buttonId: 'agree', event: 'agree' })
       return true
     }
     return false
+  },
+
+  /**
+   * 门禁组件挂载计数：多个页面各挂一个 privacy-gate，
+   * 用计数而不是布尔值，否则返回上一页时旧组件 detached 会误清标记。
+   */
+  acquirePrivacyGate() {
+    this.__gateCount = (this.__gateCount || 0) + 1
+    this.privacyGateActive = true
+  },
+
+  releasePrivacyGate() {
+    this.__gateCount = Math.max(0, (this.__gateCount || 0) - 1)
+    this.privacyGateActive = this.__gateCount > 0
+  },
+
+  /**
+   * 同步各 tab 页的 TabBar 锁定状态。
+   * custom-tab-bar 由框架渲染在页面内容层之上，页面内的 privacy-gate 遮罩盖不住它，
+   * 所以它自己维护一份 locked 状态 —— 同意/拒绝后需要主动通知它刷新。
+   */
+  syncTabBarLock() {
+    syncTabBarLock(true)
+  },
+
+  /**
+   * 门禁状态广播：同意/拒绝后通知所有已挂载的 privacy-gate 组件刷新遮罩。
+   * 页面栈里可能同时存在多个 gate 实例（每个页面各挂一个），
+   * getCurrentPages 拿不到组件实例，所以走 App 层订阅表。
+   */
+  onPrivacyStateChanged(fn) {
+    if (typeof fn !== 'function') return () => {}
+    if (!this.__privacyListeners) this.__privacyListeners = []
+    this.__privacyListeners.push(fn)
+    return () => {
+      this.__privacyListeners = (this.__privacyListeners || []).filter(x => x !== fn)
+    }
+  },
+
+  emitPrivacyStateChanged() {
+    ;(this.__privacyListeners || []).forEach(fn => {
+      try { fn() } catch (e) { /* 单个监听失败不影响其它 */ }
+    })
+    this.syncTabBarLock()
   },
 
   /**

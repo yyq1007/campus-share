@@ -13,19 +13,40 @@ Component({
   lifetimes: {
     attached () {
       const app = getApp()
-      // 告诉 App 层「门禁由组件接管」，避免 app 层再弹一次 modal
-      if (app) app.privacyGateActive = true
+      // 告诉 App 层「门禁由组件接管」，避免 app 层再弹一次 modal。
+      // 多个页面各挂一个 gate，用引用计数而不是布尔值 —— 返回上一页时
+      // 旧页 detached 会把布尔标记清掉，导致 app 层重复弹窗。
+      if (app && typeof app.acquirePrivacyGate === 'function') {
+        app.acquirePrivacyGate()
+      } else if (app) {
+        app.privacyGateActive = true
+      }
       this.setData({ visible: !hasAgreed() })
+      // 订阅门禁状态广播：别处同意/拒绝后，本实例同步收起遮罩
+      if (app && typeof app.onPrivacyStateChanged === 'function') {
+        this._offPrivacy = app.onPrivacyStateChanged(() => {
+          this.setData({ visible: !hasAgreed() })
+        })
+      }
     },
     detached () {
       const app = getApp()
-      if (app) app.privacyGateActive = false
+      if (app && typeof app.releasePrivacyGate === 'function') {
+        app.releasePrivacyGate()
+      } else if (app) {
+        app.privacyGateActive = false
+      }
+      if (typeof this._offPrivacy === 'function') this._offPrivacy()
+      this._offPrivacy = null
     }
   },
   pageLifetimes: {
     show () {
-      // 从协议页返回时同步状态（协议页同意后写缓存）
-      if (!this.data.visible && !hasAgreed()) {
+      // 从协议页返回时同步状态（协议页同意后写缓存 → 这里要收起遮罩）
+      const agreed = hasAgreed()
+      if (agreed && this.data.visible) {
+        this.setData({ visible: false })
+      } else if (!agreed && !this.data.visible) {
         this.setData({ visible: true })
       }
     }

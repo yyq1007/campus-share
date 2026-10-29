@@ -61,3 +61,6 @@
     <view class="pad" />
   </scroll-view>
 </view>
+
+<!-- 隐私协议门禁（未同意时全屏遮罩） -->
+<privacy-gate />
