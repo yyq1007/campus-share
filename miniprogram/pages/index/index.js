@@ -86,14 +86,16 @@ Page({
   },
 
   onPostTap(e) {
-    const p = e.detail.post
+    const p = e.detail && e.detail.post
+    if (!p || !p.id) return
     wx.navigateTo({ url: `/pages/post/detail/detail?id=${p.id}` })
   },
 
-  async onLike(e) { await this.toggleInteraction(e.detail.post, 'like') },
-  async onFav(e) { await this.toggleInteraction(e.detail.post, 'fav') },
+  async onLike(e) { await this.toggleInteraction(e.detail && e.detail.post, 'like') },
+  async onFav(e) { await this.toggleInteraction(e.detail && e.detail.post, 'fav') },
 
   async toggleInteraction(post, type) {
+    if (!post || !post.id) return
     const key = type === 'like' ? 'liked' : 'faved'
     const countKey = type === 'like' ? 'likeCount' : 'favCount'
     const idx = this.data.list.findIndex(x => x.id === post.id)

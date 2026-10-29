@@ -1,7 +1,12 @@
 <!--搜索页：搜索框 + 历史/热词 + 结果流 -->
 <view class="page">
-  <view class="nav" style="padding-top:{{statusBarH}}px">
-    <view class="nav-inner" style="height:{{navH}}px;padding-right:{{capGap || 100}}px">
+  <view class="nav">
+    <!-- 行1：留空给系统胶囊（不放任何自定义元素） -->
+    <view style="padding-top:{{statusBarH}}px">
+      <view style="height:{{navH}}px"></view>
+    </view>
+    <!-- 行2：返回键 + 搜索框 + 搜索按钮（在胶囊下方，永不重叠） -->
+    <view class="search-row">
       <view class="nav-btn" bind:tap="onBack">
         <image class="nav-btn-icon" src="/assets/icons/arrow-left.png" mode="aspectFit" />
       </view>

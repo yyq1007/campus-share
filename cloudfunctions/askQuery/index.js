@@ -5,7 +5,7 @@
  * 硬约束：只答站内、无引用不输出；P90 < 5s（检索轻量 + 生成限时）
  */
 const cloud = require('wx-server-sdk')
-cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV, timeout: 25000 })
 const db = cloud.database()
 const _ = db.command
 const { ok, fail, requireFields, rateLimit, charLen, CODE } = require('./lib')
@@ -57,7 +57,8 @@ exports.main = async (event) => {
 
     let answer = ''
     try {
-      const ai = cloud.extend.AI
+      // 云函数端大模型 API：wx-server-sdk ≥4.0.1 的 cloud.ai()（cloud.extend.AI 是小程序端 API，服务端不存在）
+      const ai = cloud.ai()
       const model = ai.createModel('hunyuan-exp')
       const res = await model.generateText({
         model: 'hy3-preview',
@@ -66,9 +67,12 @@ exports.main = async (event) => {
           { role: 'user', content: `站内分享：\n${context}\n\n同学的问题：${q}` }
         ]
       })
-      answer = (res && res.text) || ''
+      // 云函数端返回原始模型响应：res.choices[0].message.content（非 JS SDK 的 res.text）
+      answer = (res && res.text)
+        || (res && res.choices && res.choices[0] && res.choices[0].message && res.choices[0].message.content)
+        || ''
     } catch (e) {
-      console.error('[askQuery] model fail', e)
+      console.error('[askQuery] model fail', e && e.message ? e.message : e)
       return fail(CODE.SERVER, 'AI 开小差了，请再问一次')
     }
     if (!answer) return fail(CODE.SERVER, 'AI 开小差了，请再问一次')

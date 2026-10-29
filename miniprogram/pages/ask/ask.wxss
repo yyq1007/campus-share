@@ -151,7 +151,7 @@
   display: flex;
   align-items: center;
   padding: 16rpx 38rpx 8rpx;
-  transition: transform 0.25s ease-out;
+  /* 不加 transition：键盘弹起时输入条先一步就位、键盘随后滑入，避免两个动画互相追赶显出不同步 */
 }
 /* 键盘弹起悬浮态：补白底让输入条盖在消息流上时仍有清晰边界 */
 .input-bar.is-floating {
@@ -160,8 +160,7 @@
   box-shadow: 0 -8rpx 24rpx var(--brand-a10, rgba(108, 92, 231, 0.06));
   padding-bottom: 20rpx;
 }
-/* 设计稿：底部胶囊输入框 338×50（=676×100rpx）；发送走键盘「发送」键，框内不放按钮 */
-.input-shell {
+/* 设计稿：底部胶囊输入框 338×50（=676×100rpx）；发送走键盘「发送」键，框内不放按钮 */.input-shell {
   position: relative;
   flex: 1;
   height: 100rpx;
