@@ -44,7 +44,17 @@ Page({
     this.setData({ state: 'loading' })
     try {
       await guard()
-      const post = this.decorate(await api.postDetail(this.postId))
+      let post = await api.postDetail(this.postId)
+      // 在途同步：若 5 秒内在列表页操作过点赞/收藏（服务端可能还没写完），
+      // 以本地补丁为准渲染，避免详情页显示旧状态（补丁由乐观更新瞬间写入）
+      const pt = (getApp().globalData.interactionPatches || {})[this.postId]
+      if (pt && Date.now() - (pt.ts || 0) < 5000) {
+        post.liked = !!pt.liked
+        post.faved = !!pt.faved
+        if (typeof pt.likeCount === 'number') post.likeCount = pt.likeCount
+        if (typeof pt.favCount === 'number') post.favCount = pt.favCount
+      }
+      post = this.decorate(post)
       // 图片临时链接
       // 视频：url 必须是视频本体（fileId），poster 才是封面图（posterFileId）——此前误用封面当播放源导致 00:00 黑屏
       const fileIds = []
@@ -241,10 +251,13 @@ Page({
   },
 
   // ---------- 互动 ----------
+  // ⚠️ wxml 计数显示的是 likeShort/favShort（countShort 格式化），乐观更新必须同步这两个字段，
+  //    否则出现「图标点亮但数字不动」；成功后以服务端返回的 {active,count} 真值校正
   async onLike() {
     const p = this.data.post
     const active = !p.liked
     const likeCount = Math.max(0, (p.likeCount || 0) + (active ? 1 : -1))
+
     this.setData({
       'post.liked': active,
       'post.likeCount': likeCount,
@@ -256,6 +269,7 @@ Page({
       patchPost(this.postId, { liked: active, likeCount })
     } catch (e) {
       this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount, 'post.likeShort': p.likeShort })
+
     }
   },
 
@@ -263,6 +277,7 @@ Page({
     const p = this.data.post
     const active = !p.faved
     const favCount = Math.max(0, (p.favCount || 0) + (active ? 1 : -1))
+
     this.setData({
       'post.faved': active,
       'post.favCount': favCount,
@@ -272,10 +287,21 @@ Page({
     try {
       await api.interactionToggle(this.postId, 'fav')
       patchPost(this.postId, { faved: active, favCount })
+
       if (active) toast('已收藏')
+      this.patchInteraction({ faved: active, favCount: count })
     } catch (e) {
       this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount, 'post.favShort': p.favShort })
+
     }
+  },
+
+  /** 把点赞/收藏最新状态写入全局补丁，列表页 onShow 时局部同步（不清列表、不丢滚动位置） */
+  patchInteraction(patch) {
+    const app = getApp()
+    const patches = app.globalData.interactionPatches || (app.globalData.interactionPatches = {})
+    const cur = patches[this.postId] || {}
+    patches[this.postId] = { ...cur, ...patch, ts: Date.now() }
   },
 
   // ---------- 媒体 ----------

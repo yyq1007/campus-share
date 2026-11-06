@@ -2,8 +2,10 @@
 const api = require('../../utils/api')
 const { guard } = require('../../utils/auth')
 const { CATEGORY_STICKERS } = require('../../utils/config')
+
 const { collectPatches, patchPost } = require('../../utils/post-sync')
 const { syncTabBarLock } = require('../../utils/privacy')
+
 
 Page({
   data: {
@@ -39,8 +41,10 @@ Page({
     if (app.globalData.feedDirty && this.data.state !== 'loading') {
       app.globalData.feedDirty = false
       this.refresh()
+
     } else {
       this.applyPostPatches()
+
     }
   },
 
@@ -118,23 +122,29 @@ Page({
     if (idx < 0) return
     const item = this.data.list[idx]
     const active = !item[key]
+
     // 乐观更新，失败回滚
     const nextCount = Math.max(0, (item[countKey] || 0) + (active ? 1 : -1))
+
     this.setData({
       [`list[${idx}].${key}`]: active,
       [`list[${idx}].${countKey}`]: nextCount
     })
+    writePatch(post.id, { [key]: active, [countKey]: nextCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
+
       await api.interactionToggle(post.id, type)
       // 记补丁：进详情页再返回首页时，用云端真值覆盖这里的本地乐观值，
       // 否则详情页点「取消点赞」后返回，首页仍显示旧状态
       patchPost(post.id, { [key]: active, [countKey]: nextCount })
+
     } catch (err) {
       this.setData({
         [`list[${idx}].${key}`]: item[key],
         [`list[${idx}].${countKey}`]: item[countKey]
       })
+      writePatch(post.id, { [key]: item[key], [countKey]: item[countKey] })
       wx.showToast({ title: '操作失败', icon: 'none' })
     }
   },

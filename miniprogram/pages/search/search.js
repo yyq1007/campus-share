@@ -2,6 +2,7 @@
 const api = require('../../utils/api')
 const { toast } = require('../../utils/cloud')
 const { guard } = require('../../utils/auth')
+const { gcPatches } = require('../../utils/feed-patch')
 
 const HISTORY_KEY = 'search_history'
 
@@ -30,6 +31,20 @@ Page({
     if (query.kw) {
       this.setData({ keyword: query.kw })
       this.search(query.kw)
+    }
+  },
+
+  onShow() {
+    // 同步详情页带回的点赞/收藏变更：局部 patch 对应卡片（补丁保留给详情页 5s 在途窗口，GC 过期清理）
+    const patches = getApp().globalData.interactionPatches
+    if (patches && Object.keys(patches).length) {
+      const updates = {}
+      this.data.list.forEach((item, idx) => {
+        const pt = patches[item.id]
+        if (pt) Object.keys(pt).forEach(k => { if (k !== 'ts') updates[`list[${idx}].${k}`] = pt[k] })
+      })
+      if (Object.keys(updates).length) this.setData(updates)
+      gcPatches()
     }
   },
 
