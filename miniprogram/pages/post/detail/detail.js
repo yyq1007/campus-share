@@ -62,11 +62,16 @@ Page({
       // 以本地补丁为准渲染，避免详情页显示旧状态（补丁由乐观更新瞬间写入）
       const pt = (getApp().globalData.interactionPatches || {})[this.postId]
       if (pt && Date.now() - (pt.ts || 0) < 5000) {
-        post.liked = !!pt.liked
-        post.faved = !!pt.faved
+        // 补丁可能只含点赞或只含收藏，没有的字段要保留服务端的值
+        if (typeof pt.liked === 'boolean') post.liked = pt.liked
+        if (typeof pt.faved === 'boolean') post.faved = pt.faved
         if (typeof pt.likeCount === 'number') post.likeCount = pt.likeCount
         if (typeof pt.favCount === 'number') post.favCount = pt.favCount
       }
+      // 把详情页拿到的最新状态带回列表：列表的数据可能已过期，只看不点也要同步
+      const synced = { liked: post.liked, faved: post.faved, likeCount: post.likeCount, favCount: post.favCount }
+      this.patchInteraction(synced)
+      patchPost(this.postId, synced)
       post = this.decorate(post)
       // 图片临时链接
       // 视频：url 必须是视频本体（fileId），poster 才是封面图（posterFileId）——此前误用封面当播放源导致 00:00 黑屏
@@ -286,6 +291,9 @@ Page({
   // ⚠️ wxml 计数显示的是 likeShort/favShort（countShort 格式化），乐观更新必须同步这两个字段，
   //    否则出现「图标点亮但数字不动」；成功后以服务端返回的 {active,count} 真值校正
   async onLike() {
+    // 请求在途时忽略连点，否则后到的响应会把状态改乱
+    if (this._liking) return
+    this._liking = true
     const p = this.data.post
     const active = !p.liked
     const likeCount = Math.max(0, (p.likeCount || 0) + (active ? 1 : -1))
@@ -301,16 +309,22 @@ Page({
     try {
       const res = await api.interactionToggle(this.postId, 'like')
       const count = res && typeof res.count === 'number' ? res.count : likeCount
-      this.setData({ 'post.likeCount': count, 'post.likeShort': countShort(count) })
-      this.patchInteraction({ liked: active, likeCount: count })
-      patchPost(this.postId, { liked: active, likeCount: count })
+      const liked = res && typeof res.active === 'boolean' ? res.active : active
+      this.setData({ 'post.liked': liked, 'post.likeCount': count, 'post.likeShort': countShort(count) })
+      this.patchInteraction({ liked, likeCount: count })
+      patchPost(this.postId, { liked, likeCount: count })
     } catch (e) {
       this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount, 'post.likeShort': p.likeShort })
       this.patchInteraction({ liked: p.liked, likeCount: p.likeCount })
+      toast('操作失败')
+    } finally {
+      this._liking = false
     }
   },
 
   async onFav() {
+    if (this._faving) return
+    this._faving = true
     const p = this.data.post
     const active = !p.faved
     const favCount = Math.max(0, (p.favCount || 0) + (active ? 1 : -1))
@@ -325,13 +339,17 @@ Page({
     try {
       const res = await api.interactionToggle(this.postId, 'fav')
       const count = res && typeof res.count === 'number' ? res.count : favCount
-      this.setData({ 'post.favCount': count, 'post.favShort': countShort(count) })
-      this.patchInteraction({ faved: active, favCount: count })
-      patchPost(this.postId, { faved: active, favCount: count })
-      if (active) toast('已收藏')
+      const faved = res && typeof res.active === 'boolean' ? res.active : active
+      this.setData({ 'post.faved': faved, 'post.favCount': count, 'post.favShort': countShort(count) })
+      this.patchInteraction({ faved, favCount: count })
+      patchPost(this.postId, { faved, favCount: count })
+      if (faved) toast('已收藏')
     } catch (e) {
       this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount, 'post.favShort': p.favShort })
       this.patchInteraction({ faved: p.faved, favCount: p.favCount })
+      toast('操作失败')
+    } finally {
+      this._faving = false
     }
   },
 

@@ -53,12 +53,15 @@ Page({
   },
 
   onShow() {
-    // 在详情页删掉的帖子：返回时从列表移除，避免对已删帖子再点删除
-    const { deletedIds } = collectPatches(this.data.list, this._syncAt || 0)
+    // 详情页带回的变更：删掉的帖子移出列表（避免对已删帖子再点删除），其余同步点赞/收藏
+    const { updates, deletedIds } = collectPatches(this.data.list, this._syncAt || 0)
     this._syncAt = Date.now()
-    if (!deletedIds.length) return
-    const list = this.data.list.filter(x => deletedIds.indexOf(x.id) === -1)
-    this.setData({ list, state: list.length ? 'success' : 'empty' })
+    if (deletedIds.length) {
+      const list = this.data.list.filter(x => deletedIds.indexOf(x.id) === -1)
+      this.setData({ list, state: list.length ? 'success' : 'empty' })
+    } else if (Object.keys(updates).length) {
+      this.setData(updates)
+    }
   },
 
   async fetchList(reset) {
