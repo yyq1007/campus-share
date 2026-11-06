@@ -5,6 +5,7 @@ const { toast } = require('../../utils/cloud')
 const { guard } = require('../../utils/auth')
 const { LIMITS } = require('../../utils/config')
 const { countChars, randId } = require('../../utils/format')
+const { syncTabBarLock } = require('../../utils/privacy')
 
 const HISTORY_MAX = 20
 
@@ -52,6 +53,8 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 1 })
     }
+    // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）
+    syncTabBarLock()
   },
 
   pushMsg(role, payload) {

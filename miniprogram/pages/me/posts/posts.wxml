@@ -38,3 +38,6 @@
     <image class="fab-icon" src="/assets/icons/plus.png" mode="aspectFit" />
   </view>
 </view>
+
+<!-- 隐私协议门禁（未同意时全屏遮罩） -->
+<privacy-gate />

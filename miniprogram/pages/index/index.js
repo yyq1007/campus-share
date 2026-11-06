@@ -2,7 +2,10 @@
 const api = require('../../utils/api')
 const { guard } = require('../../utils/auth')
 const { CATEGORY_STICKERS } = require('../../utils/config')
-const { writePatch, gcPatches } = require('../../utils/feed-patch')
+
+const { collectPatches, patchPost } = require('../../utils/post-sync')
+const { syncTabBarLock } = require('../../utils/privacy')
+
 
 Page({
   data: {
@@ -32,24 +35,24 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 0 })
     }
+    // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）
+    syncTabBarLock()
     const app = getApp()
     if (app.globalData.feedDirty && this.data.state !== 'loading') {
       app.globalData.feedDirty = false
       this.refresh()
-      return
+
+    } else {
+      this.applyPostPatches()
+
     }
-    // 同步详情页带回的点赞/收藏变更：局部 patch 对应卡片，不清列表、不丢滚动位置
-    // （补丁不清空——详情页 firstLoad 还要靠它做 5s 在途窗口的一致性，由 gcPatches 过期清理）
-    const patches = app.globalData.interactionPatches
-    if (patches && Object.keys(patches).length) {
-      const updates = {}
-      this.data.list.forEach((item, idx) => {
-        const pt = patches[item.id]
-        if (pt) Object.keys(pt).forEach(k => { if (k !== 'ts') updates[`list[${idx}].${k}`] = pt[k] })
-      })
-      if (Object.keys(updates).length) this.setData(updates)
-      gcPatches()
-    }
+  },
+
+  // 详情页里点赞/收藏的变更补到卡片上
+  applyPostPatches() {
+    const { updates } = collectPatches(this.data.list, this._syncAt || 0)
+    this._syncAt = Date.now()
+    if (Object.keys(updates).length) this.setData(updates)
   },
 
   async firstLoad() {
@@ -70,7 +73,10 @@ Page({
   },
 
   async fetchList(reset) {
-    if (reset) this.setData({ cursor: null, hasMore: true, loadMoreError: false })
+    if (reset) {
+      this.setData({ cursor: null, hasMore: true, loadMoreError: false })
+      this._syncAt = Date.now()
+    }
     const params = { pageSize: 10, sort: 'latest' }
     if (this.data.board !== 'all') params.board = this.data.board
     if (this.data.cursor) params.cursor = this.data.cursor
@@ -116,8 +122,10 @@ Page({
     if (idx < 0) return
     const item = this.data.list[idx]
     const active = !item[key]
+
+    // 乐观更新，失败回滚
     const nextCount = Math.max(0, (item[countKey] || 0) + (active ? 1 : -1))
-    // 乐观更新，失败回滚；补丁瞬间写入，立刻进详情页也不会读到旧状态
+
     this.setData({
       [`list[${idx}].${key}`]: active,
       [`list[${idx}].${countKey}`]: nextCount
@@ -125,11 +133,12 @@ Page({
     writePatch(post.id, { [key]: active, [countKey]: nextCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      const res = await api.interactionToggle(post.id, type)
-      if (res && typeof res.count === 'number' && res.count !== nextCount) {
-        this.setData({ [`list[${idx}].${countKey}`]: res.count })
-        writePatch(post.id, { [key]: !!res.active, [countKey]: res.count })
-      }
+
+      await api.interactionToggle(post.id, type)
+      // 记补丁：进详情页再返回首页时，用云端真值覆盖这里的本地乐观值，
+      // 否则详情页点「取消点赞」后返回，首页仍显示旧状态
+      patchPost(post.id, { [key]: active, [countKey]: nextCount })
+
     } catch (err) {
       this.setData({
         [`list[${idx}].${key}`]: item[key],

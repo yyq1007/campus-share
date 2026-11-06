@@ -1,4 +1,4 @@
-<view class="tab-bar">
+<view class="tab-bar {{locked ? 'is-locked' : ''}}">
   <view class="tab-item {{selected === 0 ? 'on' : ''}}" data-index="0" bindtap="switchTab">
     <icon name="{{selected === 0 ? 'tab-home-on' : 'tab-home'}}" size="48"/>
     <text class="tab-text">首页</text>
@@ -16,5 +16,10 @@
   <view class="tab-item {{selected === 3 ? 'on' : ''}}" data-index="3" bindtap="switchTab">
     <icon name="{{selected === 3 ? 'tab-me-on' : 'tab-me'}}" size="48"/>
     <text class="tab-text">我的</text>
+  </view>
+
+  <!-- 未同意协议：整条 bar 不可用（盖住点击区 + 灰化） -->
+  <view wx:if="{{locked}}" class="tab-lock" bindtap="onLockTap">
+    <text class="tab-lock-text">请先同意协议</text>
   </view>
 </view>

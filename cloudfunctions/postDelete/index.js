@@ -17,6 +17,8 @@ exports.main = withAuth(async (event, ctx) => {
   }
   if (!post) return fail(40401);
   if (post.authorUid !== ctx.uid && ctx.role !== 'admin') return fail(40301);
+  // 幂等：已删过直接返回，否则重复删除会把发帖数、媒体引用计数多减一次
+  if (post.status === 'deleted') return ok({ ok: true });
 
   await coll(COL.posts).doc(postId).update({
     data: { status: 'deleted', deletedAt: db.serverDate(), updatedAt: db.serverDate() },

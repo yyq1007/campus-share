@@ -1,7 +1,10 @@
 // S2 板块页：板块横幅 + 声明 + 卡片流（含"可能已过期"角标）
 const api = require('../../utils/api')
+const { guard } = require('../../utils/auth')
 const { BOARDS } = require('../../utils/config')
-const { writePatch, gcPatches } = require('../../utils/feed-patch')
+
+const { collectPatches, patchPost } = require('../../utils/post-sync')
+
 
 Page({
   data: {
@@ -23,7 +26,17 @@ Page({
       return
     }
     this.setData({ board, meta: BOARDS[board] })
-    this.fetchList(true).catch(() => this.setData({ state: 'error' }))
+    // guard 拦截未同意隐私协议的请求
+    guard()
+      .then(() => this.fetchList(true))
+      .catch(() => this.setData({ state: 'error' }))
+  },
+
+  onShow() {
+    // 详情页里点赞/收藏的变更补到卡片上
+    const { updates } = collectPatches(this.data.list, this._syncAt || 0)
+    this._syncAt = Date.now()
+    if (Object.keys(updates).length) this.setData(updates)
   },
 
   onShow() {
@@ -41,7 +54,10 @@ Page({
   },
 
   async fetchList(reset) {
-    if (reset) this.setData({ cursor: null, hasMore: true, list: [], state: 'loading' })
+    if (reset) {
+      this.setData({ cursor: null, hasMore: true, list: [], state: 'loading' })
+      this._syncAt = Date.now()
+    }
     const params = { board: this.data.board, pageSize: 10, sort: 'latest' }
     if (this.data.cursor) params.cursor = this.data.cursor
     const res = await api.postList(params)
@@ -77,11 +93,11 @@ Page({
     writePatch(post.id, { [key]: active, [countKey]: nextCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      const res = await api.interactionToggle(post.id, type)
-      if (res && typeof res.count === 'number' && res.count !== nextCount) {
-        this.setData({ [`list[${idx}].${countKey}`]: res.count })
-        writePatch(post.id, { [key]: !!res.active, [countKey]: res.count })
-      }
+
+      await api.interactionToggle(post.id, type)
+      // 记补丁：进详情页再返回时用云端真值覆盖本地乐观值
+      patchPost(post.id, { [key]: active, [countKey]: nextCount })
+
     } catch (err) {
       this.setData({
         [`list[${idx}].${key}`]: item[key],

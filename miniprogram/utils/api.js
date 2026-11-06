@@ -118,11 +118,13 @@ function reportCreate(targetType, targetId, reasonCode, reasonText) {
 /**
  * 一级评论列表（每条内嵌最多 3 条二级回复）
  * @param {String} postId
- * @param {String} parentId 传则返回该评论下的全部回复
+ * @param {String} parentId 传则返回该评论下的全部回复（最多 50 条）
+ * @param {String} cursor 一级评论翻页游标（上一页返回的 nextCursor）
  */
-function commentList(postId, parentId) {
-  const params = { postId, pageSize: 20 }
+function commentList(postId, parentId, cursor) {
+  const params = { postId, pageSize: parentId ? 50 : 20 }
   if (parentId) params.parentId = parentId
+  if (cursor) params.cursor = cursor
   return callFn('commentList', params)
 }
 

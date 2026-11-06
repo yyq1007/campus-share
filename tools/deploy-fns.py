@@ -16,7 +16,7 @@ CLI = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_mo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CF = os.path.join(ROOT, 'cloudfunctions')
-ENV = 'yyq-d6g1dv0kgf893afe8'
+ENV = 'qqq-d7g05y68803d5476c'
 
 # 运行时：与作者线上保持一致（Nodejs18.15），支持云端安装依赖
 RUNTIME = 'Nodejs18.15'
@@ -131,8 +131,17 @@ def main():
     ap.add_argument('--no-install-dep', action='store_true')
     args = ap.parse_args()
 
-    p, names = gen_config(args.only)
-    print(f'已生成 {p}')
+    # --only 时不覆盖 cloudbaserc.json：
+    # 那个文件是「全量函数声明」，被 --only 覆盖成单个函数后，
+    # 后续 `tcb fn deploy --all` 只会认这一个函数。
+    # 单独部署某个函数不需要它 —— deploy() 直接传 --runtime/--install-dependency。
+    if args.only:
+        names = args.only
+        p = os.path.join(ROOT, 'cloudbaserc.json')
+        print(f'仅部署指定函数（不改动 cloudbaserc.json）: {", ".join(names)}')
+    else:
+        p, names = gen_config(args.only)
+        print(f'已生成 {p}')
     print(f'  envId: {ENV}')
     print(f'  runtime: {RUNTIME}')
     print(f'  环境变量: {ENV_VARS}')

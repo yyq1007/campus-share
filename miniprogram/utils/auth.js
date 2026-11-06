@@ -5,6 +5,7 @@
  * 契约见 MVP 文档 9.2：needInvite=true 表示尚未绑定邀请码
  */
 const api = require('./api')
+const { preserveAcrossClear, hasAgreed } = require('./privacy')
 
 let inflight = null
 
@@ -12,7 +13,10 @@ function clearLogin() {
   const app = getApp()
   app.globalData.profile = null
   app.globalData.profileAt = 0
+  // 退出登录只清业务缓存，隐私协议的同意标记要保留（否则登出一次就被迫重弹协议）
+  const keep = preserveAcrossClear()
   try { wx.clearStorageSync() } catch (e) { /* 忽略 */ }
+  keep.restore()
 }
 
 function ensureLogin({ force = false } = {}) {
@@ -48,8 +52,21 @@ function ensureLogin({ force = false } = {}) {
   return inflight
 }
 
-/** 页面 onLoad 首行调用；未登录自动跳邀请码页 */
+/**
+ * 页面 onLoad 首行调用；未登录自动跳邀请码页。
+ * 隐私协议门禁在这里统一拦截：未同意协议的请求一律不发给后端，
+ * 直接跳协议页 —— 各页面都走 guard()，所以这是一处全局拦截点，
+ * 比逐页挂组件更可靠（不会漏掉从首页点进去的二级页面）。
+ */
 async function guard() {
+  // 未同意隐私协议 → 拦下来，不放行任何数据请求
+  if (!hasAgreed()) {
+    const app = getApp()
+    if (app && typeof app.ensurePrivacyAgreement === 'function') {
+      app.ensurePrivacyAgreement()
+    }
+    return null
+  }
   try {
     return await ensureLogin()
   } catch (err) {

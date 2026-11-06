@@ -3,6 +3,7 @@ const api = require('../../utils/api')
 const { toast } = require('../../utils/cloud')
 const { guard, getUid, clearLogin } = require('../../utils/auth')
 const { uploadAvatar, getTempUrls } = require('../../utils/media')
+const { syncTabBarLock } = require('../../utils/privacy')
 
 Page({
   data: {
@@ -26,6 +27,8 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 3 })
     }
+    // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）
+    syncTabBarLock()
     this.load()
   },
 

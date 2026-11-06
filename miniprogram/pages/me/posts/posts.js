@@ -4,6 +4,7 @@
 const api = require('../../../utils/api')
 const { toast } = require('../../../utils/cloud')
 const { guard } = require('../../../utils/auth')
+const { collectPatches } = require('../../../utils/post-sync')
 
 const TABS = [
   { key: 'all', label: '全部' },
@@ -48,13 +49,25 @@ Page({
     }
   },
 
+  onShow() {
+    // 在详情页删掉的帖子：返回时从列表移除，避免对已删帖子再点删除
+    const { deletedIds } = collectPatches(this.data.list, this._syncAt || 0)
+    this._syncAt = Date.now()
+    if (!deletedIds.length) return
+    const list = this.data.list.filter(x => deletedIds.indexOf(x.id) === -1)
+    this.setData({ list, state: list.length ? 'success' : 'empty' })
+  },
+
   async fetchList(reset) {
     // 请求序号：快速切 tab 会并发多个请求，只有最后一次的结果才该落地，
     // 否则先发的请求后到 → 用旧 tab 的数据覆盖当前 tab（列表与 tab 不一致）
     this._reqSeq = (this._reqSeq || 0) + 1
     const seq = this._reqSeq
 
-    if (reset) this.setData({ cursor: null, list: [] })
+    if (reset) {
+      this.setData({ cursor: null, list: [] })
+      this._syncAt = Date.now()
+    }
     // 服务端只区分 pending 与「非 deleted」；其余状态在本地按 status 过滤
     const needFilter = this.data.tab !== 'pending' && this.data.tab !== 'all'
     const serverTab = this.data.tab === 'pending' ? 'pending' : 'all'
