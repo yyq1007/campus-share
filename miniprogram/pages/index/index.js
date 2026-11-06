@@ -4,6 +4,7 @@ const { guard } = require('../../utils/auth')
 const { CATEGORY_STICKERS } = require('../../utils/config')
 
 const { collectPatches, patchPost } = require('../../utils/post-sync')
+const { writePatch, gcPatches } = require('../../utils/feed-patch')
 const { syncTabBarLock } = require('../../utils/privacy')
 
 
@@ -52,7 +53,14 @@ Page({
   applyPostPatches() {
     const { updates } = collectPatches(this.data.list, this._syncAt || 0)
     this._syncAt = Date.now()
+    // 再叠加乐观补丁（点完立刻返回时请求可能还在途；它写得最晚，优先级最高）
+    const patches = getApp().globalData.interactionPatches || {}
+    this.data.list.forEach((item, idx) => {
+      const pt = patches[item.id]
+      if (pt) Object.keys(pt).forEach(k => { if (k !== 'ts') updates[`list[${idx}].${k}`] = pt[k] })
+    })
     if (Object.keys(updates).length) this.setData(updates)
+    gcPatches()
   },
 
   async firstLoad() {

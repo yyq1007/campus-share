@@ -77,6 +77,12 @@ exports.main = async (event) => {
     }
     if (!answer) return fail(CODE.SERVER, 'AI 开小差了，请再问一次')
 
+    // 累计被引用次数（「我的 → 被引用」靠它统计）。必须 await：SCF 返回后容器冻结，未 await 的写入会丢
+    await Promise.all(cands.map(c =>
+      db.collection('posts').doc(c.id).update({ data: { 'stats.citedCount': _.inc(1) } })
+        .catch(e => console.warn('[askQuery] cited inc fail', c.id, e && e.message))
+    ))
+
     // 引用帖封面
     const coverIds = [...new Set(cands.map(c => c.coverFileId).filter(Boolean))]
     let coverMap = {}

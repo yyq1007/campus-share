@@ -3,9 +3,10 @@ const api = require('../../../utils/api')
 const { toast } = require('../../../utils/cloud')
 const { guard } = require('../../../utils/auth')
 const { BOARDS } = require('../../../utils/config')
-const { timeAgo, countShort, linkHost, randId, commentAvatarIndex } = require('../../../utils/format')
+const { timeAgo, countShort, linkHost, randId } = require('../../../utils/format')
 const { getTempUrls } = require('../../../utils/media')
 const { patchPost } = require('../../../utils/post-sync')
+const { entryOf, applyPage, merged } = require('../../../utils/comment-cache')
 
 // 楼中楼身份：楼主 / 层主 / 其他匿名同学（tag 由 commentList 计算）
 const REPLY_NICK = { op: '楼主', layer: '层主' }
@@ -23,6 +24,8 @@ Page({
     commentCursor: null,
     commentHasMore: false,
     commentTotal: 0,
+    commentsLoaded: false,
+    commentLoadFailed: false,
     commentDraft: '',
     replyTo: null,          // { floor, nick }
     sending: false,
@@ -37,13 +40,23 @@ Page({
       const sb = win.statusBarHeight || 40
       this.setData({ statusBarH: sb, navH: (cap.top - sb) * 2 + cap.height })
     } catch (e) { /* 兜底 */ }
+    // 评论发送中退出重进时，由当前页接收发送结果
+    this.commentEntry = entryOf(this.postId)
+    this.commentEntry.page = this
+    this.renderComments()
     this.firstLoad()
+  },
+
+  onUnload() {
+    if (this.commentEntry && this.commentEntry.page === this) this.commentEntry.page = null
   },
 
   async firstLoad() {
     this.setData({ state: 'loading' })
     try {
       await guard()
+      // 评论与帖子并行加载，不等帖子和图片
+      this.reloadComments()
       let post = await api.postDetail(this.postId)
       // 在途同步：若 5 秒内在列表页操作过点赞/收藏（服务端可能还没写完），
       // 以本地补丁为准渲染，避免详情页显示旧状态（补丁由乐观更新瞬间写入）
@@ -85,7 +98,7 @@ Page({
       }
       if (post.link) post.linkHost = linkHost(post.link)
       this.setData({ post, state: 'success' })
-      this.loadComments(true)
+      this.renderComments()
     } catch (e) {
       // ⚠️ silent 错误 = 正在跳转邀请码页/登录态刷新，不该把页面打成 error 态
       //    （会闪一下错误页，然后被 reLaunch 覆盖，体验很糟）
@@ -119,21 +132,52 @@ Page({
 
   // ---------- 评论 ----------
   async loadComments(reset) {
-    if (reset) this.setData({ commentCursor: null })
-    const res = await api.commentList(this.postId, '', reset ? '' : this.data.commentCursor)
+    const entry = this.commentEntry
+    const seq = ++entry.seq
+    const startedAt = Date.now()
+    const res = await api.commentList(this.postId, '', reset ? '' : entry.cursor)
+    // 只采用最新一次请求的结果，避免慢请求覆盖新数据
+    if (seq !== entry.seq) return
     const page = (res.list || []).map(c => ({
       ...c,
       mine: !!c.isMine,
       timeText: timeAgo(c.createdAt),
       replies: (c.replies || []).map(decorateReply)
     }))
-    const list = reset ? page : this.data.comments.concat(page)
-    this.setData({
-      comments: list,
-      commentCursor: res.nextCursor,
-      commentHasMore: !!res.hasMore,
-      commentTotal: res.total || list.length
+    applyPage(entry, page, res, reset, startedAt)
+    this.setData({ commentLoadFailed: false })
+    this.renderComments()
+  },
+
+  /** 刷新第一页；已有缓存时失败不打扰，继续显示缓存 */
+  reloadComments() {
+    return this.loadComments(true).catch(() => {
+      if (!this.commentEntry.loaded) this.setData({ commentLoadFailed: true })
     })
+  },
+
+  onRetryComments() {
+    this.setData({ commentLoadFailed: false })
+    this.reloadComments()
+  },
+
+  /** 把缓存和发送中的评论渲染到页面 */
+  renderComments() {
+    const entry = this.commentEntry
+    const { comments, extra } = merged(entry)
+    const total = entry.total + extra
+    const data = {
+      comments,
+      commentCursor: entry.cursor,
+      commentHasMore: entry.hasMore,
+      commentTotal: total,
+      commentsLoaded: entry.loaded
+    }
+    if (entry.loaded && this.data.post) {
+      data['post.commentCount'] = total
+      data['post.commentShort'] = countShort(total)
+    }
+    this.setData(data)
   },
 
   onMoreComments() {
@@ -150,12 +194,9 @@ Page({
     try {
       const res = await api.commentList(this.postId, id)
       const replies = (res.list || []).map(decorateReply)
-      const idx = this.data.comments.findIndex(c => c.id === id)
-      if (idx < 0) return
-      this.setData({
-        [`comments[${idx}].replies`]: replies,
-        [`comments[${idx}].replyCount`]: replies.length
-      })
+      const entry = this.commentEntry
+      entry.list = entry.list.map(c => (c.id === id ? { ...c, replies, replyCount: replies.length } : c))
+      this.renderComments()
     } catch (err) {
       toast('加载失败')
     }
@@ -165,6 +206,10 @@ Page({
 
   onPickReply(e) {
     const { floor, id } = e.currentTarget.dataset
+    if (String(id).indexOf('local_') === 0) {
+      toast('评论发送中，请稍后再回复')
+      return
+    }
     this.setData({ replyTo: { floor, id } })
   },
 
@@ -173,77 +218,64 @@ Page({
   async onSendComment() {
     const content = this.data.commentDraft.trim()
     if (!content || this.data.sending) return
-    this.setData({ sending: true })
+    const replyTo = this.data.replyTo
+    // 环境契约：二级回复需传 parentId（一级评论 _id）与 replyToFloor（被回复楼层）
+    const payload = {
+      postId: this.postId,
+      content,
+      clientReqId: randId(24)
+    }
+    if (replyTo && replyTo.id) {
+      payload.parentId = replyTo.id
+      payload.replyToFloor = replyTo.floor
+    }
+    // 先显示再发送：云函数要过内容安全等多道检查，不让用户干等；中途退出重进也能看到
+    const entry = this.commentEntry
+    const pending = {
+      localId: `local_${payload.clientReqId}`,
+      id: '',
+      parentId: payload.parentId || '',
+      replyToFloor: payload.replyToFloor || 0,
+      floor: payload.parentId ? Number(replyTo.floor) || 0 : 0,
+      content,
+      createdAt: Date.now(),
+      status: 'sending',
+      tag: this.data.post && this.data.post.isMine ? 'op' : ''
+    }
+    entry.pending.push(pending)
+    this.setData({ sending: true, commentDraft: '', replyTo: null })
+    this.renderComments()
+    const removePending = () => {
+      entry.pending = entry.pending.filter(p => p !== pending)
+    }
     try {
-      // 环境契约：二级回复需传 parentId（一级评论 _id）与 replyToFloor（被回复楼层）
-      const payload = {
-        postId: this.postId,
-        content,
-        clientReqId: randId(24)
-      }
-      if (this.data.replyTo && this.data.replyTo.id) {
-        payload.parentId = this.data.replyTo.id
-        payload.replyToFloor = this.data.replyTo.floor
-      }
       const res = await api.commentCreate(payload)
-      // ⚠️ 云函数没返回 commentId/floor 时不能硬塞 undefined：
-      //    detail.wxml 的评论列表用 wx:key="floor"，floor 为 undefined 会导致
-      //    key 重复 → 列表渲染错乱（评论串行/覆盖）。
-      //    这里做兜底：拿不到有效值就提示失败并重新拉取列表。
+      // 云函数没返回 commentId 时拿不到有效楼层，提示后重新拉取列表
       if (!res || !res.commentId) {
-        this.setData({ sending: false })
+        removePending()
         toast('评论已提交，正在刷新列表')
-        this.loadComments(true).catch(() => {})
+        if (entry.page) entry.page.reloadComments()
         return
       }
-      const floor = Number(res.floor) || 0
-      // 出参无 comment 对象，前端自行构造一条展示
-      const c = {
-        id: res.commentId,
-        floor,
-        avatarIdx: commentAvatarIndex(floor),
-        content,
-        createdAt: Date.now(),
-        status: res.status,
-        replyToFloor: res.replyToFloor || 0,
-        replyCount: 0,
-        replies: [],
-        mine: res.isMine !== false,
-        tag: this.data.post && this.data.post.isMine ? 'op' : '',
-        timeText: '刚刚'
-      }
-      const comments = this.data.comments.slice()
-      if (payload.parentId) {
-        // 追加到对应一级评论的楼中楼
-        let hit = false
-        for (let i = 0; i < comments.length; i++) {
-          if (comments[i].id === payload.parentId) {
-            const t = comments[i]
-            const replies = (t.replies || []).concat([c])
-            comments[i] = { ...t, replies, replyCount: (t.replyCount || 0) + 1 }
-            hit = true
-            break
-          }
-        }
-        if (!hit) comments.unshift(c)
-      } else {
-        // 列表按楼层倒序（新的在上），新评论放最上面
-        comments.unshift(c)
-      }
-      this.setData({
-        comments,
-        commentTotal: this.data.commentTotal + 1,
-        commentDraft: '',
-        replyTo: null
-      })
-      const commentCount = (this.data.post.commentCount || 0) + 1
-      this.setData({ 'post.commentCount': commentCount, 'post.commentShort': countShort(commentCount) })
-      toast('已发布')
+      pending.id = res.commentId
+      pending.floor = Number(res.floor) || 0
+      pending.status = res.status
+      pending.replyToFloor = res.replyToFloor || 0
+      pending.confirmedAt = Date.now()
+      toast(res.status === 'pending' ? '已提交，审核后公开' : '已发布')
+      if (entry.page) entry.page.renderComments()
     } catch (e) {
+      removePending()
       if (e && e.code === 40010) {
         toast('评论包含不允许的内容')
       } else {
         toast((e && e.msg) || '发送失败')
+      }
+      // 退回草稿，方便修改后重发（用户已经输入了新内容就不覆盖）
+      const page = entry.page
+      if (page) {
+        if (!page.data.commentDraft) page.setData({ commentDraft: content, replyTo })
+        page.renderComments()
       }
     } finally {
       this.setData({ sending: false })
@@ -263,13 +295,18 @@ Page({
       'post.likeCount': likeCount,
       'post.likeShort': countShort(likeCount)
     })
+    // 补丁在乐观更新瞬间就写入：用户立刻返回列表页也能拿到最新状态，不等网络
+    this.patchInteraction({ liked: active, likeCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      await api.interactionToggle(this.postId, 'like')
-      patchPost(this.postId, { liked: active, likeCount })
+      const res = await api.interactionToggle(this.postId, 'like')
+      const count = res && typeof res.count === 'number' ? res.count : likeCount
+      this.setData({ 'post.likeCount': count, 'post.likeShort': countShort(count) })
+      this.patchInteraction({ liked: active, likeCount: count })
+      patchPost(this.postId, { liked: active, likeCount: count })
     } catch (e) {
       this.setData({ 'post.liked': p.liked, 'post.likeCount': p.likeCount, 'post.likeShort': p.likeShort })
-
+      this.patchInteraction({ liked: p.liked, likeCount: p.likeCount })
     }
   },
 
@@ -283,16 +320,18 @@ Page({
       'post.favCount': favCount,
       'post.favShort': countShort(favCount)
     })
+    this.patchInteraction({ faved: active, favCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      await api.interactionToggle(this.postId, 'fav')
-      patchPost(this.postId, { faved: active, favCount })
-
-      if (active) toast('已收藏')
+      const res = await api.interactionToggle(this.postId, 'fav')
+      const count = res && typeof res.count === 'number' ? res.count : favCount
+      this.setData({ 'post.favCount': count, 'post.favShort': countShort(count) })
       this.patchInteraction({ faved: active, favCount: count })
+      patchPost(this.postId, { faved: active, favCount: count })
+      if (active) toast('已收藏')
     } catch (e) {
       this.setData({ 'post.faved': p.faved, 'post.favCount': p.favCount, 'post.favShort': p.favShort })
-
+      this.patchInteraction({ faved: p.faved, favCount: p.favCount })
     }
   },
 

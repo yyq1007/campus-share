@@ -12,7 +12,7 @@
     <view wx:if="{{post.title}}" class="pc-title font-title">{{post.title}}</view>
     <view class="pc-excerpt">{{post.excerpt}}</view>
     <view class="pc-meta">
-      <text class="pc-meta-left">匿名 · {{timeText}}</text>
+      <text class="pc-meta-left">{{showCited ? '被 AI 引用 ' + post.citedCount + ' 次' : '匿名'}} · {{timeText}}</text>
       <view class="pc-actions">
         <view wx:if="{{manageable === 'manage'}}" class="pc-act pc-act-danger" catchtap="onDelete">删除</view>
         <view class="pc-act" catchtap="onLike">
