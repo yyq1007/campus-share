@@ -20,6 +20,24 @@ function clampSize(v) {
   return Math.max(1, Math.min(n, MAX_PAGE));
 }
 
+/** 当前用户对这些帖子的点赞/收藏状态：{ postId: { liked, faved } } */
+async function loadInteractions(uid, ids) {
+  const map = {};
+  if (!ids.length) return map;
+  try {
+    const res = await coll(COL.interactions)
+      .where({ uid, targetType: 'post', targetId: _.in(ids) })
+      .limit(100)
+      .get();
+    (res.data || []).forEach((it) => {
+      map[it.targetId] = map[it.targetId] || {};
+      if (it.type === 'like') map[it.targetId].liked = true;
+      if (it.type === 'fav') map[it.targetId].faved = true;
+    });
+  } catch (e) { /* 状态查询失败不阻断列表 */ }
+  return map;
+}
+
 async function listPosts(ctx, tab, cursor, pageSize) {
   const where = { authorUid: ctx.uid };
   if (tab === 'pending') {
@@ -46,9 +64,11 @@ async function listPosts(ctx, tab, cursor, pageSize) {
   const rows = res.data || [];
   const hasMore = rows.length > pageSize;
   const page = rows.slice(0, pageSize);
+  const inter = await loadInteractions(ctx.uid, page.map((p) => p._id));
 
   const list = page.map((p) => {
     const first = (p.media || [])[0] || {};
+    const mine = inter[p._id] || {};
     return {
       id: p._id,
       title: p.title || '',
@@ -57,6 +77,10 @@ async function listPosts(ctx, tab, cursor, pageSize) {
       board: p.board,
       status: p.status === 'published' && p.expired ? 'expired' : p.status,
       citedCount: (p.stats && p.stats.citedCount) || 0,
+      likeCount: (p.stats && p.stats.likeCount) || 0,
+      favCount: (p.stats && p.stats.favCount) || 0,
+      liked: !!mine.liked,
+      faved: !!mine.faved,
       createdAt: ms(p.createdAt),
     };
   });
@@ -93,13 +117,14 @@ async function listFavorites(ctx, cursor, pageSize) {
   }
   const map = {};
   posts.forEach((p) => { map[p._id] = p; });
+  const inter = await loadInteractions(ctx.uid, ids);
 
   // 按收藏时间排序，已删除的帖子直接跳过
   const list = page
     .map((r) => {
       const p = map[r.targetId];
       if (!p) return null;
-      return postBrief(p, { faved: true, liked: false });
+      return postBrief(p, { faved: true, liked: !!(inter[r.targetId] && inter[r.targetId].liked) });
     })
     .filter(Boolean);
 

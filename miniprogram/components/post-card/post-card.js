@@ -1,7 +1,7 @@
 // 信息流帖子卡：封面 + 圆体标题 + 摘要 + 匿名 meta + 赞/藏
 // 兼容两种数据源：
 //  - postList / meList(favorites) → postBrief（含 likeCount/favCount/liked/faved/mediaType/expired）
-//  - meList(posts) → 精简项（仅 title/excerpt/cover/status/citedCount）
+//  - meList(posts) → 精简项（title/excerpt/cover/status/citedCount + 点赞收藏状态与计数）
 const { timeAgo, countShort } = require('../../utils/format')
 
 Component({
