@@ -50,6 +50,7 @@
 }
 
 .list { height: calc(100vh - 260rpx); }
+.list-cited { height: calc(100vh - 160rpx); } /* 被引用视图没有状态 tabs */
 .feed { padding: 24rpx 32rpx 0; }
 .pad { height: 200rpx; }
 

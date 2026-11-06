@@ -9,6 +9,7 @@ Component({
     post: { type: Object, value: {} },
     showBoard: { type: Boolean, value: false },
     showFav: { type: Boolean, value: true },
+    showCited: { type: Boolean, value: false }, // 显示「被 AI 引用 N 次」
     manageable: { type: String, value: '' }   // 'manage' 时展示删除/下线操作
   },
   data: {

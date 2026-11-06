@@ -5,12 +5,12 @@
       <view class="nav-btn" bind:tap="onBack">
         <image class="nav-btn-icon" src="/assets/icons/arrow-left.png" mode="aspectFit" />
       </view>
-      <view class="nav-title">我的分享</view>
+      <view class="nav-title">{{isCited ? '被引用的分享' : '我的分享'}}</view>
       <view class="nav-ph" />
     </view>
   </view>
 
-  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+  <scroll-view wx:if="{{!isCited}}" scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
     <view class="tabs-inner">
       <view
         wx:for="{{tabs}}" wx:key="key"
@@ -20,13 +20,20 @@
     </view>
   </scroll-view>
 
-  <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}" state="{{state}}" bind:retry="onRetry" bind:action="onFab" btnText="去发一条" />
+  <page-state
+    wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}"
+    state="{{state}}" bind:retry="onRetry" bind:action="onFab"
+    emptyText="{{isCited ? '还没有分享被 AI 引用' : '还没有内容'}}"
+    emptySub="{{isCited ? '同学提问时，AI 用到你的分享就会出现在这里' : ''}}"
+    btnText="去发一条"
+  />
 
-  <scroll-view wx:else scroll-y class="list" bindscrolltolower="onMore">
+  <scroll-view wx:else scroll-y class="list {{isCited ? 'list-cited' : ''}}" bindscrolltolower="onMore">
     <view class="feed">
       <post-card
         wx:for="{{list}}" wx:key="id" post="{{item}}"
-        manageable="manage"
+        manageable="{{isCited ? '' : 'manage'}}"
+        showCited="{{isCited}}"
         bind:tap="onPostTap" bind:delete="onDelete"
       />
     </view>
@@ -34,7 +41,7 @@
   </scroll-view>
 
   <!-- FAB -->
-  <view class="fab" bind:tap="onFab">
+  <view wx:if="{{!isCited}}" class="fab" bind:tap="onFab">
     <image class="fab-icon" src="/assets/icons/plus.png" mode="aspectFit" />
   </view>
 </view>

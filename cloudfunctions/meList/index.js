@@ -22,8 +22,15 @@ function clampSize(v) {
 
 async function listPosts(ctx, tab, cursor, pageSize) {
   const where = { authorUid: ctx.uid };
-  if (tab === 'pending') where.status = 'pending';
-  else where.status = _.neq('deleted');
+  if (tab === 'pending') {
+    where.status = 'pending';
+  } else if (tab === 'cited') {
+    // 口径与 meOverview.sumCited 一致：只算已发布的帖子
+    where.status = 'published';
+    where['stats.citedCount'] = _.gt(0);
+  } else {
+    where.status = _.neq('deleted');
+  }
   if (cursor) where.createdAt = _.lt(new Date(cursor.t));
 
   const res = await coll(COL.posts)
