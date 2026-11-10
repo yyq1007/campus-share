@@ -138,7 +138,7 @@ function commentCreate(o) {
 
 // ---------- 我的 ----------
 
-/** 我的分享：tab 支持 all|pending|cited（环境版不区分 published/rejected） */
+/** 我的分享：tab 支持 all|pending（环境版不区分 published/rejected） */
 async function myPosts(params = {}) {
   const res = await callFn('meList', { type: 'posts', pageSize: 10, ...params })
   return { ...res, list: await decorateBriefs(res.list) }

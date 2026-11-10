@@ -99,20 +99,16 @@
         <text class="comment-title">评论</text>
         <text class="comment-num">{{commentTotal}}</text>
       </view>
-      <block wx:if="{{!comments.length}}">
-        <view wx:if="{{commentLoadFailed}}" class="comment-empty" bind:tap="onRetryComments">评论加载失败，点击重试</view>
-        <view wx:elif="{{commentsLoaded}}" class="comment-empty">还没有评论，来说第一句吧</view>
-        <view wx:else class="comment-empty">评论加载中…</view>
-      </block>
+      <view wx:if="{{!comments.length}}" class="comment-empty">还没有评论，来说第一句吧</view>
       <view
-        wx:for="{{comments}}" wx:key="id"
+        wx:for="{{comments}}" wx:key="floor"
         class="comment-row" data-floor="{{item.floor}}" data-id="{{item.id}}"
         bind:longpress="onPickReply"
       >
         <view class="avatar avatar-{{item.avatarIdx}}">匿</view>
         <view class="comment-main">
           <view class="comment-meta">
-            <text class="comment-nick">{{item.sending ? '匿名' : '匿名 #' + item.floor}}</text>
+            <text class="comment-nick">匿名 #{{item.floor}}</text>
             <text wx:if="{{item.tag === 'op'}}" class="comment-mine">楼主</text>
             <text wx:if="{{item.mine}}" class="comment-mine">我</text>
             <text class="comment-time">{{item.timeText}}</text>

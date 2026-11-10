@@ -120,8 +120,8 @@ Page({
   onAbout() { wx.navigateTo({ url: '/pages/about/about' }) },
   onSearch() { wx.navigateTo({ url: '/pages/search/search' }) },
 
-  // 被引用：只看被 AI 引用过的帖子
-  onCited() { wx.navigateTo({ url: '/pages/me/posts/posts?tab=cited' }) },
+  // 被引用：跳到我的分享（被引用的帖在列表里带「被 AI 引用」标记）
+  onCited() { wx.navigateTo({ url: '/pages/me/posts/posts' }) },
 
   // ---------- 退出登录 ----------
   onLogout() {

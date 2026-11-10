@@ -1,4 +1,4 @@
-// 我的分享：状态筛选；tab=cited 时只看被 AI 引用过的帖子（从「我的 → 被引用」进入）
+// 我的分享：状态筛选
 // 契约边界：meList 服务端只支持 pending / 非 deleted 两种过滤，
 // 其余状态在本地按 status 过滤（hasMore 以服务端为准）
 const api = require('../../../utils/api')
@@ -20,7 +20,6 @@ Page({
     navH: 44,
     tabs: TABS,
     tab: 'all',
-    isCited: false,
     list: [],
     cursor: null,
     hasMore: true,
@@ -29,14 +28,12 @@ Page({
   },
 
   onLoad(query) {
-    const isCited = query.tab === 'cited'
-    const tab = isCited ? 'cited' : (TABS.some(t => t.key === query.tab) ? query.tab : 'all')
-    this.setData({ tab, isCited })
+    const tab = TABS.some(t => t.key === query.tab) ? query.tab : 'all'
     try {
       const win = wx.getWindowInfo()
       const cap = wx.getMenuButtonBoundingClientRect()
       const sb = win.statusBarHeight || 40
-      this.setData({ statusBarH: sb, navH: (cap.top - sb) * 2 + cap.height })
+      this.setData({ statusBarH: sb, navH: (cap.top - sb) * 2 + cap.height, tab })
     } catch (e) { /* 兜底 */ }
     this.firstLoad()
   },
@@ -53,15 +50,12 @@ Page({
   },
 
   onShow() {
-    // 详情页带回的变更：删掉的帖子移出列表（避免对已删帖子再点删除），其余同步点赞/收藏
-    const { updates, deletedIds } = collectPatches(this.data.list, this._syncAt || 0)
+    // 在详情页删掉的帖子：返回时从列表移除，避免对已删帖子再点删除
+    const { deletedIds } = collectPatches(this.data.list, this._syncAt || 0)
     this._syncAt = Date.now()
-    if (deletedIds.length) {
-      const list = this.data.list.filter(x => deletedIds.indexOf(x.id) === -1)
-      this.setData({ list, state: list.length ? 'success' : 'empty' })
-    } else if (Object.keys(updates).length) {
-      this.setData(updates)
-    }
+    if (!deletedIds.length) return
+    const list = this.data.list.filter(x => deletedIds.indexOf(x.id) === -1)
+    this.setData({ list, state: list.length ? 'success' : 'empty' })
   },
 
   async fetchList(reset) {
@@ -74,10 +68,9 @@ Page({
       this.setData({ cursor: null, list: [] })
       this._syncAt = Date.now()
     }
-    // 服务端只区分 pending、cited 与「非 deleted」；其余状态在本地按 status 过滤
-    const serverSide = this.data.tab === 'pending' || this.data.tab === 'cited'
-    const needFilter = !serverSide && this.data.tab !== 'all'
-    const serverTab = serverSide ? this.data.tab : 'all'
+    // 服务端只区分 pending 与「非 deleted」；其余状态在本地按 status 过滤
+    const needFilter = this.data.tab !== 'pending' && this.data.tab !== 'all'
+    const serverTab = this.data.tab === 'pending' ? 'pending' : 'all'
 
     let matched = reset ? [] : (this.data.list || []).slice()
     let cursor = this.data.cursor || undefined
@@ -99,10 +92,6 @@ Page({
       if (seq !== this._reqSeq) return
       let batch = res.list || []
       if (needFilter) batch = batch.filter(p => p.status === this.data.tab)
-      // 被引用：服务端已筛选，这里再兜一层，云函数未更新时也不会混入未审核或 0 次引用的帖子
-      if (this.data.isCited) {
-        batch = batch.filter(p => (p.status === 'published' || p.status === 'expired') && p.citedCount > 0)
-      }
       matched = matched.concat(batch)
       cursor = res.nextCursor
       hasMore = res.hasMore

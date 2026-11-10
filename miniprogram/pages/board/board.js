@@ -2,10 +2,7 @@
 const api = require('../../utils/api')
 const { guard } = require('../../utils/auth')
 const { BOARDS } = require('../../utils/config')
-
 const { collectPatches, patchPost } = require('../../utils/post-sync')
-const { writePatch, gcPatches } = require('../../utils/feed-patch')
-
 
 Page({
   data: {
@@ -37,14 +34,7 @@ Page({
     // 详情页里点赞/收藏的变更补到卡片上
     const { updates } = collectPatches(this.data.list, this._syncAt || 0)
     this._syncAt = Date.now()
-    // 再叠加乐观补丁（点完立刻返回时请求可能还在途；补丁保留给详情页 5s 在途窗口，GC 过期清理）
-    const patches = getApp().globalData.interactionPatches || {}
-    this.data.list.forEach((item, idx) => {
-      const pt = patches[item.id]
-      if (pt) Object.keys(pt).forEach(k => { if (k !== 'ts') updates[`list[${idx}].${k}`] = pt[k] })
-    })
     if (Object.keys(updates).length) this.setData(updates)
-    gcPatches()
   },
 
   async fetchList(reset) {
@@ -77,11 +67,6 @@ Page({
     const countKey = type === 'like' ? 'likeCount' : 'favCount'
     const idx = this.data.list.findIndex(x => x.id === post.id)
     if (idx < 0) return
-    // 同一帖子同一操作还在途时忽略连点，否则后到的响应会把状态改乱
-    const lock = `${post.id}:${type}`
-    this._toggling = this._toggling || {}
-    if (this._toggling[lock]) return
-    this._toggling[lock] = true
     const item = this.data.list[idx]
     const active = !item[key]
     const nextCount = Math.max(0, (item[countKey] || 0) + (active ? 1 : -1))
@@ -89,34 +74,17 @@ Page({
       [`list[${idx}].${key}`]: active,
       [`list[${idx}].${countKey}`]: nextCount
     })
-    writePatch(post.id, { [key]: active, [countKey]: nextCount })
     if (active) wx.vibrateShort({ type: 'light' })
     try {
-      const res = await api.interactionToggle(post.id, type)
-      // 用服务端真值校正：列表里的状态和计数可能已过期，不校正就会和详情页对不上
-      const finalActive = res && typeof res.active === 'boolean' ? res.active : active
-      const finalCount = res && typeof res.count === 'number' ? res.count : nextCount
-      const cur = this.data.list.findIndex(x => x.id === post.id)
-      if (cur >= 0) {
-        this.setData({
-          [`list[${cur}].${key}`]: finalActive,
-          [`list[${cur}].${countKey}`]: finalCount
-        })
-      }
-      writePatch(post.id, { [key]: finalActive, [countKey]: finalCount })
-      patchPost(post.id, { [key]: finalActive, [countKey]: finalCount })
+      await api.interactionToggle(post.id, type)
+      // 记补丁：进详情页再返回时用云端真值覆盖本地乐观值
+      patchPost(post.id, { [key]: active, [countKey]: nextCount })
     } catch (err) {
-      const cur = this.data.list.findIndex(x => x.id === post.id)
-      if (cur >= 0) {
-        this.setData({
-          [`list[${cur}].${key}`]: item[key],
-          [`list[${cur}].${countKey}`]: item[countKey]
-        })
-      }
-      writePatch(post.id, { [key]: item[key], [countKey]: item[countKey] })
+      this.setData({
+        [`list[${idx}].${key}`]: item[key],
+        [`list[${idx}].${countKey}`]: item[countKey]
+      })
       wx.showToast({ title: '操作失败', icon: 'none' })
-    } finally {
-      this._toggling[lock] = false
     }
   },
 

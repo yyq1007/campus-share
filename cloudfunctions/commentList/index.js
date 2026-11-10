@@ -41,37 +41,28 @@ exports.main = withAuth(async (event, ctx) => {
   if (!postId) return fail(40001);
   const pageSize = Math.max(1, Math.min(Number(event.pageSize) || 20, 50));
   const cursor = decodeCursor(event.cursor);
-  // 作者本人能看到自己待审核的评论和回复，否则发完重进就「消失」了
-  const statusOr = ctx.uid
-    ? _.or([{ status: 'published' }, { status: 'pending', authorUid: ctx.uid }])
-    : { status: 'published' };
+  const opUid = await loadPostAuthor(postId);
 
   if (parentId) {
-    const [res, pr, opUid] = await Promise.all([
+    const [res, pr] = await Promise.all([
       coll(COL.comments)
-        .where(_.and([{ postId, parentId }, statusOr]))
+        .where({ postId, parentId, status: 'published' })
         .orderBy('createdAt', 'asc')
         .limit(pageSize)
         .get(),
       coll(COL.comments).doc(parentId).field({ authorUid: true }).get().catch(() => ({ data: null })),
-      loadPostAuthor(postId),
     ]);
     const layerUid = (pr.data && pr.data.authorUid) || '';
-    const replies = res.data || [];
+    const replies = (res.data || []).filter((c) => c.status === 'published' || c.authorUid === ctx.uid);
     const list = replies.map((r) => Object.assign(commentItem(r, [], ctx.uid), { tag: tagOf(r.authorUid, opUid, layerUid) }));
     return ok({ list, nextCursor: null, hasMore: false, total: replies.length });
   }
 
   const where = { postId, parentId: _.in(['', null]) };
   if (cursor && cursor.f) where.floor = _.lt(Number(cursor.f));
-
-  // 与一级评论查询同时发出，缩短整体耗时
-  const opTask = loadPostAuthor(postId);
-  const totalTask = coll(COL.comments)
-    .where(_.and([{ postId }, statusOr]))
-    .count()
-    .then((c) => c.total || 0)
-    .catch(() => null);
+  const statusOr = ctx.uid
+    ? _.or([{ status: 'published' }, { status: 'pending', authorUid: ctx.uid }])
+    : { status: 'published' };
 
   let res;
   try {
@@ -99,7 +90,7 @@ exports.main = withAuth(async (event, ctx) => {
   if (ids.length) {
     try {
       const rr = await coll(COL.comments)
-        .where(_.and([{ postId, parentId: _.in(ids) }, statusOr]))
+        .where({ postId, parentId: _.in(ids), status: 'published' })
         .orderBy('createdAt', 'asc')
         .limit(200)
         .get();
@@ -110,8 +101,13 @@ exports.main = withAuth(async (event, ctx) => {
     } catch (e) { /* ignore */ }
   }
 
-  const [opUid, counted] = await Promise.all([opTask, totalTask]);
-  const total = counted === null ? rows.length : counted;
+  let total = 0;
+  try {
+    const c = await coll(COL.comments).where({ postId, status: 'published' }).count();
+    total = c.total || 0;
+  } catch (e) {
+    total = rows.length;
+  }
 
   return ok({
     list: rows.map((r) => withTags(commentItem(r, replyMap[r._id] || [], ctx.uid), r, replyMap[r._id] || [], opUid)),
