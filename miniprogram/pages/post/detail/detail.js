@@ -3,7 +3,7 @@ const api = require('../../../utils/api')
 const { toast } = require('../../../utils/cloud')
 const { guard } = require('../../../utils/auth')
 const { BOARDS } = require('../../../utils/config')
-const { timeAgo, countShort, linkHost, randId } = require('../../../utils/format')
+const { timeAgo, countShort, linkHost, randId, avatarIndex } = require('../../../utils/format')
 const { getTempUrls } = require('../../../utils/media')
 const { patchPost } = require('../../../utils/post-sync')
 const { entryOf, applyPage, merged } = require('../../../utils/comment-cache')
@@ -141,6 +141,8 @@ Page({
       p.boardSticker = (b && b.sticker) || 'sticker-lamp'
     }
     p.timeText = timeAgo(p.createdAt)
+    // 匿名糖果色头像：按帖子 id 取色（与信息流卡片同口径，不泄露作者）
+    p.avatarIdx = avatarIndex(p.id)
     p.citedCount = p.citedCount || 0
     p.likeShort = countShort(p.likeCount)
     p.favShort = countShort(p.favCount)

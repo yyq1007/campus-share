@@ -8,37 +8,60 @@
   <view class="pc-digest-foot">点击查看完整周报与全部精选</view>
 </view>
 
-<!-- 普通帖子卡 -->
+<!-- 普通帖子卡（信息流样式：头像+昵称/时间 → 正文 → 图片 → 话题 → 赞/评论/收藏） -->
 <view wx:else class="pc card" bindtap="onTap">
-  <view class="pc-cover-wrap">
-    <image wx:if="{{post.cover}}" class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
-    <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">
-      <icon name="play-white" size="36"/>
-    </view>
-  </view>
-  <view class="pc-body">
-    <view class="pc-tags" wx:if="{{showBoard}}">
-      <view class="board-tag board-{{post.board}}">{{post.boardLabel}}</view>
-    </view>
-    <view wx:if="{{post.title}}" class="pc-title font-title">{{post.title}}</view>
-    <view class="pc-excerpt">{{post.excerpt}}</view>
-    <view class="pc-meta">
-      <text class="pc-meta-left">{{showCited ? '被 AI 引用 ' + post.citedCount + ' 次' : '匿名'}} · {{timeText}}</text>
-      <view class="pc-actions">
-        <view wx:if="{{manageable === 'manage'}}" class="pc-act pc-act-danger" catchtap="onDelete">删除</view>
-        <view class="pc-act" catchtap="onLike">
-          <icon name="{{post.liked ? 'heart-on' : 'heart'}}" size="36"/>
-          <text class="pc-num {{post.liked ? 'pc-num-on' : ''}}">{{likeText}}</text>
+  <view class="pc-head">
+    <!-- 匿名糖果色头像（按帖子 id 取色，不泄露作者） -->
+    <view class="pc-avatar av-{{avatarIdx}}">匿</view>
+    <view class="pc-main">
+      <view class="pc-name-row">
+        <text class="pc-name">匿名同学</text>
+        <!-- 状态角标（仅「我的分享」）：占样例里「热门」的位置 -->
+        <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
+      </view>
+      <view class="pc-sub">
+        <text>{{timeText}}</text>
+        <text wx:if="{{post.expired}}" class="pc-expired"> · 可能已过期</text>
+      </view>
+
+      <view wx:if="{{post.title}}" class="pc-title">{{post.title}}</view>
+      <view class="pc-excerpt">{{post.excerpt}}</view>
+
+      <!-- 图片/视频：排在正文下方（不再占据卡片顶部通栏） -->
+      <view wx:if="{{post.cover}}" class="pc-media">
+        <image class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
+        <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">
+          <icon name="play-white" size="36"/>
         </view>
-        <view class="pc-act" catchtap="onFav" wx:if="{{showFav}}">
-          <icon name="{{post.faved ? 'star-on' : 'star'}}" size="36"/>
-          <text class="pc-num {{post.faved ? 'pc-num-on' : ''}}">{{favText}}</text>
-        </view>
+      </view>
+
+      <!-- 话题（板块）：描边小胶囊 -->
+      <view wx:if="{{showBoard && boardLabel}}" class="pc-topic">
+        <icon name="{{boardSticker}}" size="26" />
+        <text class="pc-topic-text">{{boardLabel}}</text>
       </view>
     </view>
   </view>
-  <!-- 状态角标：挂在卡片层（不是封面层）→ 无封面图时也不会压到标题上 -->
-  <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
-  <!-- 过期提示：同样挂卡片层，且在状态角标左侧（避免两个角标重叠） -->
-  <view wx:if="{{post.expired}}" class="pc-expired">可能已过期</view>
+
+  <!-- 底部互动条：左侧「被 AI 引用 N 次」/ 删除，右侧 赞·评论·收藏 -->
+  <view class="pc-foot">
+    <view class="pc-foot-left">
+      <text wx:if="{{showCited}}" class="pc-cited">被 AI 引用 {{post.citedCount || 0}} 次</text>
+      <view wx:if="{{manageable === 'manage'}}" class="pc-act pc-act-danger" catchtap="onDelete">删除</view>
+    </view>
+    <view class="pc-acts">
+      <view class="pc-act" catchtap="onLike">
+        <icon name="{{post.liked ? 'heart-on' : 'heart'}}" size="36"/>
+        <text class="pc-num {{post.liked ? 'pc-num-on' : ''}}">{{likeText}}</text>
+      </view>
+      <view class="pc-act">
+        <icon name="comment" size="36"/>
+        <text class="pc-num">{{commentText}}</text>
+      </view>
+      <view wx:if="{{showFav}}" class="pc-act" catchtap="onFav">
+        <icon name="{{post.faved ? 'star-on' : 'star'}}" size="36"/>
+        <text class="pc-num {{post.faved ? 'pc-num-on' : ''}}">{{favText}}</text>
+      </view>
+    </view>
+  </view>
 </view>

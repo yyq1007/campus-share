@@ -78,14 +78,40 @@
 
 /* ---------- 正文区（设计稿：无白卡，直接排在渐变底上，左右 20px） ---------- */
 .detail-card {
-  margin: 32rpx 40rpx 0;
+  margin: 20rpx 40rpx 0;
   padding: 0;
   background: transparent;
   border-radius: 0;
   box-shadow: none;
 }
+/* 作者行（信息流排版）：头像 + 昵称/时间 + 板块胶囊 */
+.author-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.author-row .avatar {
+  width: 72rpx;
+  height: 72rpx;
+  font-size: 30rpx;
+}
+.author-main { flex: 1; min-width: 0; }
+.author-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.author-sub {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: var(--text-faint);
+}
 .board-chip {
   display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-left: auto;
+  flex-shrink: 0;
   padding: 8rpx 24rpx;
   font-size: 22rpx;
   font-weight: 600;
@@ -96,17 +122,16 @@
 .board-sky { background: var(--board-sky); }
 .board-coral { background: var(--board-coral); }
 .detail-title {
-  margin-top: 20rpx;
+  margin-top: 24rpx;
   font-size: 36rpx;
   font-weight: 600;
   line-height: 1.4;
   color: var(--text-strong);
 }
-.detail-time { margin-top: 8rpx; font-size: 22rpx; color: var(--text-faint); }
 
 /* ---------- 图集 ---------- */
 .gallery {
-  margin-top: 24rpx;
+  margin-top: 0;   /* 顶部间距由 .gallery-wrap 统一给，避免叠加 */
   height: 420rpx;
   border-radius: 32rpx;
   overflow: hidden;
@@ -117,9 +142,8 @@
   border-radius: 32rpx;
 }
 /* 单图：宽度撑满、高度随原图比例，不再裁切 */
-.gallery-img.solo { display: block; margin-top: 24rpx; height: auto; }
+.gallery-img.solo { display: block; height: auto; }
 .gallery-video {
-  margin-top: 24rpx;
   width: 100%;
   height: 420rpx;
   border-radius: 32rpx;
@@ -345,8 +369,9 @@
 .reply-close { width: 26rpx; height: 26rpx; }
 
 /* ---- v4 设计稿对齐（追加覆盖） ---- */
-.gallery-wrap { position: relative; padding: 24rpx 40rpx 0; }
-.detail-card { margin-top: 32rpx; }
+/* 图集已移入正文卡（正文下方），左右内缩由 .detail-card 的 40rpx 承担 */
+.gallery-wrap { position: relative; margin-top: 28rpx; padding: 0; }
+.detail-card { margin-top: 20rpx; }
 .board-chip { display: inline-flex; align-items: center; gap: 8rpx; }
 .field-chips { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 24rpx; }
 .field-chip {

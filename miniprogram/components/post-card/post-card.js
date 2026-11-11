@@ -1,13 +1,14 @@
-// 信息流帖子卡：封面 + 圆体标题 + 摘要 + 匿名 meta + 赞/藏
+// 信息流帖子卡（校园频道式）：头像 + 昵称/时间 → 标题/正文 → 图片 → 话题 → 赞·评论·收藏
 // 兼容两种数据源：
-//  - postList / meList(favorites) → postBrief（含 likeCount/favCount/liked/faved/mediaType/expired）
+//  - postList / meList(favorites) → postBrief（含 likeCount/favCount/commentCount/liked/faved/mediaType/expired）
 //  - meList(posts) → 精简项（title/excerpt/cover/status/citedCount + 点赞收藏状态与计数）
-const { timeAgo, countShort } = require('../../utils/format')
+const { timeAgo, countShort, avatarIndex } = require('../../utils/format')
+const { BOARDS } = require('../../utils/config')
 
 Component({
   properties: {
     post: { type: Object, value: {} },
-    showBoard: { type: Boolean, value: false },
+    showBoard: { type: Boolean, value: true },  // 话题胶囊（板块名），默认展示
     showFav: { type: Boolean, value: true },
     showCited: { type: Boolean, value: false }, // 显示「被 AI 引用 N 次」
     manageable: { type: String, value: '' }   // 'manage' 时展示删除/下线操作
@@ -16,7 +17,11 @@ Component({
     timeText: '',
     likeText: '0',
     favText: '0',
-    statusText: ''
+    commentText: '0',
+    statusText: '',
+    boardLabel: '',
+    boardSticker: 'sticker-lamp',
+    avatarIdx: 1
   },
   observers: {
     // ⚠️ 必须同时监听 manageable：它是控制角标显不显示的开关，
@@ -25,15 +30,21 @@ Component({
       if (!p || !p.id) return
       // 周报卡：不是真帖子，没有赞/藏/状态角标
       if (p.isDigest) {
-        this.setData({ timeText: '', likeText: '', favText: '', statusText: '' })
+        this.setData({ timeText: '', likeText: '', favText: '', commentText: '', statusText: '' })
         return
       }
+      const b = BOARDS[p.board]
       this.setData({
         timeText: timeAgo(p.createdAt),
         likeText: countShort(p.likeCount),
         favText: countShort(p.favCount),
+        commentText: countShort(p.commentCount),
+        // 匿名头像：按帖子 id 取糖果色（不按作者，避免用颜色重建作者画像）
+        avatarIdx: avatarIndex(p.id),
+        boardLabel: b ? b.label : '',
+        boardSticker: (b && b.sticker) || 'sticker-lamp',
         // 状态角标仅在管理态（我的分享）显示：首页/收藏流的帖子 status 恒为
-        // published，显示「已发布」没有信息量，且绝对定位会压住标题首字
+        // published，显示「已发布」没有信息量
         // ⚠️ 用 this.data.manageable（组件自身的 prop），
         //    不能用 p.manageable —— 帖子对象上没有这个字段，恒为 undefined
         statusText: this.data.manageable ? this.statusText(p.status) : ''

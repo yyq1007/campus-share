@@ -30,40 +30,47 @@
   </view>
 
   <block wx:elif="{{post}}">
-    <!-- 图集（设计稿：全宽大图置顶） -->
-    <view class="gallery-wrap">
-      <!-- 图集：图片/视频同属一个轮播（高度随首图比例自适应，wx:key 用真实索引） -->
-      <swiper wx:if="{{post.mediaView.length > 1}}" class="gallery" style="{{post.galleryH ? 'height:' + post.galleryH + 'rpx' : ''}}" circular bindchange="onSwiperChange">
-        <swiper-item wx:for="{{post.mediaView}}" wx:key="index">
-          <image
-            wx:if="{{item.type === 'image'}}" class="gallery-img"
-            src="{{item.url}}" mode="aspectFill" data-idx="{{index}}" bind:tap="onPreview"
-          />
-          <video wx:else class="gallery-video" src="{{item.url}}" poster="{{item.poster}}" object-fit="contain" controls />
-        </swiper-item>
-      </swiper>
-      <block wx:if="{{post.mediaView.length === 1}}">
-        <image
-          wx:if="{{post.mediaView[0].type === 'image'}}"
-          class="gallery-img solo" src="{{post.mediaView[0].url}}" mode="widthFix"
-          data-idx="{{0}}" bind:tap="onPreview"
-        />
-        <video wx:else class="gallery-video" src="{{post.mediaView[0].url}}" poster="{{post.mediaView[0].poster}}" object-fit="contain" controls />
-      </block>
-      <view wx:if="{{post.mediaView.length > 1}}" class="gallery-dots">{{imgIdx + 1}}/{{post.mediaView.length}}</view>
-    </view>
-
-    <!-- 正文卡 -->
+    <!-- 正文卡（排版同信息流：作者行 → 标题 → 正文 → 图集 → 字段） -->
     <view class="detail-card">
-      <view class="board-chip board-{{post.boardColor}}">
-        <icon name="{{post.boardSticker}}" size="26" />
-        <text>{{post.boardLabel}}</text>
+      <!-- 作者行：匿名糖果色头像 + 昵称/时间 + 板块胶囊 -->
+      <view class="author-row">
+        <view class="avatar avatar-{{post.avatarIdx}}">匿</view>
+        <view class="author-main">
+          <view class="author-name">匿名同学</view>
+          <view class="author-sub">{{post.timeText}}</view>
+        </view>
+        <view class="board-chip board-{{post.boardColor}}">
+          <icon name="{{post.boardSticker}}" size="26" />
+          <text>{{post.boardLabel}}</text>
+        </view>
       </view>
-      <view class="detail-title">{{post.title}}</view>
-      <view class="detail-time">匿名 · {{post.timeText}}</view>
+
+      <view wx:if="{{post.title}}" class="detail-title">{{post.title}}</view>
 
       <!-- 正文 -->
       <view class="detail-content">{{post.content}}</view>
+
+      <!-- 图集：排在正文下方（不再占据页首通栏），图片/视频同属一个轮播 -->
+      <view class="gallery-wrap">
+        <swiper wx:if="{{post.mediaView.length > 1}}" class="gallery" style="{{post.galleryH ? 'height:' + post.galleryH + 'rpx' : ''}}" circular bindchange="onSwiperChange">
+          <swiper-item wx:for="{{post.mediaView}}" wx:key="index">
+            <image
+              wx:if="{{item.type === 'image'}}" class="gallery-img"
+              src="{{item.url}}" mode="aspectFill" data-idx="{{index}}" bind:tap="onPreview"
+            />
+            <video wx:else class="gallery-video" src="{{item.url}}" poster="{{item.poster}}" object-fit="contain" controls />
+          </swiper-item>
+        </swiper>
+        <block wx:if="{{post.mediaView.length === 1}}">
+          <image
+            wx:if="{{post.mediaView[0].type === 'image'}}"
+            class="gallery-img solo" src="{{post.mediaView[0].url}}" mode="widthFix"
+            data-idx="{{0}}" bind:tap="onPreview"
+          />
+          <video wx:else class="gallery-video" src="{{post.mediaView[0].url}}" poster="{{post.mediaView[0].poster}}" object-fit="contain" controls />
+        </block>
+        <view wx:if="{{post.mediaView.length > 1}}" class="gallery-dots">{{imgIdx + 1}}/{{post.mediaView.length}}</view>
+      </view>
 
       <!-- 结构化字段（设计稿：浅紫底小标签） -->
       <view wx:if="{{post.fieldChips.length}}" class="field-chips">

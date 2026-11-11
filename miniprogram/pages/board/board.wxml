@@ -42,12 +42,17 @@
       <view wx:if="{{loadingMore}}" class="load-more">加载中…</view>
       <view wx:if="{{!hasMore && list.length > 2}}" class="load-more">没有更多了</view>
     </block>
-    <view class="safe-bottom"></view>
+    <view class="safe-bottom-bar"></view>
   </view>
 
-  <view class="fab fab-page" bindtap="onFab">
-    <icon name="plus-white" size="32" />
-    <text>发一条</text>
+  <!-- 底部分享条（板块内专属，首页不放）：整条点击进发布页 -->
+  <view class="share-bar" bindtap="onFab">
+    <view class="share-bar-input">
+      <text class="share-bar-ph">期待你的分享</text>
+    </view>
+    <view class="share-bar-img">
+      <icon name="image" size="40" />
+    </view>
   </view>
 </block>
 

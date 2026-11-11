@@ -57,3 +57,40 @@
 .banner-text { position: absolute; left: 148rpx; top: 50%; transform: translateY(-50%); }
 .banner-title { position: static; font-size: 40rpx; }
 .banner-sub { margin-top: 8rpx; font-size: 24rpx; color: var(--white-a92); }
+
+/* ---- 底部分享条（板块内专属） ----
+   样式参考校园频道：浅色胶囊占位 + 右侧图片按钮，整条点击进发布页。
+   首页不放这条，首页仍用右下角悬浮发布按钮。 */
+.share-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  background: var(--bg-elevated);
+  border-top: 2rpx solid var(--border);
+}
+.share-bar-input {
+  flex: 1;
+  height: 76rpx;
+  display: flex;
+  align-items: center;
+  padding: 0 28rpx;
+  border-radius: var(--radius-input);
+  background: var(--bg-field);
+}
+.share-bar-ph { font-size: 28rpx; color: var(--text-3); }
+.share-bar-img {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* 列表底部留出分享条的高度，最后一张卡不被压住 */
+.safe-bottom-bar { padding-bottom: calc(180rpx + env(safe-area-inset-bottom)); }
