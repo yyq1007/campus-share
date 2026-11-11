@@ -1,6 +1,26 @@
 /* S10 榜单：Tab 切换 + 板块 chips + 名次列表
    全部颜色/字号走 theme.wxss 变量，var() 带同值兜底（页面级样式在部分环境拿不到全局变量） */
 
+/* ---------- 页面容器 + 页头 ----------
+   ⚠️ .page / .hero 系列只在各页面自己的 wxss 里定义，app.wxss 没有全局版，
+   本页必须自带一份，否则页头无样式、页面无渐变底（与问答页同构，故意保持一致） */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-gradient, linear-gradient(180deg, #F5F1FF 0%, #EAF4FF 100%));
+}
+.hero {
+  padding: 0 32rpx 20rpx;
+  border-radius: 0 0 48rpx 48rpx;
+}
+.hero-nav {
+  display: flex;
+  align-items: center;
+}
+.hero-title { font-size: 36rpx; font-weight: 600; color: var(--text-strong, #2D2A45); }
+.hero-sub { margin-top: 4rpx; font-size: 24rpx; color: var(--text-soft, #9A96AC); }
+
 /* ---------- 一级 Tab ---------- */
 .rk-tabs {
   display: flex;
