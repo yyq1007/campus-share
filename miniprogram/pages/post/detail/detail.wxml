@@ -32,8 +32,8 @@
   <block wx:elif="{{post}}">
     <!-- 正文卡（排版同信息流：作者行 → 标题 → 正文 → 图集 → 字段） -->
     <view class="detail-card">
-      <!-- 作者行：匿名糖果色头像 + 昵称/时间 + 板块胶囊 -->
-      <view class="author-row">
+      <!-- 作者行：匿名糖果色头像 + 昵称/时间 + 板块胶囊（周报是系统发布，没有作者，直接显示标题） -->
+      <view wx:if="{{!post.isDigest}}" class="author-row">
         <view class="avatar avatar-{{post.avatarIdx}}">匿</view>
         <view class="author-main">
           <view class="author-name">匿名同学</view>
@@ -45,10 +45,17 @@
         </view>
       </view>
 
-      <view wx:if="{{post.title}}" class="detail-title">{{post.title}}</view>
+      <view wx:if="{{post.isDigest}}" class="digest-title-row">
+        <view class="detail-title">{{post.title}}</view>
+        <view class="board-chip board-{{post.boardColor}}">
+          <icon name="{{post.boardSticker}}" size="26" />
+          <text>{{post.boardLabel}}</text>
+        </view>
+      </view>
+      <view wx:elif="{{post.title}}" class="detail-title">{{post.title}}</view>
 
       <!-- 正文 -->
-      <view class="detail-content">{{post.content}}</view>
+      <view wx:if="{{!post.isDigest}}" class="detail-content">{{post.content}}</view>
 
       <!-- 图集：排在正文下方（不再占据页首通栏），图片/视频同属一个轮播 -->
       <view class="gallery-wrap">
@@ -100,32 +107,24 @@
       </view>
     </view>
 
-    <!-- 周报（周报帖专属）：每期内容整块包在一个「日期框」里，头部即该期日期（11.18） -->
-    <view wx:if="{{post.isDigest}}" class="digest-issue">
-      <view class="digest-issue-head">
-        <view class="digest-issue-date">{{post.digestDate}}</view>
-        <view wx:if="{{post.digestItems.length}}" class="digest-issue-count">本周精选 {{post.digestItems.length}} 条</view>
-      </view>
-      <view wx:if="{{post.digestItems.length}}" class="digest-issue-body">
-        <view
-          class="digest-item"
-          wx:for="{{post.digestItems}}" wx:key="postId"
-          data-post-id="{{item.postId}}"
-          bind:tap="onDigestItemTap"
-        >
-          <view class="digest-no">{{item.no}}</view>
-          <view class="digest-item-main">
-            <view class="digest-item-title">{{item.title}}</view>
-            <view class="digest-item-meta">
-              <text class="digest-item-board">{{item.boardLabel}}</text>
+    <!-- 周报（周报帖专属）：正文按 [1][2][3] 角标切成「一段带序号的描述 → 一条帖子行」，
+         一条一条往下排；角标本身不显示，序号由描述段自己带（1. 2. 3.），
+         最后那段收尾话不带序号 -->
+    <view wx:if="{{post.isDigest}}" class="digest-body">
+      <block wx:for="{{post.digestBlocks}}" wx:key="idx">
+        <view wx:if="{{item.type === 'text'}}" class="digest-p"><text wx:if="{{item.no}}" class="digest-p-no">{{item.no}}.</text>{{item.text}}</view>
+        <view wx:else class="digest-ref" data-post-id="{{item.postId}}" bind:tap="onDigestItemTap">
+          <view class="digest-ref-main">
+            <view class="digest-ref-title">{{item.title}}</view>
+            <view wx:if="{{item.boardLabel || item.likeCount || item.favCount}}" class="digest-ref-meta">
+              <text wx:if="{{item.boardLabel}}" class="digest-ref-board">{{item.boardLabel}}</text>
               <text wx:if="{{item.likeCount}}">{{item.likeCount}} 赞</text>
               <text wx:if="{{item.favCount}}">{{item.favCount}} 收藏</text>
             </view>
           </view>
-          <icon name="chevron-right-primary" size="32" />
+          <icon name="chevron-right-primary" size="28" />
         </view>
-      </view>
-      <view wx:else class="digest-issue-empty">本期暂无精选</view>
+      </block>
     </view>
 
     <!-- 评论区 -->

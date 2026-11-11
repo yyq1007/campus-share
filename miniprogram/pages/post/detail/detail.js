@@ -90,12 +90,16 @@ Page({
         if (m.fileId) fileIds.push(m.fileId)
         if (m.posterFileId) fileIds.push(m.posterFileId)
       })
+      // 周报：精选列表要显示原帖封面缩略图，把 coverFileId 一并换成临时链接
+      if (post.isDigest) {
+        ;(post.digestItems || []).forEach(it => { if (it.coverFileId) fileIds.push(it.coverFileId) })
+      }
+      const urlMap = fileIds.length ? await getTempUrls(fileIds) : {}
       if (fileIds.length) {
-        const map = await getTempUrls(fileIds)
         post.mediaView = (post.media || []).map(m => ({
           type: m.type,
-          url: map[m.fileId] || '',
-          poster: m.type === 'video' ? (map[m.posterFileId] || '') : '',
+          url: urlMap[m.fileId] || '',
+          poster: m.type === 'video' ? (urlMap[m.posterFileId] || '') : '',
           duration: m.duration || 0,
           w: m.w || 0,
           h: m.h || 0
@@ -113,7 +117,15 @@ Page({
       if (post.link && !post.linkHost) post.linkHost = linkHost(post.link)
       // 周报帖：本期的日期（日期框标题），发布时刻即该期日期
       // 往期周报不在这里列，统一由 /pages/digest/digest 列表页承担
-      if (post.isDigest) post.digestDate = fmtDot(post.publishedAt) || '本周'
+      if (post.isDigest) {
+        post.digestDate = fmtDot(post.publishedAt) || '本周'
+        post.digestItems = (post.digestItems || []).map(it => ({
+          ...it,
+          coverUrl: it.coverFileId ? (urlMap[it.coverFileId] || '') : ''
+        }))
+        // 正文按引用角标切成「一段文字 → 该帖的图 → 帖子按钮」，见 splitDigestBody
+        post.digestBlocks = splitDigestBody(post.content, post.digestItems)
+      }
       this.setData({ post, state: 'success' })
       this.renderComments()
     } catch (e) {
@@ -533,3 +545,71 @@ Page({
   onRetry() { this.firstLoad() },
   onBack() { wx.navigateBack() }
 })
+
+/**
+ * 周报正文按引用角标 [n] 切块。
+ *   「…想坐最好两点前到 [1]；期末复习可以去二教…」
+ *   → [{type:'text',  no:1, text:'…想坐最好两点前到；'},
+ *      {type:'item',  no:1, postId, coverUrl},
+ *      {type:'text',  no:2, text:'期末复习可以去二教…'}]
+ * 角标本身不渲染（后面的帖子行已经代表它）；角标后紧跟的标点回填到前一段末尾，
+ * 否则「；」「。」会掉到图片后面，读起来是断的。
+ * text 块自带顺序号 no（1、2、3…），渲染成段首的「1.」；最后那段收尾话不编号。
+ * 模型常把开场白和第 1 条揉在同一段（「哈喽各位同学…真在用的！先说学习位：…[1]」），
+ * 这里把开头的寒暄句单独切出来当引言（不编号），剩下的才是「1.」那条描述，
+ * 否则「1.」会直接压在打招呼上，看着像给寒暄编了号。
+ */
+function splitDigestBody(content, items) {
+  const byNo = {}
+  ;(items || []).forEach(it => { byNo[it.no] = it })
+  const text = String(content || '')
+  const blocks = []
+  const re = /\[(\d{1,2})\]/g
+  let last = 0
+  let seq = 0
+  let textNo = 0
+  let m
+  while ((m = re.exec(text))) {
+    const no = Number(m[1])
+    let head = text.slice(last, m.index)
+    last = m.index + m[0].length
+    const pm = text.slice(last).match(/^[\s；;。，,、]+/)
+    if (pm) {
+      // 先把角标前残留的空格去掉，再拼标点，否则会出现「图书馆通宵区 。」
+      head = head.replace(/\s+$/, '') + pm[0].trim().replace(/;/g, '；').replace(/,/g, '，')
+      last += pm[0].length
+    }
+    const body = head.trim()
+    if (body) {
+      // 首段若以寒暄开场，寒暄句单独成段且不编号
+      let intro = ''
+      let desc = body
+      if (!textNo) {
+        const im = body.match(/^(哈喽|大家好|各位同学|同学们|本周|这周)[\s\S]*?[！!。]/)
+        if (im && body.slice(im[0].length).trim()) {
+          intro = im[0].trim()
+          desc = body.slice(im[0].length).trim()
+        }
+      }
+      if (intro) blocks.push({ idx: seq++, type: 'text', text: intro })
+      if (desc) blocks.push({ idx: seq++, type: 'text', no: ++textNo, text: desc })
+    }
+    const it = byNo[no]
+    if (it) {
+      blocks.push({
+        idx: seq++,
+        type: 'item',
+        no: no,
+        postId: it.postId,
+        coverUrl: it.coverUrl || '',
+        title: it.title || '',
+        boardLabel: it.boardLabel || '',
+        likeCount: it.likeCount || 0,
+        favCount: it.favCount || 0
+      })
+    }
+  }
+  const rest = text.slice(last).trim()
+  if (rest) blocks.push({ idx: seq++, type: 'text', text: rest })
+  return blocks
+}

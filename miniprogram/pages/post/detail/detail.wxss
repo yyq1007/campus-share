@@ -393,77 +393,66 @@
 }
 .ai-cite-text { font-size: 26rpx; font-weight: 600; color: var(--primary-deep); }
 
-/* ---------- 周报精选列表（周报帖专属）----------
+/* ---------- 周报正文（周报帖专属）----------
+   正文按引用角标 [n] 切成「一段带序号的描述 → 一条帖子行」，一条一条往下排。
+   序号在描述段开头（1. 2. 3.），帖子行里不再单独挂编号。
    颜色全部走 theme.wxss 令牌（V-01 零硬编码色值）。 */
-/* 周报「日期框」：整期内容包在一个描边卡片里，头部主视觉就是该期日期（11.18） */
-.digest-issue {
-  margin: 0 32rpx 32rpx;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-card);
-  box-shadow: 0 6rpx 18rpx var(--brand-a06);
-  overflow: hidden;
+/* 周报块本身不在 .detail-card 里，要自己撑出与正文相同的左右边距（40rpx） */
+.digest-body { margin: 0 40rpx 32rpx; }
+.digest-p {
+  margin-top: 24rpx;
+  font-size: 30rpx;
+  line-height: 1.8;
+  color: var(--text-body);
+  white-space: pre-wrap;
 }
-.digest-issue-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16rpx;
-  padding: 26rpx 32rpx 18rpx;
+/* 序号放在描述段开头（1. 2. 3.），帖子行里就不必再挂一个编号圆了 */
+.digest-p-no {
+  margin-right: 8rpx;
+  color: var(--brand-700);
+  font-weight: 600;
 }
-.digest-issue-date {
-  font-family: var(--font-number);
-  font-size: var(--fs-display-l);   /* 48rpx，与周报列表的日期同字号 */
-  line-height: 1.05;
-  color: var(--digest-date);
-  letter-spacing: 1rpx;
-}
-.digest-issue-count {
-  font-size: var(--fs-body-s);
-  color: var(--text-2);
-}
-.digest-issue-body {
-  padding: 0 32rpx 8rpx;
-  border-top: 2rpx solid var(--border);
-}
-.digest-issue-empty {
-  padding: 24rpx 32rpx 28rpx;
-  border-top: 2rpx solid var(--border);
-  font-size: var(--fs-body-m);
-  color: var(--text-3);
-}
-
-.digest-item {
+/* 帖子行：标题/信息 + 右侧缩略图 + 箭头，整行可点进原帖。
+   详情页整体是「透明排版 + 浅紫渐变背景」，所以这里的块不能做成白卡：
+   白底（哪怕 90% 半透）在这张浅紫渐变上仍然读作「贴了一张白纸」，跟正文两套质感。
+   改成浅紫玻璃：brand-a10（10% 品牌紫）叠在渐变上——块底是带紫调的，不是白的，
+   渐变能透下来，块的浓度又足够把它从背景里分出来；
+   描边用帖子卡专用 card-border（同色系），阴影只留极淡一层负责「托起」。 */
+.digest-ref {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  padding: 22rpx 0;
-  border-bottom: 2rpx solid var(--border);
+  margin-top: 20rpx;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  background: var(--brand-a10);
+  border: 2rpx solid var(--card-border);
+  box-shadow: 0 4rpx 14rpx var(--brand-a06);
 }
-.digest-item:last-child { border-bottom: none; }
-.digest-no {
-  width: 40rpx;
-  height: 40rpx;
-  line-height: 40rpx;
-  text-align: center;
-  border-radius: 50%;
-  background: var(--brand-50);
-  color: var(--brand-700);
-  font-size: var(--fs-caption);
-  flex-shrink: 0;
-}
-.digest-item-main { flex: 1; overflow: hidden; }
-.digest-item-title {
-  font-size: var(--fs-body);
+.digest-ref-main { flex: 1; overflow: hidden; }
+.digest-ref-title {
+  font-size: 30rpx;
+  line-height: 1.42;
   color: var(--text-1);
+  /* 两行截断：中文一行只装十来个字，一行截会把标题截到看不出是哪条 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.digest-item-meta {
+.digest-ref-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 16rpx;
-  font-size: var(--fs-caption);
-  color: var(--text-3);
   margin-top: 4rpx;
+  font-size: 24rpx;
+  color: var(--text-3);
 }
-.digest-item-board { color: var(--brand-600); }
+.digest-ref-board { color: var(--brand-600); }
+.digest-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 8rpx;
+}
+.digest-title-row .detail-title { flex: 1; margin-top: 0; }

@@ -7,7 +7,9 @@
   overflow: hidden;
   background: var(--bg-elevated);
   border: 2px solid var(--card-border);
-  border-radius: var(--radius-card);
+  /* 信息流卡片单独收成小弧度（16rpx=8pt）；全站 --radius-card 是 48rpx，
+     那样卡片太圆。只在本组件内改，不动全局令牌 */
+  border-radius: 16rpx;
   box-shadow: var(--shadow-card);
   margin-bottom: 32rpx;
 }
@@ -102,7 +104,7 @@
 .pc-media {
   position: relative;
   margin-top: 20rpx;
-  border-radius: 24rpx;
+  border-radius: 16rpx;   /* 与卡片同弧度，不再比卡片更圆 */
   overflow: hidden;
 }
 .pc-cover {
@@ -178,7 +180,7 @@
   overflow: hidden;
   background: var(--bg-elevated);
   border: 2px solid var(--card-border);
-  border-radius: var(--radius-card);
+  border-radius: 16rpx;   /* 与 .pc 保持一致的小弧度 */
   box-shadow: var(--shadow-card);
   margin-bottom: 32rpx;
   position: relative;
