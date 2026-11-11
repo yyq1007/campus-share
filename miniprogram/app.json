@@ -6,6 +6,7 @@
     "pages/digest/digest",
     "pages/post/detail/detail",
     "pages/ask/ask",
+    "pages/rank/rank",
     "pages/profile/profile",
     "pages/post/comments/comments",
     "pages/me/messages/messages",
@@ -35,6 +36,7 @@
     "list": [
       { "pagePath": "pages/index/index", "text": "首页" },
       { "pagePath": "pages/ask/ask", "text": "问答" },
+      { "pagePath": "pages/rank/rank", "text": "榜单" },
       { "pagePath": "pages/profile/profile", "text": "我的" }
     ]
   },

@@ -164,6 +164,7 @@ exports.main = withAuth(async (event, ctx) => {
     aiSummary: '',
     searchTokens: tokenize(`${title} ${content} ${Object.values(cleanFields).join(' ')}`),
     stats: { likeCount: 0, favCount: 0, commentCount: 0, citedCount: 0, viewCount: 0 },
+    popScore: 0,                        // 长期榜热度分（赞×3 + 藏×4），由 interactionToggle 维护
     commentSeq: 0,
     hotScore: hotScore({}, now, now.getTime()),
     publishedAt: status === 'published' ? now : null,

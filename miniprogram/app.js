@@ -322,6 +322,7 @@ App({
   globalData: {
     profile: null,        // { uid, role, status, stats, unread, ... }
     profileAt: 0,
+    unread: 0,            // 站内消息未读数（meOverview 写入，TabBar 红点读取）
     feedDirty: false,     // 发帖/删除后置 true，首页 onShow 刷新
     focusAskInput: false, // 切到问答 tab 后自动聚焦
     pendingAsk: null,     // 跨页带入的提问 { q }

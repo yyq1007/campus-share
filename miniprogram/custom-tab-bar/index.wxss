@@ -26,8 +26,32 @@
   color: var(--text-2, #6B6780);
 }
 .tab-item.on .tab-text { color: var(--brand-800, #5A47C9); font-weight: 600; }
-/* 发布项与普通项一致（示意图：无凸起圆钮） */
-.tab-publish-text { color: var(--text-2, #6B6780); font-weight: 500; }
+/* 未读红点：图标右上角的实心圆，承载「站内消息」导航级提示 */
+.tab-ico-wrap { position: relative; line-height: 0; }
+.tab-badge {
+  position: absolute;
+  top: -2rpx;
+  right: -8rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #FF4D4F;
+  border: 2rpx solid var(--bg-elevated, #FFFFFF);
+  box-sizing: border-box;
+}
+/* 中间发布按钮：横胶囊 + 紫蓝渐变 + 白色加号（设计稿 S1 页脚）。
+   无文字项，用 justify-content 单独居中，避免与图标+文字项错位。 */
+.tab-publish-wrap { justify-content: center; }
+.tab-publish {
+  width: 144rpx;
+  height: 84rpx;
+  border-radius: 42rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(100deg, #A78BFA 0%, #7C9BF5 100%);
+  box-shadow: 0 8rpx 20rpx rgba(108, 92, 231, 0.28);
+}
 
 /* 未同意隐私协议：整条 bar 锁定 */
 .tab-bar.is-locked .tab-item { opacity: .35; }

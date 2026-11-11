@@ -91,6 +91,7 @@ Page({
       // ⚠️ 各 Tab 未读数用服务端返回的 counts，不要硬编码 0
       // （服务端 meMessageRead 现在会返回 counts，口径与 meList 一致）
       const counts = res.counts || { all: left, comment: 0, social: 0 }
+      getApp().globalData.unread = left
       this.setData({
         list,
         unread: left,
@@ -111,6 +112,7 @@ Page({
       api.messageRead(m.id).then(res => {
         // 服务端返回分类未读数 → 同步更新角标（不再只更总数）
         const left = res.unread || 0
+        getApp().globalData.unread = left
         this.setData({
           unread: left,
           counts: res.counts || { all: left, comment: 0, social: 0 }

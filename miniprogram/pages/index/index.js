@@ -34,12 +34,15 @@ Page({
   },
 
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 0 })
+    // ⚠️ app 必须在任何使用之前声明：此前 const app 写在 tabBar.setData 之后，
+    //    第 34 行引用触发 TDZ（Cannot access 'app' before initialization），首页 onShow 直接抛错。
+    const app = getApp()
+    const tabBar = typeof this.getTabBar === 'function' ? this.getTabBar() : null
+    if (tabBar) {
+      tabBar.setData({ selected: 0, unread: app.globalData.unread || 0 })
     }
     // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）
     syncTabBarLock()
-    const app = getApp()
     if (app.globalData.feedDirty && this.data.state !== 'loading') {
       app.globalData.feedDirty = false
       this.refresh()
