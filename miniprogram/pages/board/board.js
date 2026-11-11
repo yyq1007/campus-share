@@ -66,13 +66,17 @@ Page({
   },
 
   onPostTap(e) {
-    wx.navigateTo({ url: `/pages/post/detail/detail?id=${e.detail.post.id}` })
+    const p = e.detail && e.detail.post
+    if (!p || !p.id) return
+    wx.navigateTo({ url: `/pages/post/detail/detail?id=${p.id}` })
   },
 
   async onLike(e) { await this.toggle(e.detail.post, 'like') },
   async onFav(e) { await this.toggle(e.detail.post, 'fav') },
 
   async toggle(post, type) {
+    // 周报是聚合条目，不能点赞/收藏
+    if (!post || !post.id || post.isDigest) return
     const key = type === 'like' ? 'liked' : 'faved'
     const countKey = type === 'like' ? 'likeCount' : 'favCount'
     const idx = this.data.list.findIndex(x => x.id === post.id)

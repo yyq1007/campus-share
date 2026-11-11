@@ -10,7 +10,8 @@ const { queryTokens } = require('./lib/tokenize');
 const { getConfig } = require('./lib/config');
 
 const MAX_PAGE = 20;
-
+// 周报帖的板块标识（taskWeeklyDigest 写入时用这个）
+const DIGEST_BOARD = 'digest';
 // interactions.type → 出参字段名。
 // 数据库里存的是 'like' / 'fav'，但 present.postBrief 读的是 'liked' / 'faved'
 //（与 postDetail 的 myInteraction、meList 的收藏列表口径一致）。
@@ -49,7 +50,9 @@ exports.main = withAuth(async (event, ctx) => {
   const config = await getConfig();
 
   const where = { status: 'published' };
-  if (board) where.board = board;
+  // 周报帖（board='digest'）跟着当前板块一起查出来 → 各板块都能看到它。
+  // 它 hotScore 极高（999999），排序时自然落在第一位。
+  if (board) where.board = _.in([board, DIGEST_BOARD]);
 
   if (keyword) {
     const tokens = queryTokens(keyword);
@@ -89,6 +92,7 @@ exports.main = withAuth(async (event, ctx) => {
     return brief;
   });
 
+
   let nextCursor = null;
   if (hasMore && page.length) {
     const last = page[page.length - 1];
@@ -106,6 +110,16 @@ exports.main = withAuth(async (event, ctx) => {
     } catch (e) {
       data.total = list.length;
     }
+    // 首屏附带最新一条周报：首页「周报入口」用（信息流里不再放周报卡）
+    // 失败不阻塞列表返回，前端拿不到就不显示入口
+    try {
+      const dr = await coll(COL.posts)
+        .where({ status: 'published', board: DIGEST_BOARD })
+        .orderBy('publishedAt', 'desc')
+        .limit(1)
+        .get();
+      if (dr.data && dr.data[0]) data.latestDigest = postBrief(dr.data[0]);
+    } catch (e) { /* 无周报/查询失败 → 前端隐藏入口 */ }
   }
   return ok(data);
 }, {});

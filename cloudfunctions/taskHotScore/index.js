@@ -31,8 +31,10 @@ exports.main = async (event) => {
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
     let rows = [];
     try {
+      // ⚠️ 排除周报帖（board='digest'）：它的 hotScore 是手动设的极大值（用来置顶），
+      //   不能被热度重算覆盖 —— 否则周报会从各板块的第一位掉到最后。
       const res = await coll(COL.posts)
-        .where({ status: 'published', publishedAt: _.gte(since) })
+        .where({ status: 'published', publishedAt: _.gte(since), board: _.neq('digest') })
         .field({ stats: true, publishedAt: true, hotScore: true })
         .orderBy('publishedAt', 'desc')
         .skip(round * PAGE)

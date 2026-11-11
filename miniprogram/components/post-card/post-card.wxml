@@ -1,4 +1,15 @@
-<view class="pc card" bindtap="onTap">
+<!-- 周报卡（board='digest'，各板块置顶）：点进详情页看全文 + 可跳转的原帖列表 -->
+<view wx:if="{{post.isDigest}}" class="pc pc-digest" bindtap="onTap">
+  <view class="pc-digest-head">
+    <view class="pc-digest-badge">周报</view>
+    <view class="pc-digest-count">{{post.itemCount}} 条精选</view>
+  </view>
+  <view class="pc-digest-summary">{{post.excerpt}}</view>
+  <view class="pc-digest-foot">点击查看完整周报与全部精选</view>
+</view>
+
+<!-- 普通帖子卡 -->
+<view wx:else class="pc card" bindtap="onTap">
   <view class="pc-cover-wrap">
     <image wx:if="{{post.cover}}" class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
     <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">

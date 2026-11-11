@@ -14,6 +14,13 @@ function decorateReply(r) {
   return { ...r, mine: !!r.isMine, nick: REPLY_NICK[r.tag] || '匿名同学', timeText: timeAgo(r.createdAt) }
 }
 
+/** 周报日期框用：只留「月.日」（11.18），跟手绘稿的写法一致 */
+function fmtDot(ts) {
+  if (!ts) return ''
+  const d = new Date(ts)
+  return `${d.getMonth() + 1}.${d.getDate()}`
+}
+
 Page({
   data: {
     statusBarH: 40,
@@ -57,7 +64,8 @@ Page({
       await guard()
       // 评论与帖子并行加载，不等帖子和图片
       this.reloadComments()
-      let post = await api.postDetail(this.postId)
+      const res = await api.postDetail(this.postId)
+      let post = res
       // 在途同步：若 5 秒内在列表页操作过点赞/收藏（服务端可能还没写完），
       // 以本地补丁为准渲染，避免详情页显示旧状态（补丁由乐观更新瞬间写入）
       const pt = (getApp().globalData.interactionPatches || {})[this.postId]
@@ -101,7 +109,11 @@ Page({
       } else {
         post.mediaView = []
       }
-      if (post.link) post.linkHost = linkHost(post.link)
+      // link / linkHost 已由 api.postDetail 从 fields 里提到顶层（见 utils/api.js）
+      if (post.link && !post.linkHost) post.linkHost = linkHost(post.link)
+      // 周报帖：本期的日期（日期框标题），发布时刻即该期日期
+      // 往期周报不在这里列，统一由 /pages/digest/digest 列表页承担
+      if (post.isDigest) post.digestDate = fmtDot(post.publishedAt) || '本周'
       this.setData({ post, state: 'success' })
       this.renderComments()
     } catch (e) {
@@ -115,10 +127,20 @@ Page({
 
   decorate(p) {
     const b = BOARDS[p.board] || {}
-    p.boardLabel = b.label || p.board
-    p.boardColor = b.color || 'mint'
+    // 周报帖（board='digest'）不属于任何板块 → 单独给标签与配色
+    if (p.isDigest) {
+      // 标签与标题不重复：标题是「周报」，标签用「精选」
+      p.boardLabel = '精选'
+      // detail.wxss 只有 .board-mint / .board-sky / .board-coral 三个板块色，
+      // 周报用 mint（生活板块的青绿），不新增样式类
+      p.boardColor = 'mint'
+      p.boardSticker = 'ai-sparkle'
+    } else {
+      p.boardLabel = b.label || p.board
+      p.boardColor = b.color || 'mint'
+      p.boardSticker = (b && b.sticker) || 'sticker-lamp'
+    }
     p.timeText = timeAgo(p.createdAt)
-    p.boardSticker = (b && b.sticker) || 'sticker-lamp'
     p.citedCount = p.citedCount || 0
     p.likeShort = countShort(p.likeCount)
     p.favShort = countShort(p.favCount)
@@ -381,6 +403,13 @@ Page({
     }
     safeIdx = Math.max(0, Math.min(safeIdx, urls.length - 1))
     wx.previewImage({ urls, current: urls[safeIdx] })
+  },
+
+  /** 周报里的单条 → 跳原帖详情 */
+  onDigestItemTap(e) {
+    const id = e.currentTarget.dataset.postId
+    if (!id) return
+    wx.navigateTo({ url: `/pages/post/detail/detail?id=${id}` })
   },
 
   onCopyLink() {

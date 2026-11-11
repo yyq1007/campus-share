@@ -1,0 +1,171 @@
+/* 周报列表 —— 白胶囊卡 + Alkatra 日期（设计稿：335×53 R24 白底，日期 24pt #997BF8）
+   尺寸换算：750rpx = 375pt → 卡片 670×106rpx，圆角 48rpx，左右留白 40rpx */
+.page {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+}
+
+/* ---------- 导航 ---------- */
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 0 32rpx;
+}
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: 32rpx;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.16s ease;
+}
+.nav-btn-press { transform: scale(0.92); }
+.nav-btn-icon { width: 32rpx; height: 32rpx; }
+.nav-title {
+  font-size: 48rpx;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-strong);
+  letter-spacing: 2rpx;
+}
+
+/* ---------- 副标题 ---------- */
+.head-sub {
+  /* 下面紧接「本周精选」小标题，间距收到 20rpx，避免标题区叠太多留白 */
+  padding: 6rpx 40rpx 20rpx;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  letter-spacing: 0.5rpx;
+}
+
+/* ---------- 卡片列表 ---------- */
+/* 骨架：仍是平铺一列 */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 36rpx;
+  padding: 0 40rpx;
+}
+/* 内容：本周精选 / 往期周报 两组，组间比组内更松一档，靠留白区分 */
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 48rpx;
+  padding: 0 40rpx;
+}
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding-bottom: 18rpx;
+}
+.sec-title {
+  font-size: var(--fs-h4);
+  color: var(--brand-800);
+  letter-spacing: 0.5rpx;
+}
+.sec-hint {
+  margin-left: auto;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+.issues {
+  display: flex;
+  flex-direction: column;
+  gap: 36rpx;
+}
+.issue {
+  display: flex;
+  align-items: center;
+  height: 106rpx;
+  padding: 0 36rpx 0 40rpx;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card);
+  box-shadow: 0 6rpx 18rpx var(--brand-a06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  /* 依次淡入（延迟由 wxml 的 animation-delay 给）。
+     fill-mode 用 backwards 而不是 both：both 会把最终帧的 transform 一直钉住，
+     按压态的 scale 就永远不生效 */
+  animation: issue-in 0.36s cubic-bezier(0.22, 0.9, 0.3, 1) backwards;
+}
+.issue-press {
+  transform: scale(0.977);
+  box-shadow: 0 2rpx 8rpx var(--digest-press);
+}
+@keyframes issue-in {
+  from { opacity: 0; transform: translateY(16rpx) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 日期：定宽 + 右间距，保证 4 位（11.2）与 5 位（11.11）日期的「N条精选」左边缘一致，
+   且最长的 11.11（121rpx）也不会贴到条数上 */
+.issue-date {
+  width: 136rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+  font-family: var(--font-number);
+  font-size: 48rpx;
+  line-height: 1;
+  color: var(--digest-date);
+  letter-spacing: 1rpx;
+  /* Alkatra 数字基线偏低，视觉居中上提一点 */
+  margin-bottom: 4rpx;
+}
+.issue-count {
+  flex: 1;
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+  letter-spacing: 0.5rpx;
+}
+
+/* ---------- 骨架 ---------- */
+.sk-card {
+  height: 106rpx;
+  border-radius: var(--radius-card);
+  background: linear-gradient(90deg, var(--bg-elevated) 0%, var(--skeleton-hi) 50%, var(--bg-elevated) 100%);
+  background-size: 200% 100%;
+  animation: sk-shine 1.3s linear infinite;
+}
+@keyframes sk-shine {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+
+/* ---------- 空态 / 错误 ---------- */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 80rpx 0;
+}
+.state-icon { width: 160rpx; height: 160rpx; opacity: 0.9; }
+.state-title {
+  margin-top: 20rpx;
+  font-size: var(--fs-body-m);
+  color: var(--text-2);
+}
+.state-sub {
+  margin-top: 8rpx;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  text-align: center;
+}
+.state-btn {
+  margin-top: 32rpx;
+  padding: 0 48rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  font-size: var(--fs-body-m);
+  color: var(--text-strong);
+  background: var(--bg-elevated);
+  border-radius: 36rpx;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.16s ease;
+}
+.state-btn-press { transform: scale(0.95); }

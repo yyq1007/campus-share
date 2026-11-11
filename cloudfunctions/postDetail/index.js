@@ -51,10 +51,30 @@ exports.main = withAuth(async (event, ctx) => {
     });
   } catch (e) { /* ignore */ }
 
+  // 周报帖：附带往期周报（最多 10 篇，按发布时间倒序，不含当前这篇）
+  // 前端渲染成「往期周报」列表，点击跳对应周报详情
+  let pastDigests = [];
+  if (post.isDigest) {
+    try {
+      const pr = await coll(COL.posts)
+        .where({ status: 'published', board: 'digest', _id: _.neq(post._id) })
+        .orderBy('publishedAt', 'desc')
+        .limit(10)
+        .field({ _id: true, itemCount: true, publishedAt: true })
+        .get();
+      pastDigests = (pr.data || []).map((p) => ({
+        id: p._id,
+        itemCount: p.itemCount || 0,
+        publishedAt: ms(p.publishedAt),
+      }));
+    } catch (e) { /* 查询失败不阻塞详情返回 */ }
+  }
+
   return ok({
     post: postFull(post, isMine),
     isMine,
     myInteraction,
     commentTotal: (post.stats && post.stats.commentCount) || 0,
+    pastDigests,
   });
 }, {});

@@ -14,6 +14,7 @@ Page({
     navH: 44,
     board: 'all',
     stickers: CATEGORY_STICKERS,
+    digest: null,          // 最新周报（AI 引导卡下方入口），无周报时为 null
     list: [],
     cursor: null,
     hasMore: true,
@@ -89,13 +90,27 @@ Page({
     if (this.data.board !== 'all') params.board = this.data.board
     if (this.data.cursor) params.cursor = this.data.cursor
     const res = await api.postList(params)
-    const list = reset ? res.list : this.data.list.concat(res.list)
+    // 首页信息流不再放周报卡（board='all' 时往期周报也会混进流里占位）：
+    // 周报统一从 AI 引导卡下方的入口进，详情页内含往期周报
+    const rows = (res.list || []).filter(x => !x.isDigest)
+    const list = reset ? rows : this.data.list.concat(rows)
     this.setData({
       list,
       cursor: res.nextCursor,
       hasMore: res.hasMore,
-      state: list.length ? 'success' : 'empty'
+      state: list.length ? 'success' : 'empty',
+      digest: res.latestDigest
+        ? { id: res.latestDigest.id, itemCount: res.latestDigest.itemCount || 0 }
+        : (reset ? null : this.data.digest)
     })
+  },
+
+  /** AI 引导卡下方的周报入口 → 周报列表页（每期一张卡，点进去看该期精选）；
+      还没生成周报时也照常进入，由列表页自己展示空态 */
+  onDigestTap() {
+    const d = this.data.digest
+    const id = d && d.id ? `?id=${d.id}` : ''
+    wx.navigateTo({ url: `/pages/digest/digest${id}` })
   },
 
   onStickerTap(e) {
@@ -124,6 +139,8 @@ Page({
 
   async toggleInteraction(post, type) {
     if (!post || !post.id) return
+    // 周报是聚合条目，不能点赞/收藏
+    if (post.isDigest) return
     const key = type === 'like' ? 'liked' : 'faved'
     const countKey = type === 'like' ? 'likeCount' : 'favCount'
     const idx = this.data.list.findIndex(x => x.id === post.id)

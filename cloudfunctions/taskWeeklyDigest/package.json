@@ -1,0 +1,10 @@
+{
+  "name": "taskWeeklyDigest",
+  "version": "1.0.0",
+  "description": "每周周报（热帖汇总 + AI 总结）",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^4.2.1",
+    "wx-server-sdk": "^4.0.1"
+  }
+}

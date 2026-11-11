@@ -31,7 +31,9 @@ exports.main = async () => {
 
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
     // 只捞「还没向量化」的帖子：embedded 字段缺失（旧数据）或为 false
-    const where = { status: 'published', embedded: _.neq(true) };
+    // 排除周报帖（board='digest'）：它是 AI 生成的汇总，不是同学的真实分享，
+    // 不该进检索库（否则 AI 问答会引用周报，而周报本身又引用帖子 → 循环）
+    const where = { status: 'published', embedded: _.neq(true), board: _.neq('digest') };
     if (cursor) where.createdAt = _.lt(new Date(cursor));
 
     let posts = [];

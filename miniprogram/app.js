@@ -5,6 +5,19 @@ const { PRIVACY_VERSION, hasAgreed, markAgreed, syncTabBarLock } = require('./ut
 // 包内路径不被支持、云端 URL 被 CORS 挡——见 tools/build-font-data.js）
 const FONT_DATA_URL = require('./utils/font-data')
 
+// AI 圆章字样（Agbalumo，仅 "AI" 两字符子集，woff2 仅 640B）：
+// Data URL 内联直载（子集太小，不单独成模块，避免新建文件不被编译器注册）
+// 日期数字体：Alkatra（SIL OFL 1.1），只保留 0-9 与句点 → 1.7KB
+// 重建：fontTools subset --unicodes=U+0030-0039,U+002E（源 @fontsource/alkatra 5.3.0 latin-400）
+// 用途：周报列表的「11.2 / 11.20」日期，斜切圆润的中性衬线数字
+const NUMBER_FONT_FAMILY = 'Alkatra'
+const NUMBER_FONT_DATA_URL =
+  'data:font/woff2;base64,' +
+  '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'
+
+const AI_FONT_FAMILY = 'Agbalumo'
+const AI_FONT_DATA_URL =
+  'data:font/woff2;base64,' + 'd09GMgABAAAAAAKAAA4AAAAABFQAAAIvAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbdhwqBmAAPBEICoIcgg8BNgIkAwwLCAAEIAU8ByAbSgMAjsK2tXMJaYqnKddcKYJqDN27/yDKTBQKA5JZUoGFYx0nOhUyyhcly8778Ovq/Zk9yGoyEpjofG1DvPO6A3ziNwkx/9rCY9q8deIEEz8GbVGaZpQGpumtYg+vlSjs6lSBfkCK2B/otWBJWXf1Dobw08KULAi/SijOhbAK7V8gXqYU5oIdgVD16BbGCXuFQRVp0rSQQtKT7U+K9ob+RxlnzEni1QTxGQBqDpJOdJB3VDhgr26JKxiGtmSH487OneRxjxUedfPvB/UTFQ4IiL95D6YVJArGFYFx1Rw6VSGt8Gj/WNHu264ARvs3lBfQyeEb8A5ABaRY7pW5aN4jVW9wVeJsXpUW7SVXy4vB0NQYeXGWGFrishUxkcrna87m21fF+VPO5lnhwUl8uI5aOOPien0NfX4OaT4iVSNk4hJLjdwtxV2ZwWd8QPDgqHjvTjQt91/JTLfAOdc5QzdOQ4GfaztgysLEN0hN2yjcgjc9RxpxTOWxeWWk5woK1Jgn6yo59cjLzWr55LxPi/Of3Levy4pt5vPXF8uLEg/WERFHNje7MTyq0h/tuVAXB0uFqoUrBCL916plJdeKgiSSZbokN9jiYN158AEEkpHXHZJxfNb/2PloJvB5dYgAX1L+z1rB31anE6MPdEoQfFbo3J4wvwEVmgm/oxQ54zmOwbAyJVD8NO4OnWKavEMxpYjKgTBM/7w0aNiKNIkSZCuRI0+gFGlKZEtQiAbat0sAAA=='
 App({
   onLaunch() {
     if (!wx.cloud) {
@@ -16,6 +29,8 @@ App({
       traceUser: true
     })
     this.loadTitleFont()
+    this.loadAiBadgeFont()
+    this.loadNumberFont()
 
     // 网络状态监听：离线提示条由各页消费
     wx.onNetworkStatusChange(res => {
@@ -255,6 +270,32 @@ App({
       timeout: 2000,
       success: () => { this.globalData.fontLoaded = true },
       fail: () => { this.globalData.fontLoaded = false }
+    })
+  },
+
+  /** AI 圆章字样 Agbalumo（"AI" 两字符子集，Data URL 直载零网络），失败静默降级系统字体 */
+  loadAiBadgeFont() {
+    if (!AI_FONT_DATA_URL) return
+    wx.loadFontFace({
+      family: AI_FONT_FAMILY,
+      source: `url("${AI_FONT_DATA_URL}")`,
+      global: true,
+      scopes: ['webview', 'native'],
+      timeout: 2000,
+      fail: () => { /* 降级：wxss 中已带系统字体 fallback */ }
+    })
+  },
+
+  /** 周报日期数字 Alkatra（0-9 与句点子集，Data URL 直载），失败静默降级系统数字 */
+  loadNumberFont() {
+    if (!NUMBER_FONT_DATA_URL) return
+    wx.loadFontFace({
+      family: NUMBER_FONT_FAMILY,
+      source: `url("${NUMBER_FONT_DATA_URL}")`,
+      global: true,
+      scopes: ['webview', 'native'],
+      timeout: 2000,
+      fail: () => { /* 降级：wxss 中已带系统字体 fallback */ }
     })
   },
 

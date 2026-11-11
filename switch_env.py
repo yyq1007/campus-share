@@ -99,6 +99,23 @@ def main():
             with open(cfgp, 'w', encoding='utf-8') as f:
                 f.write(new)
 
+    # 3. cloudbaserc.json 的 envId（tcb CLI 与云开发面板读它，必须与 config.js 一致）
+    cbrc = os.path.join(ROOT, 'cloudbaserc.json')
+    txt = read(cbrc)
+    if txt is not None:
+        try:
+            data = json.loads(txt)
+        except json.JSONDecodeError:
+            print('  ! cloudbaserc.json 不是合法 JSON，跳过')
+        else:
+            if data.get('envId') != env:
+                changes.append(('cloudbaserc.json', f'envId: {data.get("envId")} -> {env}', env))
+                if not args.dry_run:
+                    data['envId'] = env
+                    with open(cbrc, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, ensure_ascii=False, indent=2)
+                        f.write('\n')
+
     print()
     print(f'目标 profile: {args.profile}（{prof["label"]}）')
     print(f'  AppID: {appid}')

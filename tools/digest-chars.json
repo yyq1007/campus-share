@@ -1,0 +1,18 @@
+[
+  {
+    "char": "周",
+    "name": "digest-zhou",
+    "w_px": 171,
+    "h_px": 209,
+    "w_rpx": 42.6,
+    "h_rpx": 52.2
+  },
+  {
+    "char": "报",
+    "name": "digest-bao",
+    "w_px": 164,
+    "h_px": 216,
+    "w_rpx": 41.1,
+    "h_rpx": 54.0
+  }
+]

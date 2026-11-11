@@ -77,8 +77,16 @@ async function postDetail(id) {
   const p = res.post || {}
   const stats = p.stats || {}
   const inter = res.myInteraction || {}
+  // 链接在环境契约里属于 fields.link（postCreate 存进 fields），
+  // 但详情页按顶层 link 取值 → 这里在适配层提上来，
+  // 否则页面读到 undefined，链接卡与「复制/打开链接」全部失效。
+  const fields = p.fields || {}
+  const link = fields.link || ''
   return {
     ...p,
+    link,
+    // linkHost 服务端已算好（postCreate 派生），没有再按链接兜底推一次
+    linkHost: fields.linkHost || '',
     likeCount: stats.likeCount || 0,
     favCount: stats.favCount || 0,
     commentCount: stats.commentCount || 0,
@@ -87,7 +95,9 @@ async function postDetail(id) {
     liked: !!inter.liked,
     faved: !!inter.faved,
     isMine: !!res.isMine,
-    commentTotal: res.commentTotal || 0
+    commentTotal: res.commentTotal || 0,
+    // 周报帖专属：往期周报列表（postDetail 只在 isDigest 时返回）
+    pastDigests: res.pastDigests || []
   }
 }
 
@@ -192,5 +202,9 @@ module.exports = {
   commentList, commentCreate,
   myPosts, myFavorites, messages, messageRead, messageReadAll,
   adminQueue, adminReview,
+  // ⚠️ mediaCheck 必须导出：create.js 上传后调用它做 imgSecCheck +
+  // 登记 mediaAssets 台账。漏导出 → 调用抛 TypeError → 图片直接发布，
+  // 服务端查不到台账按 unknown 容忍 → 未经内容审核的图片公开可见。
+  mediaCheck,
   askQuery
 }

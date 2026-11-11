@@ -14,6 +14,8 @@ Page({
     navH: 44,
     boards: BOARD_KEYS.map(k => ({ key: k, label: BOARDS[k].label, color: BOARDS[k].color })),
     board: 'life',
+    // 该板块是否提供「购买链接」输入框（只有生活板块为 true）
+    allowLink: !!BOARDS.life.allowLink,
     fieldList: [],
     fields: {},
     title: '',
@@ -53,8 +55,12 @@ Page({
   switchBoard(board, opts = {}) {
     const fields = {}
     const fieldList = BOARDS[board].fields.map(f => ({ ...f, value: '' }))
-    if (!opts.silent) this.setData({ board, fieldList, fields })
-    else this.setData({ board, fieldList })
+    // 只有生活板块有链接输入；切到学习/美食要把 link 清掉，
+    // 否则上一板块填的链接会跟着提交（服务端不按板块过滤 link）
+    const allowLink = !!BOARDS[board].allowLink
+    const link = allowLink ? this.data.link : ''
+    if (!opts.silent) this.setData({ board, fieldList, fields, allowLink, link })
+    else this.setData({ board, fieldList, allowLink, link })
     return fieldList
   },
 
@@ -90,7 +96,9 @@ Page({
       }
       const fieldList = BOARDS[board].fields.map(f => ({ ...f, value: (d.fields && d.fields[f.key]) || '' }))
       this.setData({
-        title: d.title || '', content: d.content || '', link: d.link || '',
+        title: d.title || '', content: d.content || '',
+        // 学习/美食板块不恢复链接（老草稿里可能存着 link）
+        link: BOARDS[board].allowLink ? (d.link || '') : '',
         fields: d.fields || {}, fieldList,
         titleCount: countChars(d.title), contentCount: countChars(d.content)
       })
@@ -263,7 +271,8 @@ Page({
     if (countChars(title) > LIMITS.titleMax) return `标题最多 ${LIMITS.titleMax} 字`
     if (countChars(content) < LIMITS.contentMin) return `正文至少 ${LIMITS.contentMin} 个字`
     if (countChars(content) > LIMITS.contentMax) return `正文最多 ${LIMITS.contentMax} 字`
-    if (this.data.link && !validLink(this.data.link)) return '链接格式不正确'
+    // 只在允许链接的板块校验链接格式
+    if (this.data.allowLink && this.data.link && !validLink(this.data.link)) return '链接格式不正确'
     return ''
   },
 
@@ -282,7 +291,8 @@ Page({
         if (v) fields[f.key] = v
       }
       // 环境契约：链接属于 fields.link（服务端会派生 linkHost 并校验格式）
-      if (this.data.link) fields.link = this.data.link
+      // ⚠️ 只有生活板块提供链接输入 —— 学习/美食板块不带 link 上行
+      if (this.data.allowLink && this.data.link) fields.link = this.data.link
       const res = await api.postCreate({
         board: this.data.board,
         title: normalizeText(this.data.title),

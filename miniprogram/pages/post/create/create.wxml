@@ -54,8 +54,9 @@
   </view>
 
   <!-- 链接（置于媒体卡之前：input 是原生组件层级最高，fixed 发布栏盖不住它，
-       放在页面末尾会穿透显示——页面最后必须是无原生组件的媒体卡） -->
-  <view class="card">
+       放在页面末尾会穿透显示——页面最后必须是无原生组件的媒体卡）
+       ⚠️ 只有生活板块提供链接输入：学习/美食板块分享的是资料与店铺，不需要商品链接 -->
+  <view class="card" wx:if="{{allowLink}}">
     <view class="card-title">购买链接 <text class="card-sub">选填</text></view>
     <view class="input-row">
       <image class="link-icon" src="/assets/icons/link.png" mode="aspectFit" />

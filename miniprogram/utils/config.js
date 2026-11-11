@@ -3,7 +3,7 @@
  * 部署时唯一需要核对的文件：CLOUD_ENV 必须与云开发控制台一致
  */
 module.exports = {
-  CLOUD_ENV: 'qqq-d7g05y68803d5476c',
+  CLOUD_ENV: 'yyq-d6g1dv0kgf893afe8',
 
   /**
    * 图标统一引用（云存储优先，本地包内副本兜底）
@@ -11,7 +11,7 @@ module.exports = {
    * <image src>，cloudIcon() 已废弃禁止用于渲染）。云存储副本仅作兼容备份，
    * 由 tools/upload-assets.py 上传。
    */
-  ICON_CLOUD_BASE: 'cloud://qqq-d7g05y68803d5476c.icons/',
+  ICON_CLOUD_BASE: 'cloud://yyq-d6g1dv0kgf893afe8.icons/',
   ICON_LOCAL_BASE: '/assets/icons/',
 
   /**
@@ -23,11 +23,17 @@ module.exports = {
   FONT_FAMILY: 'KuaiLe',
 
   // 板块定义（首页贴纸 / 发帖动态字段 / 详情 chips 共用）
+  //
+  // allowLink：该板块的发帖表单是否提供「购买链接」输入框。
+  // 只有生活（好物分享）需要 —— 学习/美食板块分享的是资料与店铺，不需要商品链接。
+  // 前端按它决定链接卡显不显示；服务端 postCreate 不按板块区分 link，
+  // 所以前端在非生活板块必须主动不带 link 上行。
   BOARDS: {
     life: {
       label: '生活',
       sticker: 'sticker-lamp',
       color: 'mint',
+      allowLink: true,
       fields: [
         { key: 'shop', label: '好物相关', placeholder: '在哪买的 / 多少钱 / 位置…' }
       ]
@@ -37,6 +43,7 @@ module.exports = {
       sticker: 'sticker-book',
       color: 'sky',
       // 单字段：与生活/美食板块口径一致，一个框写清即可
+      allowLink: false,
       fields: [
         { key: 'course', label: '课程相关', placeholder: '课程名 / 老师 / 资料名…' }
       ]
@@ -46,6 +53,7 @@ module.exports = {
       sticker: 'sticker-bowl',
       color: 'coral',
       // 单字段：与生活/学习板块口径一致
+      allowLink: false,
       fields: [
         { key: 'shop', label: '店铺相关', placeholder: '店名 / 位置 / 人均…' }
       ]

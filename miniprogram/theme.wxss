@@ -28,6 +28,24 @@ page {
   --blue-700: #1B5FBF;    /* ★链接与辅助文字（白底 5.9:1） */
   --blue-800: #1750A3;    /* hover */
 
+  /* ---------- AI 引导卡专用（设计稿色值） ---------- */
+  --ai-badge-grad-from: rgba(37, 11, 253, 0.48);  /* 圆章径向渐变起点 250BFD@48% */
+  --ai-badge-grad-to: rgba(27, 239, 247, 0.58);   /* 圆章径向渐变终点 1BEFF7@58% */
+  --ai-text-grad-from: #6F52F9;                   /* 引导文字渐变起点 */
+  --ai-text-grad-to: #6BD9F7;                     /* 引导文字渐变终点 */
+  --ai-card-grad-from: #F2EDFF;                   /* 引导卡底框线性渐变起点 0% */
+  --ai-card-grad-to: #E3D9FF;                     /* 引导卡底框线性渐变终点 100% */
+  --ai-card-stroke: #C7BAFF;                      /* 引导卡内描边 1px */
+  --ai-card-shadow: rgba(199, 186, 255, 0.45);    /* 引导卡外阴影（取描边色淡化） */
+
+  /* ---------- 周报按钮（白底色块 + 渐变字，设计稿色值） ---------- */
+  --digest-btn-grad-1: #D8F8F6;                   /* 容器渐变 左（浅薄荷，取样自设计稿 x0） */
+  --digest-btn-grad-2: #B5E9FD;                   /* 容器渐变 93%（浅蓝，此处为底色末端） */
+  --digest-edge: #91C9DF;                         /* 右边缘深色收边终点（只做 7% 窄带，色差 ≤35） */
+  --digest-tile-bg: #FDFFFF;                      /* 周/报白色椭圆底填色 */
+  --digest-date: #997BF8;                         /* 周报列表日期字（设计稿图层填充） */
+  --digest-press: rgba(108, 92, 231, 0.16);       /* 周报卡按压态阴影 */
+
   /* ---------- 点缀色：珊瑚粉 Accent ---------- */
   --orange-50: #FFECEF;
   --orange-100: #FFD9DE;
@@ -148,6 +166,8 @@ page {
   --text-soft: var(--text-2);
   --text-faint: var(--text-3);
   --font-title: "KuaiLe", -apple-system, "PingFang SC", sans-serif;
+  /* 数字体：Alkatra（子集 0-9 与句点，app.js 内 Data URL 直载），失败降级系统数字 */
+  --font-number: "Alkatra", "DIN Alternate", -apple-system, "PingFang SC", sans-serif;
   --shadow-soft: 0 8rpx 24rpx rgba(108, 92, 231, 0.10);
   --board-mint: var(--board-life);
   --board-sky: var(--board-study);

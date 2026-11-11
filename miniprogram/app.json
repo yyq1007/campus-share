@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/board/board",
     "pages/post/create/create",
+    "pages/digest/digest",
     "pages/post/detail/detail",
     "pages/ask/ask",
     "pages/profile/profile",

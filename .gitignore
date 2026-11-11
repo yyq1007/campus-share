@@ -26,3 +26,6 @@ tools/fetch-env-src.js
 
 # 数据库备份（含真实用户 openid 等敏感数据）
 .db-backup/
+
+# 改动前的整目录文件快照（体积大、只用于本机还原，不入库）
+.backup/

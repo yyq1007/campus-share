@@ -61,24 +61,35 @@
 }
 .sticker-label { font-size: 24rpx; color: var(--text-1); }
 
-/* AI 引导卡（设计稿：浅紫渐变底 + 渐变圆章 "AI" + 主色文案） */
+/* AI 引导卡（设计稿：浅紫渐变底 + 径向渐变圆章 "AI" + 渐变主色文案） */
 .ai-card {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;              /* 行间距由 .guide-row 控制 */
   display: flex;
   align-items: center;
-  gap: 24rpx;
-  padding: 20rpx 32rpx;
-  background: linear-gradient(100deg, var(--brand-50) 0%, var(--brand-100) 55%, var(--brand-50) 100%);
-  border: 2rpx solid var(--brand-100);
+  gap: 20rpx;
+  height: 124rpx;                /* 设计 62 */
+  border-radius: 48rpx;          /* 设计圆角 24 */
+  padding: 0 24rpx;              /* 圆章位于卡片 X14/Y10 → 水平 24rpx，高度由 height 锁定 */
+  /* 底框：线性渐变 F2EDFF(0%) → E3D9FF(100%) + 内描边 C7BAFF 1px + 外阴影 */
+  background: linear-gradient(90deg, var(--ai-card-grad-from) 0%, var(--ai-card-grad-to) 100%);
+  box-shadow: inset 0 0 0 2rpx var(--ai-card-stroke), 0 8rpx 24rpx var(--ai-card-shadow);
 }
 .ai-badge {
-  width: 80rpx; height: 80rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--brand-200) 0%, var(--primary) 100%);
+  box-sizing: border-box; /* 锁定 80×80：padding 计入高度，不撑成椭圆 */
+  width: 80rpx; height: 80rpx; /* 设计稿 40×40 */
+  border-radius: 999rpx;
+  /* 径向渐变：圆心=正圆心，250BFD(5%) → 1BEFF7(100%)，两 stop 各带 48%/58% 不透明度 */
+  background: radial-gradient(circle,
+    var(--ai-badge-grad-from) 5%,
+    var(--ai-badge-grad-to) 100%);
   color: var(--text-on-brand);
-  font-size: 26rpx;
-  font-style: italic;
-  font-weight: 600;
-  letter-spacing: 1rpx;
+  font-family: 'Agbalumo', 'KuaiLe', -apple-system, 'PingFang SC', sans-serif;
+  font-size: 48rpx; /* 设计稿 Agbalumo Regular 24 */
+  font-weight: 400;
+  /* Agbalumo 行盒中心比 "AI" 字形视觉中心低 4.8rpx（hhea asc/desc 偏大），补 padding 使字形回到圆心 */
+  padding-bottom: 10rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,7 +97,89 @@
   box-shadow: 0 8rpx 20rpx var(--brand-a25);
 }
 .ai-text { flex: 1; }
-.ai-main { font-size: 32rpx; font-weight: 600; color: var(--primary-deep); }
+/* 引导文字：Noto Sans SC Bold 15，线性渐变填色 6F52F9 → 6BD9F7 */
+.ai-main {
+  font-size: 30rpx;
+  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;   /* 卡片变窄（265pt）后防溢出 */
+  background: linear-gradient(90deg, var(--ai-text-grad-from) 0%, var(--ai-text-grad-to) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 引导行：AI 卡（265×62） + 周报按钮（77×52）同一行 */
+.guide-row {
+  position: relative;            /* 装饰星以此定位，可溢出卡片边界 */
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+/* 右上角装饰星（设计稿约 33×33rpx，青色描边四角星，压在 AI 卡与周报按钮的接缝上）
+   锚定在行右缘：星框右缘距行右缘 130rpx → 相对周报按钮左缘外扩 32rpx；
+   顶部高出按钮 12rpx（设计稿星心距按钮顶 11rpx）。
+   pointer-events 关掉，避免吃掉周报按钮的点击 */
+.guide-sparkle {
+  position: absolute;
+  right: 130rpx;
+  top: -12rpx;
+  width: 60rpx;
+  height: 60rpx;
+  z-index: 2;
+  pointer-events: none;
+}
+/* 周报按钮：容器 158×120 直角 + 横向浅薄荷→浅蓝渐变，最后 7% 收一条窄的深色边；
+   两个白色竖椭圆（50×60：周左上、报右下）；字为得意黑渐变字（烘焙 PNG，见 assets/icons/digest-*.png） */
+.digest-entry {
+  position: relative;
+  flex-shrink: 0;
+  width: 158rpx;   /* 设计稿面板 79 */
+  height: 120rpx;  /* 设计稿面板 60：比左侧 AI 卡（62）矮 2，垂直居中 */
+  border-radius: 0; /* 设计标注直角 */
+  overflow: hidden;
+  /* 单层渐变：0%→93% 是底色过渡，93%→100% 才是收边，避免出现明显"条边" */
+  background: linear-gradient(90deg,
+    var(--digest-btn-grad-1) 0%,
+    var(--digest-btn-grad-2) 93%,
+    var(--digest-edge) 100%);
+}
+.digest-tile {
+  position: absolute;
+  width: 50rpx;    /* 设计稿实测 49.7×59.5：竖向椭圆，不是正圆 */
+  height: 60rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--digest-tile-bg);
+}
+/* 椭圆位置按设计稿：周 left 18.7 / top 22.2，报 left 81.7 / top 40.2 */
+.digest-tile-zhou {
+  left: 19rpx;
+  top: 22rpx;
+}
+.digest-tile-bao {
+  left: 82rpx;
+  top: 40rpx;
+}
+/* 渐变字 PNG（8x 烘焙，含渐变与字形）；两字同一字号，宽高按各自字形比例。
+   得意黑是斜体，"周"的撇、"报"的扌 都向左下甩出包围盒，bbox 居中会让字身看起来右偏，
+   所以按设计稿把墨迹盒整体左挪（周 3.4、报 1.6），让字身落在椭圆圆心 */
+.digest-char {
+  position: relative;
+  left: -3.4rpx;
+  width: 42.6rpx;
+  height: 52.2rpx;
+}
+.digest-char-bao {
+  left: -1.6rpx;
+  width: 41.1rpx;
+  height: 54rpx;
+}
 
 /* 加载更多 */
 .load-more {

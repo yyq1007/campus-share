@@ -93,6 +93,34 @@
       </view>
     </view>
 
+    <!-- 周报（周报帖专属）：每期内容整块包在一个「日期框」里，头部即该期日期（11.18） -->
+    <view wx:if="{{post.isDigest}}" class="digest-issue">
+      <view class="digest-issue-head">
+        <view class="digest-issue-date">{{post.digestDate}}</view>
+        <view wx:if="{{post.digestItems.length}}" class="digest-issue-count">本周精选 {{post.digestItems.length}} 条</view>
+      </view>
+      <view wx:if="{{post.digestItems.length}}" class="digest-issue-body">
+        <view
+          class="digest-item"
+          wx:for="{{post.digestItems}}" wx:key="postId"
+          data-post-id="{{item.postId}}"
+          bind:tap="onDigestItemTap"
+        >
+          <view class="digest-no">{{item.no}}</view>
+          <view class="digest-item-main">
+            <view class="digest-item-title">{{item.title}}</view>
+            <view class="digest-item-meta">
+              <text class="digest-item-board">{{item.boardLabel}}</text>
+              <text wx:if="{{item.likeCount}}">{{item.likeCount}} 赞</text>
+              <text wx:if="{{item.favCount}}">{{item.favCount}} 收藏</text>
+            </view>
+          </view>
+          <icon name="chevron-right-primary" size="32" />
+        </view>
+      </view>
+      <view wx:else class="digest-issue-empty">本期暂无精选</view>
+    </view>
+
     <!-- 评论区 -->
     <view class="comment-card">
       <view class="comment-head">

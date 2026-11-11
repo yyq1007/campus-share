@@ -265,6 +265,33 @@ try {
   console.log(`\n✗ app.json 解析失败: ${e.message}`);
 }
 
+// 9. JS：相对路径 require() 必须能解析到真实文件
+//    踩过的坑：新建 pages/digest/（两层目录）时照抄 pages/post/detail/（三层）的
+//    '../../../utils/api'，多出的 ../ 直接跳出 miniprogram 根 →
+//    运行时 "can not find module , require args is ..."，编译期不报错。
+{
+  const reqMiss = [];
+  for (const f of files.filter((x) => x.endsWith('.js') && !x.includes(`${path.sep}node_modules${path.sep}`))) {
+    const src = fs.readFileSync(f, 'utf8');
+    for (const m of src.matchAll(/require\(\s*['"]([^'"]+)['"]\s*\)/g)) {
+      const spec = m[1];
+      if (!spec.startsWith('.')) continue; // 只查相对路径
+      const base = path.resolve(path.dirname(f), spec);
+      const ok = [base, base + '.js', path.join(base, 'index.js')].some((p) => fs.existsSync(p) && fs.statSync(p).isFile());
+      if (!ok) {
+        const line = src.slice(0, m.index).split('\n').length;
+        const hint = base.startsWith(ROOT + path.sep) ? '' : '（跳出 miniprogram 根目录）';
+        reqMiss.push(`${path.relative(ROOT, f).replace(/\\/g, '/')}:${line} require('${spec}') 解析失败${hint}`);
+      }
+    }
+  }
+  if (reqMiss.length) {
+    total += reqMiss.length;
+    console.log('\n✗ require 路径不可解析');
+    reqMiss.forEach((e) => console.log(`   ${e}`));
+  }
+}
+
 console.log(
   `\n===== 校验完成：${wxmls.length} WXML + ${wxsss.length} WXSS + ${jsons.length} JSON，共 ${total} 处问题 =====`
 );

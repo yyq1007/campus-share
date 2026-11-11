@@ -23,6 +23,11 @@ Component({
     //    只监听 post 的话，post 先到、manageable 后设就永远不触发重算
     post(p) {
       if (!p || !p.id) return
+      // 周报卡：不是真帖子，没有赞/藏/状态角标
+      if (p.isDigest) {
+        this.setData({ timeText: '', likeText: '', favText: '', statusText: '' })
+        return
+      }
       this.setData({
         timeText: timeAgo(p.createdAt),
         likeText: countShort(p.likeCount),
@@ -36,7 +41,7 @@ Component({
     },
     manageable() {
       const p = this.data.post
-      if (!p || !p.id) return
+      if (!p || !p.id || p.isDigest) return
       this.setData({
         statusText: this.data.manageable ? this.statusText(p.status) : ''
       })

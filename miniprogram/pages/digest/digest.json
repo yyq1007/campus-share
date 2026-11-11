@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "custom",
+  "backgroundColor": "#F5F1FF",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "icon": "/components/icon/icon",
+    "privacy-gate": "/components/privacy-gate/privacy-gate"
+  }
+}

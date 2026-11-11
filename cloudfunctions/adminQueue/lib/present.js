@@ -38,6 +38,10 @@ function postBrief(p, inter) {
     publishedAt: ms(p.publishedAt),
     expired: !!p.expired,
     status: p.status,
+    // 周报帖（board='digest'）：前端据此渲染成周报卡，并带上可跳转的原帖列表
+    isDigest: !!p.isDigest,
+    digestItems: p.digestItems || [],
+    itemCount: p.itemCount || 0,
   };
 }
 
@@ -68,6 +72,10 @@ function postFull(p, isMine) {
     fields: p.fields || {},
     tags: p.tags || [],
     aiSummary: p.aiSummary || '',
+    // 周报帖：带上引用的原帖列表（详情页渲染成可点击的列表）
+    isDigest: !!p.isDigest,
+    digestItems: p.digestItems || [],
+    itemCount: p.itemCount || 0,
     status: p.status,
     risk: isMine ? p.risk : { level: p.risk ? p.risk.level : 'pass' },
     stats,

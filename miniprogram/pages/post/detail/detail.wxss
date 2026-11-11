@@ -367,3 +367,78 @@
   border-radius: 32rpx;
 }
 .ai-cite-text { font-size: 26rpx; font-weight: 600; color: var(--primary-deep); }
+
+/* ---------- 周报精选列表（周报帖专属）----------
+   颜色全部走 theme.wxss 令牌（V-01 零硬编码色值）。 */
+/* 周报「日期框」：整期内容包在一个描边卡片里，头部主视觉就是该期日期（11.18） */
+.digest-issue {
+  margin: 0 32rpx 32rpx;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card);
+  box-shadow: 0 6rpx 18rpx var(--brand-a06);
+  overflow: hidden;
+}
+.digest-issue-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16rpx;
+  padding: 26rpx 32rpx 18rpx;
+}
+.digest-issue-date {
+  font-family: var(--font-number);
+  font-size: var(--fs-display-l);   /* 48rpx，与周报列表的日期同字号 */
+  line-height: 1.05;
+  color: var(--digest-date);
+  letter-spacing: 1rpx;
+}
+.digest-issue-count {
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+}
+.digest-issue-body {
+  padding: 0 32rpx 8rpx;
+  border-top: 2rpx solid var(--border);
+}
+.digest-issue-empty {
+  padding: 24rpx 32rpx 28rpx;
+  border-top: 2rpx solid var(--border);
+  font-size: var(--fs-body-m);
+  color: var(--text-3);
+}
+
+.digest-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 22rpx 0;
+  border-bottom: 2rpx solid var(--border);
+}
+.digest-item:last-child { border-bottom: none; }
+.digest-no {
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-size: var(--fs-caption);
+  flex-shrink: 0;
+}
+.digest-item-main { flex: 1; overflow: hidden; }
+.digest-item-title {
+  font-size: var(--fs-body);
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.digest-item-meta {
+  display: flex;
+  gap: 16rpx;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  margin-top: 4rpx;
+}
+.digest-item-board { color: var(--brand-600); }

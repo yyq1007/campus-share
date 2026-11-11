@@ -30,13 +30,25 @@
     </view>
   </view>
 
-  <!-- AI 引导卡（设计 B1：白底单行 + 左侧紫色圆章 "AI" + 右箭头） -->
-  <view class="ai-card card" bindtap="onAiTap">
-    <view class="ai-badge">AI</view>
-    <view class="ai-text">
-      <view class="ai-main">问问同学都在推荐什么</view>
+  <!-- 引导行：AI 引导卡（265×62/圆角24） + 周报按钮（77×64 双白椭圆叠字），同一行 -->
+  <view class="guide-row">
+    <view class="ai-card card" bindtap="onAiTap">
+      <view class="ai-badge">AI</view>
+      <view class="ai-text">
+        <view class="ai-main">问问同学都在推荐什么</view>
+      </view>
+      <icon name="arrow-jump-primary" size="40" />
     </view>
-    <icon name="chevron-right-primary" size="36" />
+    <view class="digest-entry" bindtap="onDigestTap">
+      <view class="digest-tile digest-tile-zhou">
+        <image class="digest-char" src="/assets/icons/digest-zhou.png" mode="aspectFit" />
+      </view>
+      <view class="digest-tile digest-tile-bao">
+        <image class="digest-char digest-char-bao" src="/assets/icons/digest-bao.png" mode="aspectFit" />
+      </view>
+    </view>
+    <!-- 装饰星：压在 AI 卡右边框与周报按钮左上角的接缝处（pointer-events:none 不吃点击） -->
+    <image class="guide-sparkle" src="/assets/deco/sparkle-cyan.png" mode="aspectFit" />
   </view>
 
   <!-- 信息流（板块筛选由上方分类贴纸跳转板块页承担，不再重复放筛选 chips） -->
