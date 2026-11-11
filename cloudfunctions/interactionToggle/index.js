@@ -8,6 +8,7 @@ const { coll, COL, db, excerpt } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth } = require('./lib/auth');
 const msg = require('./lib/msg');
+const rate = require('./lib/rate');
 
 const STAT_KEY = { like: 'likeCount', fav: 'favCount' };
 const MAX_RETRY = 2;
@@ -64,12 +65,15 @@ async function toggleOnce(id, uid, targetType, targetId, type) {
     const key = STAT_KEY[type];
     stats[key] = Math.max(0, (stats[key] || 0) + delta);
 
+    // 长期榜热度分（累计不衰减）：在事务内随 stats 一起落库，避免二次读改写导致漂移
+    const popScore = 3 * (stats.likeCount || 0) + 4 * (stats.favCount || 0);
+
     await t.collection(COL.posts).doc(targetId).update({
-      data: { stats, updatedAt: db.serverDate() },
+      data: { stats, popScore, updatedAt: db.serverDate() },
     });
 
     await t.commit();
-    return { active: !existed, count: stats[key], post, stats };
+    return { active: !existed, count: stats[key], popScore, post, stats };
   } catch (e) {
     try {
       await t.rollback();
@@ -109,6 +113,15 @@ exports.main = withAuth(async (event, ctx) => {
   if (targetType !== 'post') return fail(40001, '暂不支持该对象的互动');
   if (!targetId) return fail(40001, '缺少目标 ID');
   if (type !== 'like' && type !== 'fav') return fail(40001, '不支持的互动类型');
+
+  // 频控：长期榜的排名收益是永久的，刷赞动机远强于短期榜。
+  // 每人每分钟 60 次（正常浏览点赞远低于此）；rate.hit 内部 fail-closed，异常按超限拒绝。
+  try {
+    const rl = await rate.hit(ctx.uid, 'interact', 60, 60 * 1000);
+    if (!rl.allowed) return fail(42901);
+  } catch (e) {
+    console.warn('[interactionToggle] rate limit error', e && e.message);
+  }
 
   const id = interId(ctx.uid, targetType, targetId, type);
 

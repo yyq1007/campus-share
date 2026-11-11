@@ -25,7 +25,8 @@ Page({
 
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 3 })
+      // 5 位置 TabBar：首页0 / 问答1 / 发布2 / 榜单3 / 我的4
+      this.getTabBar().setData({ selected: 4 })
       this.syncTabUnread()
     }
     // 同步 tabBar 锁定态（未同意协议时底部导航栏不可点）

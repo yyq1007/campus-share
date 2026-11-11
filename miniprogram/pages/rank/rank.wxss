@@ -1,0 +1,114 @@
+/* S10 榜单：Tab 切换 + 板块 chips + 名次列表
+   全部颜色/字号走 theme.wxss 变量，var() 带同值兜底（页面级样式在部分环境拿不到全局变量） */
+
+/* ---------- 一级 Tab ---------- */
+.rk-tabs {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx 0 20rpx;
+}
+.rk-tab {
+  flex: 1;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 38rpx;
+  font-size: var(--fs-body, 30rpx);
+  color: var(--text-2, #6B6780);
+  background: var(--bg-card, #FFFFFF);
+  transition: background 0.15s, color 0.15s;
+}
+.rk-tab.on {
+  background: var(--primary, #6C5CE7);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* ---------- 板块筛选 ---------- */
+.rk-chips {
+  display: flex;
+  gap: 16rpx;
+  padding: 0 0 16rpx;
+}
+.rk-chip {
+  padding: 10rpx 30rpx;
+  border-radius: 28rpx;
+  font-size: var(--fs-body-s, 26rpx);
+  color: var(--text-2, #6B6780);
+  background: var(--bg-card, #FFFFFF);
+}
+.rk-chip.on {
+  color: var(--brand-800, #5A47C9);
+  background: var(--brand-100, #EFEAFF);
+  font-weight: 600;
+}
+
+/* ---------- 榜单行 ---------- */
+.rk-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line-soft, #F0EEF8);
+}
+.rk-item:last-of-type { border-bottom: none; }
+
+/* 名次：前三名金银铜，其余灰色 */
+.rk-no {
+  width: 60rpx;
+  flex: none;
+  text-align: center;
+  font-size: var(--fs-h4, 34rpx);
+  font-weight: 700;
+  color: var(--text-3, #B4B0C8);
+  font-variant-numeric: tabular-nums;
+}
+.rk-no-1 { color: #F5A623; }
+.rk-no-2 { color: #9AA3B2; }
+.rk-no-3 { color: #C8834D; }
+
+.rk-cover {
+  width: 132rpx;
+  height: 132rpx;
+  flex: none;
+  border-radius: 20rpx;
+  background: var(--brand-50, #F5F1FF);
+}
+.rk-cover-ph { background: var(--brand-50, #F5F1FF); }
+
+.rk-body {
+  flex: 1;
+  min-width: 0;
+}
+.rk-title {
+  font-size: var(--fs-body, 30rpx);
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1.42;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rk-meta {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 10rpx;
+  font-size: var(--fs-caption, 24rpx);
+  color: var(--text-3, #B4B0C8);
+}
+.rk-board {
+  color: var(--brand-800, #5A47C9);
+  background: var(--brand-50, #F5F1FF);
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+/* ---------- 更新时间 ---------- */
+.rk-updated {
+  text-align: center;
+  padding: 32rpx 0 8rpx;
+  font-size: var(--fs-caption, 24rpx);
+  color: var(--text-3, #B4B0C8);
+}
