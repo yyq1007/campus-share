@@ -71,16 +71,6 @@ async function postList(params = {}) {
   return { ...res, list: await decorateBriefs(res.list) }
 }
 
-/**
- * 排行榜：type = hot（热度榜·长期累计）| board（板块榜）| fresh（新秀榜·近 7 天）
- * board 仅在 type='board' 时传，取值 food / life / study
- * 榜单同样返回 cloud:// 的 cover，必须走 decorateBriefs 转临时链接 + 补 boardLabel
- */
-async function rankList(params = {}) {
-  const res = await callFn('rankList', params)
-  return { ...res, list: await decorateBriefs(res.list) }
-}
-
 /** 帖子详情：把 stats.* 与 myInteraction 平铺成页面易用结构 */
 async function postDetail(id) {
   const res = await callFn('postDetail', { id })
@@ -209,7 +199,6 @@ function askQuery(question, history, clientReqId) {
 module.exports = {
   login, bindInvite, meOverview, updateAvatar,
   postList, postDetail, postCreate, postDelete, interactionToggle, reportCreate,
-  rankList,
   commentList, commentCreate,
   myPosts, myFavorites, messages, messageRead, messageReadAll,
   adminQueue, adminReview,

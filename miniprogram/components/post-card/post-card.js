@@ -21,7 +21,10 @@ Component({
     statusText: '',
     boardLabel: '',
     boardSticker: 'sticker-lamp',
-    avatarIdx: 1
+    avatarIdx: 1,
+    // 封面区高度（占卡片宽度的百分比）：默认 4:3；post.coverW/H 有值就直接用，
+    // 没有（老帖子）再等图片 onload 按真实比例覆盖
+    coverRatio: 75
   },
   observers: {
     // ⚠️ 必须同时监听 manageable：它是控制角标显不显示的开关，
@@ -34,7 +37,15 @@ Component({
         return
       }
       const b = BOARDS[p.board]
+      // 封面换了（列表复用同一条记录）：按新帖的宽高重算，避免沿用上一条的比例。
+      // coverW/H 由 postList 下发，图片还没加载就能算准，不会先 75% 再跳一下。
+      let ratioPatch = null
+      if (this._lastCover !== p.cover) {
+        this._lastCover = p.cover
+        ratioPatch = { coverRatio: this.ratioOf(p.coverW, p.coverH, p.mediaType) }
+      }
       this.setData({
+        ...(ratioPatch || {}),
         timeText: timeAgo(p.createdAt),
         likeText: countShort(p.likeCount),
         favText: countShort(p.favCount),
@@ -79,6 +90,30 @@ Component({
     onOffline() { this.triggerEvent('offline', { post: this.data.post }) },
     onPreview(e) {
       // 不冒泡到卡片点击
+    },
+
+    /**
+     * 宽高 → 占位高度百分比（相对卡片宽度）。
+     * 区间说明：56%（16:9 横图）~ 140%（接近 3:4 竖图）之内都是精确比例，
+     * aspectFill 一个像素都不裁；只有极端长截图/全景图才被压在边界上。
+     * 之前上限 118% 会把常见的 3:4 竖图裁掉一截，看着就像「图片大小不对」。
+     */
+    ratioOf(w, h, mediaType) {
+      if (!w || !h) return mediaType === 'video' ? 56 : 75
+      return Math.min(Math.max(Math.round((h / w) * 100), 56), 140)
+    },
+
+    /**
+     * 封面图加载完 → 按真实宽高比兜底（老帖子没有 coverW/H 时走这条）。
+     * 上下限与 ratioOf 保持一致。
+     */
+    onCoverLoad(e) {
+      const d = e.detail || {}
+      const w = d.width || 0
+      const h = d.height || 0
+      if (!w || !h) return
+      const ratio = this.ratioOf(w, h)
+      if (ratio !== this.data.coverRatio) this.setData({ coverRatio: ratio })
     }
   }
 })

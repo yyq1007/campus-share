@@ -104,11 +104,12 @@ Page({
           w: m.w || 0,
           h: m.h || 0
         })).filter(m => m.url)
-        // 轮播高度按首图宽高比自适应（竖图完整可见，上限约 1.6 屏高）
-        const first = post.mediaView.find(m => m.type === 'image')
-        if (first && first.w > 0) {
-          const ratio = first.h / first.w
-          post.galleryH = Math.round(Math.min(Math.max(ratio * 670, 300), 1080))
+        // 轮播高度按「当前这张图」的宽高比自适应（见 applyGalleryH）。
+        // 多图不再是首图一刀切：横图竖图混排时，切到哪张高度就跟到哪张，
+        // 否则竖图会被塞进横图的框里裁掉上下、横图被拉成竖的。
+        const first = post.mediaView[0]
+        if (first && first.type === 'image' && first.w > 0) {
+          post.galleryH = this.galleryHOf(first.w, first.h)
         }
       } else {
         post.mediaView = []
@@ -126,7 +127,9 @@ Page({
         // 正文按引用角标切成「一段文字 → 该帖的图 → 帖子按钮」，见 splitDigestBody
         post.digestBlocks = splitDigestBody(post.content, post.digestItems)
       }
-      this.setData({ post, state: 'success' })
+      // 每次重新拉数据都清掉旧的宽高缓存（下拉重试 / 从分享链接重进）
+      this._ratios = []          // 按 index 缓存的图片真实宽高（老数据 media.w/h 为 0 时靠它）
+      this.setData({ post, imgIdx: 0, state: 'success' })
       this.renderComments()
     } catch (e) {
       // ⚠️ silent 错误 = 正在跳转邀请码页/登录态刷新，不该把页面打成 error 态
@@ -398,7 +401,56 @@ Page({
   },
 
   // ---------- 媒体 ----------
-  onSwiperChange(e) { this.setData({ imgIdx: e.detail.current }) },
+  onSwiperChange(e) {
+    const idx = e.detail.current || 0
+    this.setData({ imgIdx: idx })
+    this.applyGalleryH(idx)
+  },
+
+  /**
+   * 图片在 670rpx 内容宽下应该占多高（rpx）。
+   * 上下限：
+   *   300rpx —— 极扁的全景图也不至于压成一条缝
+   *   1.3 屏 —— 长截图（如 885×1920）要能整张看完；再长才裁，
+   *             页面本来就能上下滚，比截掉一截更合理
+   * 落在区间内时高度就是精确比例，aspectFill 不会裁掉任何东西。
+   */
+  galleryHOf(w, h) {
+    if (!w || !h) return 0
+    let win = { windowWidth: 375, windowHeight: 667 }
+    try { win = wx.getWindowInfo() } catch (err) { /* 兜底用默认屏幕 */ }
+    const px2rpx = 750 / (win.windowWidth || 375)
+    const maxH = (win.windowHeight || 667) * 1.3 * px2rpx
+    return Math.round(Math.min(Math.max((h / w) * 670, 300), maxH))
+  },
+
+  /** 按第 idx 张图的真实宽高重设轮播高度（拿不到宽高就保持原样） */
+  applyGalleryH(idx) {
+    const view = (this.data.post && this.data.post.mediaView) || []
+    const v = view[idx]
+    if (!v || v.type !== 'image') return
+    const cached = this._ratios && this._ratios[idx]
+    const w = cached ? cached.w : v.w
+    const h = cached ? cached.h : v.h
+    const height = this.galleryHOf(w, h)
+    if (!height) return
+    if (this.data.post.galleryH !== height) this.setData({ 'post.galleryH': height })
+  },
+
+  /**
+   * 图片加载完 → 记下这张的真实宽高（WXML 里带了 data-idx，多图各自记各自的）。
+   * 为什么还要这一步：老帖子的 media 里没有 w/h（发布时没记），
+   * 只能等图片渲染时用自身宽高反推；有了它就与后端字段无关。
+   * 只写内存不 setData 整个 mediaView —— 否则会触发图片重新加载、闪一下。
+   */
+  onGalleryImgLoad(e) {
+    const idx = Number(e.currentTarget.dataset.idx) || 0
+    const d = e.detail || {}
+    if (!d.width || !d.height) return
+    this._ratios = this._ratios || []
+    this._ratios[idx] = { w: d.width, h: d.height }
+    if (idx === (this.data.imgIdx || 0)) this.applyGalleryH(idx)
+  },
 
   onPreview(e) {
     const idx = Number(e.currentTarget.dataset.idx)

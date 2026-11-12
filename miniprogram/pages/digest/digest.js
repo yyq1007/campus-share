@@ -42,7 +42,9 @@ Page({
 
       let id = this.latestId
       if (!id) {
-        const res = await api.postList({ board: 'life' })
+        // 只为拿首屏附带的 latestDigest（最新一期 id）；pageSize 压到 1，
+        // 不跟着路过的板块捞数据——周报已不再是任何板块的置顶条目。
+        const res = await api.postList({ pageSize: 1 })
         const latest = res && res.latestDigest
         id = latest && latest.id
       }

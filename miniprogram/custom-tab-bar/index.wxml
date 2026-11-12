@@ -11,23 +11,19 @@
     <text class="tab-text">问答</text>
   </view>
 
-  <!-- 2 发布（非 tab 页，navigateTo 发帖） -->
+  <!-- 2 发布（非 tab 页，navigateTo 发帖）。与普通项同构：
+       图标 + 文字，不做凸起胶囊（回到加榜单之前的形态） -->
   <view class="tab-item tab-publish-wrap" data-index="2" bindtap="switchTab">
     <view class="tab-publish">
-      <icon name="plus-white" size="44"/>
+      <icon name="tab-publish-line" size="48"/>
     </view>
+    <text class="tab-text tab-publish-text">发布</text>
   </view>
 
-  <!-- 3 榜单 -->
+  <!-- 3 我的 -->
   <view class="tab-item {{selected === 3 ? 'on' : ''}}" data-index="3" bindtap="switchTab">
-    <icon name="{{selected === 3 ? 'tab-rank-on' : 'tab-rank'}}" size="48"/>
-    <text class="tab-text">榜单</text>
-  </view>
-
-  <!-- 4 我的 -->
-  <view class="tab-item {{selected === 4 ? 'on' : ''}}" data-index="4" bindtap="switchTab">
     <view class="tab-ico-wrap">
-      <icon name="{{selected === 4 ? 'tab-me-on' : 'tab-me'}}" size="48"/>
+      <icon name="{{selected === 3 ? 'tab-me-on' : 'tab-me'}}" size="48"/>
       <view wx:if="{{unread > 0}}" class="tab-badge" />
     </view>
     <text class="tab-text">我的</text>

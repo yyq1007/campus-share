@@ -35,23 +35,13 @@
   width: 16rpx;
   height: 16rpx;
   border-radius: 50%;
-  background: #FF4D4F;
+  background: var(--badge-red, #FF4D4F);
   border: 2rpx solid var(--bg-elevated, #FFFFFF);
   box-sizing: border-box;
 }
-/* 中间发布按钮：横胶囊 + 紫蓝渐变 + 白色加号（设计稿 S1 页脚）。
-   无文字项，用 justify-content 单独居中，避免与图标+文字项错位。 */
-.tab-publish-wrap { justify-content: center; }
-.tab-publish {
-  width: 144rpx;
-  height: 84rpx;
-  border-radius: 42rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(100deg, #A78BFA 0%, #7C9BF5 100%);
-  box-shadow: 0 8rpx 20rpx rgba(108, 92, 231, 0.28);
-}
+/* 发布项与普通项一致（加榜单之前的形态：无凸起圆钮、无渐变胶囊）。
+   4 项均分后左右完全对称，也就不用再为「胶囊偏右」做任何补偿。 */
+.tab-publish-text { color: var(--text-2, #6B6780); font-weight: 500; }
 
 /* 未同意隐私协议：整条 bar 锁定 */
 .tab-bar.is-locked .tab-item { opacity: .35; }

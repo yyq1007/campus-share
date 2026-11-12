@@ -1,7 +1,9 @@
-// 自定义 TabBar：首页 / 问答 / [发布] / 榜单 / 我的 —— 中间发布为大胶囊主色钮
+// 自定义 TabBar：首页 / 问答 / [发布] / 我的 —— 中间发布为大胶囊主色钮
 // ⚠️ selected 索引与 app.json 的 tabBar.list 顺序无关，只与本组件 wxml 的位置有关：
-//    0 首页 / 1 问答 / 2 发布（非页面）/ 3 榜单 / 4 我的
+//    0 首页 / 1 问答 / 2 发布（非页面）/ 3 我的
 //    各 tab 页 onShow 里的 getTabBar().setData({ selected: N }) 必须与此一致。
+// S10 榜单已下架：原「3 榜单 / 4 我的」改为「3 我的」，
+// 若以后恢复榜单，务必同步改回本文件、index.wxml、profile.js 三处索引。
 // 隐私门禁：custom-tab-bar 由框架渲染在页面内容层之上，页面里的 privacy-gate
 // 遮罩盖不住它。所以未同意协议时必须在这里单独拦一道：
 //   1) 点任何 tab 都不跳转，只提示「请先同意协议」
@@ -17,7 +19,6 @@ Component({
       { key: 'index', path: '/pages/index/index', text: '首页', icon: 'tab-home', iconOn: 'tab-home-on' },
       { key: 'ask', path: '/pages/ask/ask', text: '问答', icon: 'tab-ask', iconOn: 'tab-ask-on' },
       { key: 'publish' },
-      { key: 'rank', path: '/pages/rank/rank', text: '榜单', icon: 'tab-rank', iconOn: 'tab-rank-on' },
       { key: 'profile', path: '/pages/profile/profile', text: '我的', icon: 'tab-me', iconOn: 'tab-me-on' }
     ]
   },

@@ -14,6 +14,7 @@ page {
   --brand-500: #9D8BF0;   /* 图标、高亮 */
   --brand-600: #8F7BEE;   /* 大色块、插画 */
   --brand-gradient: linear-gradient(160deg, #8F7BEE 0%, #6C5CE7 100%); /* 头像占位渐变 */
+  /* --publish-grad-1/2 已随「发布」渐变胶囊一并移除（底部栏回到普通项形态） */
   --brand-700: #6C5CE7;   /* ★主色默认：按钮底/主色文字（白字 4.85:1、白底 4.85:1） */
   --brand-800: #5A47C9;   /* hover；★淡紫底上的紫色文字（5.6:1） */
   --brand-900: #4A3AAE;   /* active / pressed */
@@ -83,6 +84,12 @@ page {
   --bg-muted: #F7F4FF;    /* 输入框、骨架屏 */
   --bg-field: #F1EEF8;    /* 表单字段底、骨架屏块 */
   --bg-elevated: #FFFFFF; /* 卡片 */
+  /* 自定义导航条底色：**不用纯白**。白条压在淡紫渐变顶上像一块贴片，
+     边缘和投影都会把「顶栏」从页面里切出来。取渐变起点的同色系 + 90% 不透明度，
+     静止时几乎与页面融成一片，滚动时仍留一点遮罩感；
+     分隔只靠一条极浅描边（inset，不占位），不加投影。 */
+  --nav-glass: rgba(246, 242, 255, 0.90);
+  --nav-glass-line: rgba(108, 92, 231, 0.07);
   --border: #EAE4F6;
   --border-strong: #D9D0F0;
   --card-border: #D2CBFD;  /* 帖子卡专用描边（用户指定，比 border-strong 明显） */
@@ -104,6 +111,10 @@ page {
   --error-text: #C73648;     /* ≈5.2:1 */
   --info-bg: #EDE9FE;
   --info-text: #5A47C9;      /* AI 提示 / 说明 */
+  --badge-red: #FF4D4F;      /* 未读红点：导航级提示，比 --error 更艳（要在一堆彩色图标里跳出来） */
+
+  /* S10 榜单已于 2026-11-11 下架：--rank-* 全系列令牌随 pages/rank 一并移除。
+     若将来恢复榜单，色值可从 .backup/2026-11-11-2112/miniprogram/theme.wxss 取回。 */
 
   /* ---------- 板块色（糖果色 + 深色文字保证对比度） ---------- */
   --board-life: #4ECDC4;

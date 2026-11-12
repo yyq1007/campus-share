@@ -27,6 +27,10 @@ function postBrief(p, inter) {
     title: p.title || '',
     excerpt: p.aiSummary || p.excerpt || '',
     cover: p.coverFileId || first.posterFileId || first.fileId || '',
+    // 封面真实宽高：前端靠它按比例占位，图片还没下载完高度就是对的，
+    // 不会先按 4:3 撑开再跳一下（老帖子这两个字段是 0，前端 onload 兜底）
+    coverW: first.w || 0,
+    coverH: first.h || 0,
     mediaType: isVideo ? 'video' : (media.length ? 'image' : ''),
     duration: first.duration || 0,
     likeCount: (p.stats && p.stats.likeCount) || 0,

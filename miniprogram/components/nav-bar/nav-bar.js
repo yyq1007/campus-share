@@ -10,6 +10,10 @@ Component({
   data: {
     statusBarH: 40,
     navH: 44,
+    // 导航行（状态栏以下那一条）的垂直中点，返回按钮靠它定位。
+    // 不能用 CSS 的 top:50%：.nav-inner 的高度含 padding-top（状态栏），
+    // 50% 会落在「状态栏+导航行」的中点，比标题高半个状态栏，箭头就浮上去了。
+    navMid: 62,
     bgOpacity: 0,
     capsuleRight: 90
   },
@@ -33,9 +37,9 @@ Component({
         const statusBarH = win.statusBarHeight || 40
         const navH = (cap.top - statusBarH) * 2 + cap.height
         const capsuleRight = cap.width + 12
-        this.setData({ statusBarH, navH, capsuleRight })
+        this.setData({ statusBarH, navH, navMid: statusBarH + navH / 2, capsuleRight })
       } catch (e) {
-        this.setData({ statusBarH: 40, navH: 44, capsuleRight: 90 })
+        this.setData({ statusBarH: 40, navH: 44, navMid: 62, capsuleRight: 90 })
       }
     },
     onBack() {

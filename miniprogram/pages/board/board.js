@@ -55,12 +55,19 @@ Page({
     const params = { board: this.data.board, pageSize: 10, sort: 'latest' }
     if (this.data.cursor) params.cursor = this.data.cursor
     const res = await api.postList(params)
-    const list = reset ? res.list : this.data.list.concat(res.list)
+    // 兜底剔除周报：周报只从首页入口进，板块里不该出现。
+    // 新版 postList 已不再把 board='digest' 混进板块查询，但云函数没重新部署时
+    // 旧版仍在跑（每个板块首条都是同一篇周报），这一层保证页面立刻正确。
+    const raw = res.list || []
+    const rows = raw.filter(x => !x.isDigest)
+    const dropped = raw.length - rows.length
+    const list = reset ? rows : this.data.list.concat(rows)
     this.setData({
       list,
       cursor: res.nextCursor,
       hasMore: res.hasMore,
-      total: res.total || list.length,
+      // total 是后端 count（旧版含周报），首屏按剔除条数修正
+      total: Math.max(0, (res.total || list.length) - dropped),
       state: list.length ? 'success' : 'empty'
     })
   },

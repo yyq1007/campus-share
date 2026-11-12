@@ -63,9 +63,10 @@
           <swiper-item wx:for="{{post.mediaView}}" wx:key="index">
             <image
               wx:if="{{item.type === 'image'}}" class="gallery-img"
-              src="{{item.url}}" mode="aspectFill" data-idx="{{index}}" bind:tap="onPreview"
+              src="{{item.url}}" mode="aspectFill" data-idx="{{index}}"
+              bind:tap="onPreview" bind:load="onGalleryImgLoad"
             />
-            <video wx:else class="gallery-video" src="{{item.url}}" poster="{{item.poster}}" object-fit="contain" controls />
+            <video wx:else class="gallery-video in-swiper" src="{{item.url}}" poster="{{item.poster}}" object-fit="contain" controls />
           </swiper-item>
         </swiper>
         <block wx:if="{{post.mediaView.length === 1}}">

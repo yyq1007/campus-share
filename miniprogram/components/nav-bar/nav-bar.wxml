@@ -4,12 +4,19 @@
     style="padding-top:{{statusBarH}}px;height:{{navH}}px;opacity:{{transparent ? bgOpacity : 1}}"
   ></view>
   <view class="nav-inner" style="padding-top:{{statusBarH}}px;height:{{navH}}px;">
-    <view wx:if="{{back}}" class="nav-back {{transparent && bgOpacity < 0.5 ? 'nav-back-dark' : ''}}" bindtap="onBack">
+    <!-- 返回箭头：top 用 navMid（状态栏 + 导航行的一半），与标题同一水平线。
+         不能用 CSS 的 top:50% —— 那个 50% 把状态栏高度也算进去了，箭头会高半个状态栏。 -->
+    <view wx:if="{{back}}" class="nav-back {{transparent && bgOpacity < 0.5 ? 'nav-back-dark' : ''}}"
+      style="top:{{navMid}}px" bindtap="onBack">
       <icon name="{{transparent && bgOpacity < 0.5 ? 'back-white' : 'chevron-left'}}" size="40"/>
     </view>
+    <!-- 标题居中：左右各让出胶囊的宽度。
+         只留 margin-right 时，居中区是 [0, 屏宽-胶囊宽]，标题会被推左约半个胶囊
+         （iOS 胶囊宽 87px → 偏左 40~50px，肉眼一眼能看出）。左边留同样的宽度后，
+         标题的中点才落在屏幕中线上；左侧返回按钮只占 12~44px，不会被压住。 -->
     <view
       class="nav-title font-title {{transparent && bgOpacity < 0.5 ? 'nav-title-light' : ''}}"
-      style="margin-right:{{capsuleRight}}px;{{titleColor ? 'color:' + titleColor : ''}}"
+      style="margin-left:{{capsuleRight}}px;margin-right:{{capsuleRight}}px;{{titleColor ? 'color:' + titleColor : ''}}"
     >{{title}}</view>
   </view>
 </view>

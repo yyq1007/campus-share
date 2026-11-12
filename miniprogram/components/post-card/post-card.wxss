@@ -101,16 +101,25 @@
 }
 
 /* ---------- 媒体（在正文下方） ---------- */
+/* 媒体区：高度由内联的 padding-top 百分比决定（百分比按容器宽度算），
+   所以不依赖卡片实际像素宽，也不用运行时去量宽高。
+   默认 75% ≈ 4:3，图片 onload 前先占住位置，避免列表在图片加载时跳动。 */
 .pc-media {
   position: relative;
   margin-top: 20rpx;
+  padding-top: 75%;
   border-radius: 16rpx;   /* 与卡片同弧度，不再比卡片更圆 */
   overflow: hidden;
+  background: var(--bg-field);
 }
+/* 绝对定位铺满占位区：竖图按比例拉高，横图按比例压扁，一律 aspectFill 填满不露白边 */
 .pc-cover {
+  position: absolute;
+  left: 0;
+  top: 0;
   display: block;
   width: 100%;
-  height: 400rpx;
+  height: 100%;
   background: var(--bg-field);
 }
 .pc-play {

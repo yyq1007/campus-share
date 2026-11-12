@@ -29,3 +29,6 @@ tools/fetch-env-src.js
 
 # 改动前的整目录文件快照（体积大、只用于本机还原，不入库）
 .backup/
+
+# 视觉自检临时产物（headless 截图/对照页，仅本机用）
+.tmp-preview/

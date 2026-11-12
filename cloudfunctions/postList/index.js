@@ -50,9 +50,14 @@ exports.main = withAuth(async (event, ctx) => {
   const config = await getConfig();
 
   const where = { status: 'published' };
-  // 周报帖（board='digest'）跟着当前板块一起查出来 → 各板块都能看到它。
-  // 它 hotScore 极高（999999），排序时自然落在第一位。
-  if (board) where.board = _.in([board, DIGEST_BOARD]);
+  // 周报帖（board='digest'）不进板块信息流：
+  //   以前是 _.in([board, 'digest'])，结果每个板块第一条都是同一篇周报（它 hotScore
+  //   999999 必然排第一），板块自己的内容被压在下面。现在板块只查本板块。
+  // 周报统一从首页 AI 引导卡右侧的「周报」入口进（pages/digest），
+  // 那里靠下面首屏附带的 latestDigest + postDetail 的 pastDigests 列期次。
+  // 首页（无 board）这里不加 board 条件：会与现有 status+hotScore 索引组合失配，
+  // 首页信息流里的周报由前端 index.js 的 filter(x => !x.isDigest) 剔除。
+  if (board) where.board = board;
 
   if (keyword) {
     const tokens = queryTokens(keyword);

@@ -91,6 +91,35 @@ function fileSize(path) {
   })
 }
 
+/**
+ * 取图片「看到的」像素宽高，写进 media.w/h。
+ * 为什么要单独取：chooseMedia 返回的 width/height 是原图文件尺寸，
+ * 而 iPhone 拍的竖图常带 EXIF 旋转标记（orientation=right/left）——
+ * 文件里存的是 1920×885（横），屏幕上却按 885×1920 竖着显示。
+ * 直接拿文件宽高去算比例，详情页/卡片就会把竖图当横图，显示成一条横条。
+ * 处理：压缩后的展示图由 wx.compressImage 把方向烘进像素（orientation 变 up），
+ * 所以优先用展示图取尺寸；若仍带左右旋转标记，把宽高互换后再返回。
+ */
+function imageSize(src) {
+  return new Promise(resolve => {
+    if (!src) return resolve(null)
+    wx.getImageInfo({
+      src,
+      success: r => {
+        let w = r.width || 0
+        let h = r.height || 0
+        const o = String(r.orientation || 'up')
+        if (o.indexOf('right') === 0 || o.indexOf('left') === 0) {
+          const t = w; w = h; h = t
+        }
+        if (!w || !h) return resolve(null)
+        resolve({ w, h })
+      },
+      fail: () => resolve(null)
+    })
+  })
+}
+
 function uploadFile(cloudPath, filePath) {
   return new Promise((resolve, reject) => {
     wx.cloud.uploadFile({
@@ -135,11 +164,14 @@ async function uploadImage(item, uid, onProgress) {
     checkFileId = await uploadFile(`${base}_c.jpg`, item.localPath)
   }
   if (onProgress) onProgress(100)
+  // 展示图的真实宽高（已修正 EXIF 旋转）：详情页/信息流卡片靠它按比例占位，
+  // 首帧就是对的，不必等 image 的 onload 再跳一次；取不到则回退原图尺寸
+  const dim = (await imageSize(prep.display)) || { w: item.w || 0, h: item.h || 0 }
   return {
     type: 'image', fileId, checkFileId,
     size: await fileSize(prep.display),
     mime: 'image/jpeg',
-    w: item.w || 0, h: item.h || 0
+    w: dim.w || 0, h: dim.h || 0
   }
 }
 
@@ -202,5 +234,5 @@ async function getTempUrls(fileIds) {
 
 module.exports = {
   chooseImages, chooseVideo, prepareImage, uploadImage, uploadVideo,
-  uploadAvatar, uploadFile, getTempUrls, fileSize, compressImage
+  uploadAvatar, uploadFile, getTempUrls, fileSize, compressImage, imageSize
 }

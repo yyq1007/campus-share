@@ -1,4 +1,5 @@
-<!-- 周报卡（board='digest'，各板块置顶）：点进详情页看全文 + 可跳转的原帖列表 -->
+<!-- 周报卡（board='digest'）：板块流与首页流都不再出现周报（周报只从首页入口进），
+     这里保留为兜底——搜索命中周报帖时仍要能渲染。点进详情页看全文 + 可跳转的原帖列表 -->
 <view wx:if="{{post.isDigest}}" class="pc pc-digest" bindtap="onTap">
   <view class="pc-digest-head">
     <view class="pc-digest-badge">周报</view>
@@ -27,9 +28,11 @@
       <view wx:if="{{post.title}}" class="pc-title">{{post.title}}</view>
       <view class="pc-excerpt">{{post.excerpt}}</view>
 
-      <!-- 图片/视频：排在正文下方（不再占据卡片顶部通栏） -->
-      <view wx:if="{{post.cover}}" class="pc-media">
-        <image class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
+      <!-- 图片/视频：排在正文下方（不再占据卡片顶部通栏）。
+           高度用内联 padding-top 百分比（相对卡片宽度）占位，图片 onload 后按真实比例更新，
+           避免竖图被固定 400rpx 的框裁成一条横条。 -->
+      <view wx:if="{{post.cover}}" class="pc-media" style="padding-top:{{coverRatio}}%;">
+        <image class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" bind:load="onCoverLoad" />
         <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">
           <icon name="play-white" size="36"/>
         </view>
