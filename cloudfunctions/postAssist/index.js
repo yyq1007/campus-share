@@ -219,14 +219,23 @@ exports.main = withAuth(async (event, ctx) => {
         },
       ],
     });
-    answer = (res && res.choices && res.choices[0] && res.choices[0].message && res.choices[0].message.content) || '';
+    // 与 askQuery 同款兜底：服务端返回原始响应，可能是 res.text（CloudBase 包装）
+    // 或 res.choices[0].message.content（OpenAI 原始结构）
+    answer = (res && res.text)
+      || (res && res.choices && res.choices[0] && res.choices[0].message && res.choices[0].message.content)
+      || '';
+    console.log('[postAssist] answer head:', String(answer).slice(0, 300));
   } catch (e) {
     console.error('[postAssist] model fail', e && (e.message || e));
     return fail(50003, 'AI 开小差了，已切回手动填写');
   }
 
   const result = normalize(parseJsonLoose(answer));
-  if (!result) return fail(50003, 'AI 开小差了，已切回手动填写');
+  if (!result) {
+    // 解析失败：把原始返回打进日志（便于排查是结构问题还是模型输出漂移）
+    console.error('[postAssist] parse fail, answer head:', String(answer).slice(0, 400));
+    return fail(50003, 'AI 开小差了，已切回手动填写');
+  }
 
   // ---------- 幂等缓存：写入 assistLogs（不写 posts；持久化只在 postCreate） ----------
   try {
