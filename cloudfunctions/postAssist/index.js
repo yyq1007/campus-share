@@ -207,7 +207,7 @@ exports.main = withAuth(async (event, ctx) => {
     // generateText 返回原始响应：res.text（CloudBase 包装）或 res.choices[0].message.content
     const model = cloud.ai().createModel('cloudbase');
     const res = await model.generateText({
-      model: process.env.AI_VISION_MODEL || 'glm-5.3-flash',
+      model: process.env.AI_VISION_MODEL || 'hy-vision-2.0-instruct',
       temperature: 0.3,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },

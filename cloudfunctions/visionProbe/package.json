@@ -1,0 +1,9 @@
+{
+  "name": "visionProbe",
+  "version": "1.0.0",
+  "description": "临时探针：枚举免密钥视觉模型组合（用完即删）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.1"
+  }
+}
