@@ -201,12 +201,13 @@ exports.main = withAuth(async (event, ctx) => {
   let answer = '';
   try {
     // 云函数端大模型 API：wx-server-sdk ≥4.0.1 的 cloud.ai()
-    // 与 askQuery 同款口径：createModel('hunyuan-exp') 是提供方 ID（固定），
-    // generateText 的 model 字段才是具体模型——识图用 hunyuan-vision（混元多模态）。
-    // generateText 返回原始响应 res.choices[0].message.content
-    const model = cloud.ai().createModel('hunyuan-exp');
+    // ⚠️ 视觉通道必须走 createModel('cloudbase')（CloudBase 托管模型组，免密钥），
+    //    官方多模态文档的图生文示例即此写法；内置 'hunyuan-exp' 是纯文本通道，
+    //    image_url 会被丢弃 → 模型"看不到图"→ 返回全空 JSON（已踩坑验证）。
+    // generateText 返回原始响应：res.text（CloudBase 包装）或 res.choices[0].message.content
+    const model = cloud.ai().createModel('cloudbase');
     const res = await model.generateText({
-      model: process.env.AI_VISION_MODEL || 'hunyuan-vision',
+      model: process.env.AI_VISION_MODEL || 'glm-5.3-flash',
       temperature: 0.3,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
