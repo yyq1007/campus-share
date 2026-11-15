@@ -65,11 +65,13 @@
         placeholder-class="ph" value="{{content}}" maxlength="2000"
         auto-height bindinput="onContent"
       />
-      <text wx:if="{{aiMarks.content}}" class="ai-mark ai-mark-float">✦ AI 写的</text>
     </view>
     <view wx:if="{{assistLowConf && assistState === 'prefilled'}}" class="ai-lowconf-tip">AI 没太认出来，帮它写两句</view>
     <view wx:if="{{rejectMarks && rejectMarks.length}}" class="reject-tip">内容里有不允许发布的文字，请修改后再发布</view>
-    <view class="content-count">{{contentCount}}/2000</view>
+    <view class="content-meta">
+      <text wx:if="{{aiMarks.content}}" class="ai-mark">✦ AI 写的</text>
+      <text class="content-count">{{contentCount}}/2000</text>
+    </view>
   </view>
 
   <!-- 板块动态字段 -->
