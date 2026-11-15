@@ -28,6 +28,34 @@ function chooseImages(remain) {
   })
 }
 
+/**
+ * 单选一张图（拍照即发帖专用）：sourceType 按弹层入口区分 camera | album
+ * 独立于 chooseImages：那边是多选补图，这边是「选定即分析」的单张主图
+ */
+function chooseSingleImage(sourceType) {
+  return new Promise((resolve, reject) => {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: [sourceType === 'camera' ? 'camera' : 'album'],
+      sizeType: ['compressed'],
+      camera: 'back',
+      success: res => {
+        const f = res.tempFiles[0]
+        if (!f) return reject({ code: 40001, msg: '未选择图片' })
+        resolve({
+          type: 'image',
+          localPath: f.tempFilePath,
+          size: f.size,
+          w: f.width,
+          h: f.height
+        })
+      },
+      fail: err => reject(err)
+    })
+  })
+}
+
 function chooseVideo() {
   return new Promise((resolve, reject) => {
     wx.chooseMedia({
@@ -201,6 +229,6 @@ async function getTempUrls(fileIds) {
 }
 
 module.exports = {
-  chooseImages, chooseVideo, prepareImage, uploadImage, uploadVideo,
+  chooseImages, chooseSingleImage, chooseVideo, prepareImage, uploadImage, uploadVideo,
   uploadAvatar, uploadFile, getTempUrls, fileSize, compressImage
 }

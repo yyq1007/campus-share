@@ -27,6 +27,8 @@ exports.main = withAuth(async (event, ctx) => {
   const fields = event.fields && typeof event.fields === 'object' ? event.fields : {};
   const clientReqId = String(event.clientReqId || '');
   const editPostId = String(event.editPostId || '');
+  // 拍照即发帖（9.22）：postAssist 参与过创作 → 帖子打 aiAssist 标（审核台/读者知情权）
+  const aiAssist = event.aiAssist === true;
 
   if (BOARDS.indexOf(board) === -1) return fail(40001, '板块不合法');
   const cLen = charLen(content);
@@ -122,6 +124,7 @@ exports.main = withAuth(async (event, ctx) => {
       checkedAt: now,
     },
     clientReqId,
+    aiAssist,
     updatedAt: db.serverDate(),
   };
 
@@ -194,6 +197,7 @@ exports.main = withAuth(async (event, ctx) => {
           reason: needReview ? '内容安全待复核' : '',
           priority: 5,
           status: 'pending',
+          aiAssist, // 审核台 ✦ 知情权：AI 协助创作的帖子对审核员可见
           createdAt: db.serverDate(),
         },
       });

@@ -208,6 +208,18 @@
       "description": "校园分享 · 内容安全检测（文本/图片）"
     },
     {
+      "name": "postAssist",
+      "timeout": 25,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 拍照即发帖（多模态识图建议，纯建议不落库）"
+    },
+    {
       "name": "postCreate",
       "timeout": 20,
       "runtime": "Nodejs18.15",

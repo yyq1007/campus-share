@@ -116,6 +116,26 @@ function postCreate(params) {
   return callFn('postCreate', params, { timeout: 30000 })
 }
 
+/**
+ * 拍照即发帖（9.22）：AI 识图 → 结构化发帖建议（纯建议，不落库）
+ * @param {String} fileId 已上传展示图的 cloud:// fileID（服务端从它推导送审图）
+ * @param {String} clientReqId 幂等键（重复调用返回缓存结果）
+ * 返回 { board:{top,conf,runnerUp,conf2}, title, content, fields, tags, observations, confidence }
+ * 错误：40010 图片不合规 · 42902 当日 3 次用完 · 50003 AI 异常（前端一律降级回手动）
+ */
+function postAssist(fileId, clientReqId) {
+  return callFn('postAssist', { fileId, clientReqId }, { timeout: 15000 })
+}
+
+/**
+ * 埋点上报（9.24，fire-and-forget，失败静默）
+ * 契约：type ∈ error|rejection|api（白名单外按 error 归档），message ≤500 字
+ * 行为埋点走 type='api'，事件名放 message、明细放 extra
+ */
+function clientLog(type, message, extra, page) {
+  return callFn('clientLog', { type, message, extra: extra || {}, page: page || '' }).catch(() => {})
+}
+
 /** 删除（软删） */
 function postDelete(postId) {
   return callFn('postDelete', { postId })
@@ -217,5 +237,6 @@ module.exports = {
   // 登记 mediaAssets 台账。漏导出 → 调用抛 TypeError → 图片直接发布，
   // 服务端查不到台账按 unknown 容忍 → 未经内容审核的图片公开可见。
   mediaCheck,
+  postAssist, clientLog,
   askQuery
 }

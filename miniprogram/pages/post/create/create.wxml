@@ -1,4 +1,6 @@
 <!--S3 发帖页：软萌手账风。紫晕渐变底 + 白卡 48rpx + 胶囊按钮 + 板块糖果色 -->
+<!--拍照即发帖（9.22）：AI 入口卡 + 半屏选图 + 分析覆盖层 + ✦ 预填标记 + 成功页，
+    全部叠加在既有表单之上，零布局改动、样式只用 theme.wxss 令牌 -->
 <view class="page">
   <!-- 导航：取消 + 发布（并排靠左，右侧避让微信原生胶囊；间距 20rpx） -->
   <view class="hero" style="padding-top:{{statusBarH}}px">
@@ -19,6 +21,31 @@
     </view>
   </view>
 
+  <!-- 屏 01 · AI 入口卡：插在板块选择与标题卡之间（privacy-gate 激活 / needInvite 时隐藏） -->
+  <view wx:if="{{assistAvailable && assistState !== 'submitted'}}"
+    class="ai-entry" bind:tap="onAssistEntry">
+    <view class="ai-entry-badge">AI</view>
+    <view class="ai-entry-body">
+      <view class="ai-entry-title">拍张照，AI 帮你发</view>
+      <view class="ai-entry-sub">认物品 · 写文案 · 估价格，你只做确认</view>
+    </view>
+    <view class="ai-entry-arrow">›</view>
+  </view>
+
+  <!-- 屏 04 · 板块建议条（prefilled）：主判定 + 次选，胶囊手动点选永远优先 -->
+  <view wx:if="{{assistState === 'prefilled' && assistBoardTop}}" class="ai-board-tip">
+    <text class="ai-board-text">AI 觉得这是</text>
+    <view class="ai-board-chip is-top" data-key="{{assistBoardTop}}" bind:tap="onBoardTap">
+      {{assistBoardTop === 'life' ? '生活' : assistBoardTop === 'study' ? '学习' : '美食'}} {{assistBoardConf}}%
+    </view>
+    <block wx:if="{{assistBoardRunner}}">
+      <text class="ai-board-sec">次选</text>
+      <view class="ai-board-chip is-run" data-key="{{assistBoardRunner}}" bind:tap="onBoardTap">
+        {{assistBoardRunner === 'life' ? '生活' : assistBoardRunner === 'study' ? '学习' : '美食'}} {{assistBoardConf2}}%
+      </view>
+    </block>
+  </view>
+
   <!-- 标题 + 正文 -->
   <view class="card">
     <view class="input-row">
@@ -27,14 +54,20 @@
         placeholder-class="ph" value="{{title}}" maxlength="40"
         bindinput="onTitle"
       />
+      <!-- ✦ 徽标：字段级标记 AI 来源，开始编辑即移除 -->
+      <text wx:if="{{aiMarks.title}}" class="ai-mark">✦ AI</text>
       <text class="count {{titleCount >= 40 ? 'count-warn' : ''}}">{{titleCount}}/40</text>
     </view>
     <view class="divider" />
-    <textarea
-      class="content-input" placeholder="内容"
-      placeholder-class="ph" value="{{content}}" maxlength="2000"
-      auto-height bindinput="onContent"
-    />
+    <view class="content-wrap">
+      <textarea
+        class="content-input" placeholder="内容"
+        placeholder-class="ph" value="{{content}}" maxlength="2000"
+        auto-height bindinput="onContent"
+      />
+      <text wx:if="{{aiMarks.content}}" class="ai-mark ai-mark-float">✦ AI 写的</text>
+    </view>
+    <view wx:if="{{assistLowConf && assistState === 'prefilled'}}" class="ai-lowconf-tip">AI 没太认出来，帮它写两句</view>
     <view wx:if="{{rejectMarks && rejectMarks.length}}" class="reject-tip">内容里有不允许发布的文字，请修改后再发布</view>
     <view class="content-count">{{contentCount}}/2000</view>
   </view>
@@ -50,6 +83,7 @@
         value="{{item.value}}" data-key="{{item.key}}" data-type="{{item.type}}"
         bindinput="onField"
       />
+      <text wx:if="{{aiMarks.field && assistFieldKey === item.key}}" class="ai-mark">✦</text>
     </view>
   </view>
 
@@ -95,6 +129,75 @@
         <text>添加图片 / 视频</text>
       </view>
     </view>
+    <!-- 屏 04 · 「AI 看到了」识别依据卡 + 「换个写法」（prefilled） -->
+    <block wx:if="{{assistState === 'prefilled' && assistSuggest}}">
+      <view wx:if="{{assistSuggest.observations.length}}" class="ai-obs">
+        <view class="ai-obs-title">AI 看到了</view>
+        <view class="ai-obs-row" wx:for="{{assistSuggest.observations}}" wx:key="index">
+          <text class="ai-obs-k">{{item.k}}</text>
+          <text class="ai-obs-v">{{item.v}}</text>
+        </view>
+      </view>
+      <view class="ai-regen-row">
+        <view class="ai-regen-btn {{regenUsed ? 'is-disabled' : ''}}" bind:tap="onAssistRegen">
+          {{regenUsed ? '已换过一次' : '换个写法'}}
+        </view>
+        <view class="ai-tag-row" wx:if="{{assistSuggest.tags.length}}">
+          <text class="ai-tag" wx:for="{{assistSuggest.tags}}" wx:key="*this">#{{item}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+
+<!-- 屏 02 · 半屏弹层：拍照 / 相册 + 隐私预告知 -->
+<view wx:if="{{assistState === 'shooting'}}" class="assist-mask" bind:tap="onAssistCancel">
+  <view class="assist-sheet" catch:tap="stopBubble">
+    <view class="sheet-grabber" />
+    <view class="sheet-title">拍张照，AI 帮你发</view>
+    <view class="sheet-privacy">
+      <text class="sheet-privacy-icon">🔒</text>
+      AI 只读取这一张照片用来识别物品，识别完成后不做其他留存；发布前照片会先经过内容安全检测。
+    </view>
+    <view class="sheet-btn sheet-btn-camera" bind:tap="onAssistCamera">现在拍一张</view>
+    <view class="sheet-btn sheet-btn-album" bind:tap="onAssistAlbum">从相册选一张</view>
+    <view class="sheet-cancel" bind:tap="onAssistCancel">取消</view>
+  </view>
+</view>
+
+<!-- 屏 03 · AI 分析中：扫描流光 + 步骤文案轮换 + 字段骨架屏 -->
+<view wx:if="{{assistState === 'analyzing'}}" class="assist-scan">
+  <view class="scan-card">
+    <view class="scan-photo-box">
+      <image class="scan-photo" src="{{assistPhoto}}" mode="aspectFill" />
+      <view class="scan-beam" />
+    </view>
+    <view class="scan-phase">{{assistPhaseText}}</view>
+    <!-- 骨架：模拟建议字段逐条就位 -->
+    <view class="scan-skeleton">
+      <view class="sk-line sk-title" />
+      <view class="sk-line" />
+      <view class="sk-line sk-short" />
+    </view>
+    <view class="scan-giveup" bind:tap="onAssistGiveUp">不等待，切回手动填写</view>
+  </view>
+</view>
+
+<!-- 屏 05 · 提交成功：状态告知 + AI 协作标注 + 帖子预览 -->
+<view wx:if="{{assistState === 'submitted'}}" class="assist-done">
+  <view class="done-check">
+    <image class="done-check-icon" src="/assets/icons/check.png" mode="aspectFit" />
+  </view>
+  <view class="done-title">发布成功</view>
+  <view class="done-status">{{submitStatus === 'pending' ? '帖子正在审核中，结果会通过站内消息通知你' : '帖子已发布，快去首页看看吧'}}</view>
+  <view class="done-badge">✦ AI 协助创作</view>
+  <view class="done-preview" wx:if="{{assistPreviewCover}}">
+    <image class="done-preview-img" src="{{assistPreviewCover}}" mode="aspectFill" />
+    <view class="done-preview-title">{{title}}</view>
+  </view>
+  <view class="done-actions">
+    <view class="done-btn done-btn-primary" bind:tap="onAssistGoHome">看看首页</view>
+    <view class="done-btn done-btn-ghost" bind:tap="onAssistGoMine">回我的分享</view>
   </view>
 </view>
 

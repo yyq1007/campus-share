@@ -1212,6 +1212,22 @@ OPENID → users 查询 → 校验 status !== 'banned'
 | 频控 | 3 次/小时/人                                                                                                                                                                                                      |
 | 错误 | `40001` / `40401`（文件不存在/非本人） / `50002`（送审异常，保留 `pending`，不阻断使用）                                                                                                                                               |
 
+### 9.26 `postAssist`（拍照即发帖）
+
+> v1.1 新增（2026-11-15），契约源：《postAssist-拍照即发帖-交互稿-v1.0》第五章。纯建议函数，**不写 `posts` 集合**；持久化只发生在 `postCreate`（前端带 `aiAssist:true` 打标）。
+
+| 项  | 内容 |
+| -- | -- |
+| 入参 | `{ fileId:String(cloud:// 展示图), clientReqId:String }`（幂等键） |
+| 出参 | `{ board:{top,conf,runnerUp,conf2}, title(≤40), content(≤200), fields{shop 等 FIELD_KEYS 白名单}, tags[≤5], observations[{k≤6,v≤30,src:'photo'\|'web'\|'infer'}], confidence }`；重复调用返回缓存结果并带 `duplicated:true` |
+| 逻辑 | 鉴权 → 幂等（`assistLogs` 集合，同 `clientReqId`+uid 直接返回缓存）→ 频控 → **imgSecCheck 先行**（送审图由服务端从 `fileId` 推导 `_c.jpg`，`risky` 直接 40010 驳回、不消耗模型调用；`review/降级` 放行——图未定违规且结果仅本人可见）→ `getTempFileURL` → `cloud.ai().createModel('hunyuan-vision')` 多模态识图 → `parseJsonLoose` 容错解析 → `normalize` 白名单校验 + 截断 → 写 `assistLogs` 缓存 |
+| 频控 | `assist_1day`：3 次/天/人（含「换个写法」），**fail-closed**（沿用 8.13 原则） |
+| 错误 | `40001`（缺参/文件 ID 不合法） / `40401`（非本人文件） / `40010`（图片不合规，msg「这张照片过不了内容检测，换一张试试」） / `42902`（当日次数用完） / `50003`（AI 异常，前端降级回手动） / `50004`（照片读取失败） |
+| 降级 | confidence < 0.6 → `title`/`content` 置空（前端黄条引导手写，不硬编内容）；模型未开通/异常 → 50003，前端 12s 兜底切回手动，迟到结果静默丢弃（`clientReqId` 幂等防重复计费） |
+| 集合 | `assistLogs`（新增，权限同全站：所有用户不可读写） |
+| 部署 | `cloudbaserc.json`：Nodejs18.15 / timeout **25** / `MODERATION_MODE=strict`；`wx-server-sdk ^4.0.1`（cloud.ai 必需）；可选环境变量 `AI_VISION_MODEL`（默认 `hyv-preview`） |
+| 前端 | `pages/post/create` 叠加五状态（idle→shooting→analyzing→prefilled→submitted，fail 回 idle）；AI 只填空、从不覆盖用户输入；字段级 ✦ 徽标，编辑即移除；`postCreate` 新增可选入参 `aiAssist:Boolean` 落 `posts.aiAssist` + `reviewQueue.aiAssist`（审核台知情权，契约零破坏） |
+
 ---
 
 ## 10. 无感登录与身份体系
