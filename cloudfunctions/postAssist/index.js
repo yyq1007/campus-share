@@ -201,10 +201,12 @@ exports.main = withAuth(async (event, ctx) => {
   let answer = '';
   try {
     // 云函数端大模型 API：wx-server-sdk ≥4.0.1 的 cloud.ai()
-    // createModel('hunyuan-vision') 视觉模型族；generateText 返回原始响应 res.choices[0].message.content
-    const model = cloud.ai().createModel('hunyuan-vision');
+    // 与 askQuery 同款口径：createModel('hunyuan-exp') 是提供方 ID（固定），
+    // generateText 的 model 字段才是具体模型——识图用 hunyuan-vision（混元多模态）。
+    // generateText 返回原始响应 res.choices[0].message.content
+    const model = cloud.ai().createModel('hunyuan-exp');
     const res = await model.generateText({
-      model: process.env.AI_VISION_MODEL || 'hyv-preview',
+      model: process.env.AI_VISION_MODEL || 'hunyuan-vision',
       temperature: 0.3,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
