@@ -13,7 +13,7 @@ const { countChars, clipChars, normalizeText, cleanContent, validLink, randId } 
 const DRAFT_KEY = 'draft_post_'
 
 // 拍照即发帖常量（契约见交互稿第五章）
-const ASSIST_TIMEOUT_MS = 12000      // 前端 12s 兜底：超时降级回手动，结果迟到静默丢弃
+const ASSIST_TIMEOUT_MS = 22000      // 前端 22s 兜底：实测链路=压缩上传(~6s)+冷启动(0.5s)+视觉模型(~9s)≈15s+，12s 会误杀成功结果（2026-11-15 线上埋点 analyze_fail reason=超时 证实）
 const ASSIST_PHASE_MS = 2500         // 分析屏文案轮换间隔
 const ASSIST_PHASES = ['在认物品…', '在写标题和简介…', '在估价格挑板块…']
 const ASSIST_CONF_LOW = 0.6          // 低置信度：标题留空 + 黄条，不硬编内容

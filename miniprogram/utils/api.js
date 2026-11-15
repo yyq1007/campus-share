@@ -124,7 +124,7 @@ function postCreate(params) {
  * 错误：40010 图片不合规 · 42902 当日 3 次用完 · 50003 AI 异常（前端一律降级回手动）
  */
 function postAssist(fileId, clientReqId) {
-  return callFn('postAssist', { fileId, clientReqId }, { timeout: 15000 })
+  return callFn('postAssist', { fileId, clientReqId }, { timeout: 20000 })
 }
 
 /**
