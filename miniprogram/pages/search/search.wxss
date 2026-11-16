@@ -92,3 +92,22 @@
   color: var(--text-faint);
 }
 .pad { height: 180rpx; }
+
+/* 排序切换（相关程度 / 最新发布） */
+.sort-row {
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx 32rpx 0;
+}
+.sort-pill {
+  padding: 10rpx 28rpx;
+  font-size: var(--fs-caption, 24rpx);
+  color: var(--text-body);
+  background: var(--fill-soft);
+  border-radius: 26rpx;
+}
+.sort-pill-on {
+  color: var(--text-on-brand);
+  background: var(--primary);
+  font-weight: 600;
+}

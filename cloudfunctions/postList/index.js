@@ -122,6 +122,8 @@ exports.main = withAuth(async (event, ctx) => {
   pageSize = Math.max(1, Math.min(pageSize, MAX_PAGE));
   const cursor = decodeCursor(event.cursor);
   const keyword = String(event.keyword || '').trim();
+  // 搜索模式：sort=latest 按时间，其余（relevant/hot/未传）一律相关程度排序
+  const isSearch = !!keyword;
   const config = await getConfig();
 
   const where = { status: 'published' };
@@ -166,6 +168,52 @@ exports.main = withAuth(async (event, ctx) => {
   query = sort === 'latest'
     ? query.orderBy('createdAt', 'desc')
     : query.orderBy('hotScore', 'desc');
+
+  // —— 搜索 + 相关程度排序：拉 50 条候选内存打分（title 命中权重最高），offset 分页 ——
+  // 游标格式 off:N（与信息流的时间/热度游标无关）
+  const offMatch = isSearch && sort !== 'latest' ? /^off:(\d+)$/.exec(String(event.cursor || '')) : null;
+  if (offMatch) {
+    let cands;
+    try {
+      cands = await coll(COL.posts).where(finalWhere).orderBy('hotScore', 'desc').limit(50).get();
+    } catch (e) {
+      console.error('[postList relevant]', e && (e.message || e));
+      return fail(50001);
+    }
+    const kw = keyword.replace(/\s+/g, '').toLowerCase();
+    const scored = (cands.data || []).map((p) => {
+      const title = String(p.title || '').toLowerCase();
+      const excerpt = String(p.excerpt || p.content || '').toLowerCase();
+      let s = (p.hotScore || 0) / 100;
+      if (kw) {
+        s += (title.split(kw).length - 1) * 10;        // 标题每命中一处 +10
+        if (kw && title.indexOf(kw) === 0) s += 5;     // 标题开头命中再 +5
+        s += (excerpt.split(kw).length - 1) * 3;       // 摘要每命中一处 +3
+      }
+      return { p, s };
+    }).sort((a, b) => b.s - a.s);
+    const start = Number(offMatch[1]) || 0;
+    const page = scored.slice(start, start + pageSize).map((x) => x.p);
+    const inter = await loadInteractions(ctx.uid, page.map((p) => p._id));
+    const authors = await resolveAuthors(page.map((p) => p.authorUid));
+    const expireDays = (config.hot && config.hot.expireDays) || 90;
+    const list = page.map((p) => {
+      const brief = postBrief(p, inter[p._id]);
+      if (!p.expired && p.publishedAt && Date.now() - ms(p.publishedAt) > expireDays * 86400000) {
+        brief.expired = true;
+      }
+      brief.isMine = p.authorUid === ctx.uid;
+      brief.author = authors[p.authorUid] || null;
+      return brief;
+    });
+    const hasMore = start + page.length < scored.length;
+    return ok({
+      list,
+      nextCursor: hasMore ? `off:${start + page.length}` : null,
+      hasMore,
+      total: scored.length,
+    });
+  }
 
   let res;
   try {

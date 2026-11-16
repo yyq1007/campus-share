@@ -45,13 +45,20 @@
   <!-- 结果 -->
   <block wx:else>
     <page-state wx:if="{{state === 'loading' || state === 'error' || state === 'empty'}}" state="{{state}}" bind:retry="onConfirm" bind:action="onEmptyAction" />
-    <scroll-view wx:else scroll-y class="list" bindscrolltolower="loadMore">
-      <view class="feed">
-        <post-card wx:for="{{list}}" wx:key="id" post="{{item}}" bind:tap="onPostTap" />
+    <block wx:else>
+      <!-- 排序切换：相关程度 / 最新发布 -->
+      <view class="sort-row">
+        <view class="sort-pill {{sort === 'relevant' ? 'sort-pill-on' : ''}}" data-sort="relevant" bind:tap="onSortTap">相关程度</view>
+        <view class="sort-pill {{sort === 'latest' ? 'sort-pill-on' : ''}}" data-sort="latest" bind:tap="onSortTap">最新发布</view>
       </view>
-      <view wx:if="{{loadingMore || hasMore}}" class="list-foot">{{searching ? '加载中…' : ''}}</view>
-      <view class="pad" />
-    </scroll-view>
+      <scroll-view scroll-y class="list" bindscrolltolower="loadMore">
+        <view class="feed">
+          <post-card wx:for="{{list}}" wx:key="id" post="{{item}}" bind:tap="onPostTap" />
+        </view>
+        <view wx:if="{{loadingMore || hasMore}}" class="list-foot">{{searching ? '加载中…' : ''}}</view>
+        <view class="pad" />
+      </scroll-view>
+    </block>
   </block>
 </view>
 

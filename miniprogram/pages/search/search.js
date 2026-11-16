@@ -12,6 +12,7 @@ Page({
     navH: 44,
     keyword: '',
     searching: false,
+    sort: 'relevant',    // relevant=相关程度 | latest=最新发布
     list: [],
     cursor: null,
     hasMore: true,
@@ -72,6 +73,15 @@ Page({
     if (kw) this.search(kw)
   },
 
+  /** 切换排序方式：相关程度 / 最新发布（切换后重搜） */
+  onSortTap(e) {
+    const sort = e.currentTarget.dataset.sort === 'latest' ? 'latest' : 'relevant'
+    if (sort === this.data.sort) return
+    this.setData({ sort })
+    const kw = this.data.keyword.trim()
+    if (kw) this.search(kw)
+  },
+
   onTagTap(e) {
     const kw = e.currentTarget.dataset.kw
     this.setData({ keyword: kw })
@@ -89,7 +99,7 @@ Page({
     this.saveHistory(kw)
     try {
       await guard()
-      const res = await api.postList({ keyword: kw, pageSize: 10 })
+      const res = await api.postList({ keyword: kw, pageSize: 10, sort: this.data.sort })
       this.setData({
         list: res.list,
         cursor: res.nextCursor,
@@ -110,7 +120,8 @@ Page({
     try {
       const params = {
         keyword: this.data.keyword.trim(),
-        pageSize: 10
+        pageSize: 10,
+        sort: this.data.sort
       }
       if (this.data.cursor) params.cursor = this.data.cursor
       const res = await api.postList(params)
@@ -127,7 +138,11 @@ Page({
   },
 
   onPostTap(e) {
-    wx.navigateTo({ url: `/pages/post/detail/detail?id=${e.detail.post.id}` })
+    // post-card 的自定义 tap 事件 detail={post}；原生 tap 冒泡也会到达本 handler
+    // （detail 是 {x,y}，无 post）——直接忽略，防「Cannot read properties of undefined」
+    const post = e && e.detail && e.detail.post
+    if (!post || !post.id) return
+    wx.navigateTo({ url: `/pages/post/detail/detail?id=${post.id}` })
   },
 
   onBack() { wx.navigateBack() },
