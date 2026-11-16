@@ -2,7 +2,7 @@
  * postDetail（9.5）
  * 非 published 仅作者可见；authorUid 不下发；citedCount 仅作者可见
  */
-const { coll, _, COL, ms } = require('./lib/db');
+const { coll, _, COL, ms, cloud } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth } = require('./lib/auth');
 const { postFull } = require('./lib/present');
@@ -70,8 +70,29 @@ exports.main = withAuth(async (event, ctx) => {
     } catch (e) { /* 查询失败不阻塞详情返回 */ }
   }
 
+  // 作者公开信息（2026-11-16 起所有人可见）：昵称+头像临时链接，不下发 authorUid
+  let author = null;
+  try {
+    const ar = await coll(COL.users).where({ _id: post.authorUid }).field({ nickname: true, avatar: true }).limit(1).get();
+    const u = ar.data && ar.data[0];
+    if (u) {
+      const av = u.avatar || {};
+      let avatarUrl = '';
+      if (av.fileId && av.status !== 'risky') {
+        try {
+          const tr = await cloud.getTempFileURL({ fileList: [av.fileId] });
+          const f = tr.fileList && tr.fileList[0];
+          if (f && f.tempFileURL) avatarUrl = f.tempFileURL;
+        } catch (e) { /* 链接失败降级为空 */ }
+      }
+      author = { nickname: String(u.nickname || '').trim(), avatarUrl };
+    }
+  } catch (e) { /* 解析失败降级为匿名 */ }
+
+  const full = postFull(post, isMine);
+  full.author = author;
   return ok({
-    post: postFull(post, isMine),
+    post: full,
     isMine,
     myInteraction,
     commentTotal: (post.stats && post.stats.commentCount) || 0,

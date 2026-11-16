@@ -124,6 +124,33 @@ Page({
     }
   },
 
+  // ---------- 昵称 ----------
+  onNickTap() {
+    wx.showModal({
+      title: '修改昵称',
+      editable: true,
+      placeholderText: '1-12 个字，对所有人可见',
+      content: this.data.profile && this.data.profile.nick || '',
+      confirmText: '保存',
+      success: async r => {
+        if (!r.confirm) return
+        const nick = (r.content || '').trim()
+        if (!nick) return toast('昵称不能为空')
+        if (nick === (this.data.profile && this.data.profile.nick || '').trim()) return
+        try {
+          wx.showLoading({ title: '保存中…', mask: true })
+          const res = await api.updateNickname(nick)
+          wx.hideLoading()
+          this.setData({ 'profile.nick': (res && res.nickname) || nick })
+          toast('昵称已更新')
+        } catch (e) {
+          wx.hideLoading()
+          toast((e && e.msg) || '修改失败')
+        }
+      }
+    })
+  },
+
   // ---------- 菜单 ----------
   onMyPosts() { wx.navigateTo({ url: '/pages/me/posts/posts' }) },
   onMyFavs() { wx.navigateTo({ url: '/pages/me/favorites/favorites' }) },

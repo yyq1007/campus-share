@@ -1030,7 +1030,7 @@ OPENID → users 查询 → 校验 status !== 'banned'
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 入参          | `{ board?:'life'\|'study'\|'food', keyword?:String, sort?:'hot'\|'latest', cursor?:{v:Number\|Date, id:String}, pageSize?:10 }`                          |
 | 出参          | `{ list:[postBrief], nextCursor, hasMore, total? }`                                                                                                      |
-| `postBrief` | `{ id, shortId, board, title, excerpt, cover, mediaType, likeCount, favCount, liked, faved, createdAt, expired, status }`（**不含 authorUid/openid**）       |
+| `postBrief` | `{ id, shortId, board, title, excerpt, cover, mediaType, likeCount, favCount, liked, faved, createdAt, expired, status, author? }`（**不含 authorUid/openid**；`author = { nickname, avatarUrl }` 为作者公开信息（2026-11-16 起下发），只含昵称与头像临时链接，没设置则 `author` 字段为 `null`，前端回退「匿名同学」+糖果色头像）       |
 | 逻辑          | 强制 `status:'published'`；`keyword` 走 `searchTokens` 的 `_.all(tokens)`；排序 `hotScore desc, createdAt desc` 或 `createdAt desc`；游标分页（避免翻页抖动）；`pageSize` 上限 20 |
 | `expired`   | `now - publishedAt > 90d`（`configs.hot.expireDays`）                                                                                                      |
 | 错误          | `40001` / `50001`                                                                                                                                        |
@@ -1041,7 +1041,7 @@ OPENID → users 查询 → 校验 status !== 'banned'
 | ------ | ------------------------------------------------------------------------------------------------------- |
 | 入参     | `{ id?:String, sid?:String }`（二选一）                                                                      |
 | 出参     | `{ post, isMine, myInteraction:{liked,faved}, commentTotal }`                                           |
-| `post` | 完整字段，但 `authorUid` 不下发；`isMine` 由服务端比较得出；`citedCount` **仅当 `isMine`** 时下发，否则剔除                          |
+| `post` | 完整字段，但 `authorUid` 不下发；`isMine` 由服务端比较得出；`citedCount` **仅当 `isMine`** 时下发，否则剔除；`post.author = { nickname, avatarUrl }` 作者公开信息（2026-11-16 起所有人可见，不下发 uid）                          |
 | 逻辑     | `sid` → `shortId` 查；`status !== 'published'` 时仅作者可见，其他人返回 `40402`（内容不存在）；`viewCount` 异步 `inc(1)`（不阻塞返回） |
 | 错误     | `40401` 不存在 / `40402` 已删除或无权限 / `50001`                                                                 |
 
@@ -1064,11 +1064,12 @@ OPENID → users 查询 → 校验 status !== 'banned'
 
 ### 9.8 `commentList`
 
-入参 `{ postId, cursor?, pageSize?:20, parentId? }`；出参 `{ list:[{ id, floor, content, createdAt, status, replyCount, replies:[{ id, floor, replyToFloor, content, createdAt }] }], nextCursor, hasMore, total }`。
+入参 `{ postId, cursor?, pageSize?:20, parentId? }`；出参 `{ list:[{ id, floor, content, createdAt, status, replyCount, author?, replies:[{ id, floor, replyToFloor, content, createdAt, author? }] }], nextCursor, hasMore, total }`。
 
 - 不传 `parentId`：返回一级评论（`parentId` 为空），每条内嵌最多 3 条二级回复。
 - 传 `parentId`：只返回该一级评论下的回复（"展开更多"时用）。
 - 仅返回 `status:'published'`；作者本人可见自己的 `pending` 并带 `status` 标记。
+- `author = { nickname, avatarUrl }` 评论作者公开信息（2026-11-16 起下发，批量解析一次 users 查询；不下发 authorUid，没填昵称/头像时 `author` 为 `null`，前端回退「匿名 #楼层」）。
 
   错误：`40401`。
 
@@ -1206,9 +1207,9 @@ OPENID → users 查询 → 校验 status !== 'banned'
 
 | 项  | 内容                                                                                                                                                                                                            |
 | -- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 入参 | `{ avatarFileId?:String }`（传 `null` 表示恢复默认头像）                                                                                                                                                                 |
-| 出参 | `{ avatar:{fileId?,status} }`                                                                                                                                                                                 |
-| 逻辑 | 校验 `fileId` 归属当前 uid 且来自 `avatar/` 目录；写 `users.avatar = { fileId, status:'pending' }` → 调 `imgSecCheck`（送审图 400×400，满足尺寸/体积限制）→ `pass` 置 `status:'pass'`；`risky` 则清空头像并给 `messages` 一条提示；`null` 直接清空 `avatar` |
+| 入参 | `{ avatarFileId?:String }`（传 `null` 表示恢复默认头像）；或 `{ nickname?:String }`（2026-11-16 新增：修改昵称，1-12 字，`msgSecCheck` 不过审直接驳回不落库）                                                                                                                                                             |
+| 出参 | `{ avatar:{fileId?,status} }`；昵称分支返回 `{ nickname }`                                                                                                                                                                                |
+| 逻辑 | 校验 `fileId` 归属当前 uid 且来自 `avatar/` 目录；写 `users.avatar = { fileId, status:'pending' }` → 调 `imgSecCheck`（送审图 400×400，满足尺寸/体积限制）→ `pass` 置 `status:'pass'`；`risky` 则清空头像并给 `messages` 一条提示；`null` 直接清空 `avatar`；`event.nickname !== undefined` 时走昵称分支（与头像互斥） |
 | 频控 | 3 次/小时/人                                                                                                                                                                                                      |
 | 错误 | `40001` / `40401`（文件不存在/非本人） / `50002`（送审异常，保留 `pending`，不阻断使用）                                                                                                                                               |
 

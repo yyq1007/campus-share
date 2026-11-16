@@ -5,10 +5,44 @@
  * 身份标签 tag：'op' 楼主（帖子作者）/ 'layer' 层主（被回复的一级评论作者）/ '' 其他匿名同学
  *   —— 在读取时计算，只下发标签不下发 authorUid
  */
-const { coll, _, COL, decodeCursor, encodeCursor } = require('./lib/db');
+const { coll, _, COL, cloud, decodeCursor, encodeCursor } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth } = require('./lib/auth');
 const { commentItem } = require('./lib/present');
+
+/** 作者公开信息（2026-11-16 起所有人可见）：只下发昵称+头像临时链接，绝不下发 authorUid */
+async function resolveAuthors(uids) {
+  const uniq = [...new Set((uids || []).filter(Boolean))];
+  if (!uniq.length) return {};
+  try {
+    const r = await coll(COL.users)
+      .where({ _id: _.in(uniq) })
+      .field({ nickname: true, avatar: true })
+      .limit(100)
+      .get();
+    const users = r.data || [];
+    const fileIds = users
+      .map((u) => (u.avatar && u.avatar.fileId && u.avatar.status !== 'risky' ? u.avatar.fileId : ''))
+      .filter(Boolean);
+    const urlMap = {};
+    if (fileIds.length) {
+      try {
+        const tr = await cloud.getTempFileURL({ fileList: fileIds });
+        (tr.fileList || []).forEach((f) => { if (f.tempFileURL) urlMap[f.fileID] = f.tempFileURL; });
+      } catch (e) { /* 降级为空，前端回退匿名头像 */ }
+    }
+    const map = {};
+    users.forEach((u) => {
+      const av = u.avatar || {};
+      const fileId = av.status !== 'risky' ? av.fileId || '' : '';
+      map[u._id] = { nickname: String(u.nickname || '').trim(), avatarUrl: fileId ? urlMap[fileId] || '' : '' };
+    });
+    return map;
+  } catch (e) {
+    console.warn('[commentList resolveAuthors]', e && (e.errMsg || e.message));
+    return {};
+  }
+}
 
 async function loadPostAuthor(postId) {
   try {
@@ -26,11 +60,13 @@ function tagOf(authorUid, opUid, layerUid) {
   return '';
 }
 
-/** commentItem 不带 authorUid，这里按原始数据补上身份标签 */
-function withTags(item, raw, rawReplies, opUid) {
+/** commentItem 不带 authorUid，这里按原始数据补上身份标签和作者公开信息 */
+function withTags(item, raw, rawReplies, opUid, authors) {
   item.tag = tagOf(raw.authorUid, opUid, '');
+  item.author = (authors && authors[raw.authorUid]) || null;
   item.replies.forEach((r, i) => {
     r.tag = tagOf(rawReplies[i] && rawReplies[i].authorUid, opUid, raw.authorUid);
+    r.author = (authors && rawReplies[i] && authors[rawReplies[i].authorUid]) || null;
   });
   return item;
 }
@@ -58,7 +94,11 @@ exports.main = withAuth(async (event, ctx) => {
     ]);
     const layerUid = (pr.data && pr.data.authorUid) || '';
     const replies = res.data || [];
-    const list = replies.map((r) => Object.assign(commentItem(r, [], ctx.uid), { tag: tagOf(r.authorUid, opUid, layerUid) }));
+    const authors = await resolveAuthors(replies.map((r) => r.authorUid));
+    const list = replies.map((r) => Object.assign(commentItem(r, [], ctx.uid), {
+      tag: tagOf(r.authorUid, opUid, layerUid),
+      author: authors[r.authorUid] || null,
+    }));
     return ok({ list, nextCursor: null, hasMore: false, total: replies.length });
   }
 
@@ -113,8 +153,16 @@ exports.main = withAuth(async (event, ctx) => {
   const [opUid, counted] = await Promise.all([opTask, totalTask]);
   const total = counted === null ? rows.length : counted;
 
+  // 一级评论 + 内嵌回复的作者公开信息（一次批量解析）
+  const authorUids = [];
+  rows.forEach((r) => {
+    authorUids.push(r.authorUid);
+    (replyMap[r._id] || []).forEach((x) => authorUids.push(x.authorUid));
+  });
+  const authors = await resolveAuthors(authorUids);
+
   return ok({
-    list: rows.map((r) => withTags(commentItem(r, replyMap[r._id] || [], ctx.uid), r, replyMap[r._id] || [], opUid)),
+    list: rows.map((r) => withTags(commentItem(r, replyMap[r._id] || [], ctx.uid), r, replyMap[r._id] || [], opUid, authors)),
     nextCursor: hasMore && rows.length ? encodeCursor({ f: rows[rows.length - 1].floor }) : null,
     hasMore,
     total,

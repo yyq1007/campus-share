@@ -629,8 +629,7 @@ Page({
       // 用户取消选图：回到 idle（半屏已关），无任何副作用
       return this.setData({ assistState: 'idle' })
     }
-    // 选完同样先让用户裁剪编辑（与拍照一致，2026-11-16）
-    item.localPath = await this._editImage(item.localPath)
+    // 先识别再裁剪（2026-11-16 用户要求）：原图直接进 AI，裁剪入口在预填确认态
     this._assistProceed(item)
   },
 
@@ -643,6 +642,7 @@ Page({
       uploaded: false, fileId: '', progress: 0
     }
     const media = this.data.media.concat([rec])
+    this._assistMediaIdx = media.length - 1 // 裁剪按钮按此下标回写
     this.setData({
       media, mediaType: 'image',
       assistState: 'analyzing',
@@ -678,10 +678,12 @@ Page({
         wx.createCameraContext().takePhoto({ quality: 'high', success: resolve, fail: reject })
       })
       this.setData({ cameraShow: false })
-      // 拍完先让用户裁剪编辑（2026-11-16 用户要求），取消/不支持则用原图
-      const edited = await this._editImage(res.tempImagePath)
+      // 先识别再裁剪：识图流程用原图直接进 AI（裁剪入口在预填确认态）；
+      // 普通加图（intent=add）保留拍完即裁剪
+      let photoPath = res.tempImagePath
+      if (this._cameraIntent !== 'assist') photoPath = await this._editImage(photoPath)
       // takePhoto 只给临时路径：补齐 size/w/h，与 chooseMedia 返回结构对齐
-      const item = await this._photoRecord(edited)
+      const item = await this._photoRecord(photoPath)
       if (this._cameraIntent === 'assist') {
         this._assistProceed(item)
       } else {
@@ -855,9 +857,28 @@ Page({
     wx.navigateTo({ url: '/pages/me/posts/posts?tab=pending' })
   },
 
+  /** 「裁剪图片」（先识别再裁剪）：识别/预填完成后可对原图裁剪，只影响最终发布的图；
+      AI 建议保持不变（基于原图识别），裁剪后重置上传态，发布时重新上传裁剪产物 */
+  async onAssistCrop() {
+    if (this.data.assistState !== 'prefilled') return
+    const idx = this._assistMediaIdx
+    const rec = this.data.media[idx]
+    if (!rec) return
+    const edited = await this._editImage(rec.localPath)
+    if (!edited || edited === rec.localPath) return // 取消裁剪：保持原样
+    this.setData({
+      [`media[${idx}].localPath`]: edited,
+      [`media[${idx}].uploaded`]: false,
+      [`media[${idx}].fileId`]: '',
+      [`media[${idx}].progress`]: 0,
+      assistPhoto: edited
+    })
+    this._assistSnapshotDirty = true
+    toast('已用裁剪后的图发布，AI 建议不变')
+  },
+
   /** 「换个写法」：仅标题与正文重新生成，可反复换（总量受服务端每日频控约束）；
-      用户改过的字段不被覆盖（canFill：只覆盖仍带 ✦ 的 AI 字段） */
-  async onAssistRegen() {
+      用户改过的字段不被覆盖（canFill：只覆盖仍带 ✦ 的 AI 字段） */  async onAssistRegen() {
     if (this.data.assistState !== 'prefilled') return
     if (!this._assistFileId) return toast('照片还没上传成功，先手动改一改吧')
     this.logAssist('regen_click')

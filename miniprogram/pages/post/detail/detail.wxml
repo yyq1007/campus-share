@@ -34,10 +34,11 @@
     <view class="detail-card">
       <!-- 作者行：本人显示自己设置的头像（仅自己可见），他人一律匿名糖果色 -->
       <view wx:if="{{!post.isDigest}}" class="author-row">
-        <image wx:if="{{post.isMine && myAvatarUrl}}" class="avatar avatar-img" src="{{myAvatarUrl}}" mode="aspectFill" />
+        <image wx:if="{{post.author && post.author.avatarUrl}}" class="avatar avatar-img" src="{{post.author.avatarUrl}}" mode="aspectFill" />
+        <image wx:elif="{{post.isMine && myAvatarUrl}}" class="avatar avatar-img" src="{{myAvatarUrl}}" mode="aspectFill" />
         <view wx:else class="avatar avatar-{{post.avatarIdx}}">匿</view>
         <view class="author-main">
-          <view class="author-name">匿名同学</view>
+          <view class="author-name">{{post.author && post.author.nickname ? post.author.nickname : '匿名同学'}}</view>
           <view class="author-sub">{{post.timeText}}</view>
         </view>
         <view class="board-chip board-{{post.boardColor}}">
@@ -144,10 +145,11 @@
         class="comment-row" data-floor="{{item.floor}}" data-id="{{item.id}}"
         bind:longpress="onPickReply"
       >
-        <view class="avatar avatar-{{item.avatarIdx}}">匿</view>
+        <image wx:if="{{item.author && item.author.avatarUrl}}" class="avatar avatar-img" src="{{item.author.avatarUrl}}" mode="aspectFill" />
+        <view wx:else class="avatar avatar-{{item.avatarIdx}}">匿</view>
         <view class="comment-main">
           <view class="comment-meta">
-            <text class="comment-nick">{{item.sending ? '匿名' : '匿名 #' + item.floor}}</text>
+            <text class="comment-nick">{{item.sending ? '匿名' : (item.nick || '匿名 #' + item.floor)}}</text>
             <text wx:if="{{item.tag === 'op'}}" class="comment-mine">楼主</text>
             <text wx:if="{{item.mine}}" class="comment-mine">我</text>
             <text class="comment-time">{{item.timeText}}</text>

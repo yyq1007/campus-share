@@ -58,6 +58,11 @@ function updateAvatar(avatarFileId) {
   return callFn('meUpdateProfile', { avatarFileId }, { timeout: 20000 })
 }
 
+/** 修改昵称（2026-11-16）：服务端内容安检，1-12 字；所有人可见 */
+function updateNickname(nickname) {
+  return callFn('meUpdateProfile', { nickname }, { timeout: 20000 })
+}
+
 // ---------- 内容 ----------
 
 /** 媒体送审（9.19）：上传后调用 → 服务端登记 mediaAssets 台账 + imgSecCheck 图片安全检测 */
@@ -227,7 +232,7 @@ function askQuery(question, history, clientReqId) {
 }
 
 module.exports = {
-  login, bindInvite, meOverview, updateAvatar,
+  login, bindInvite, meOverview, updateAvatar, updateNickname,
   postList, postDetail, postCreate, postDelete, interactionToggle, reportCreate,
   rankList,
   commentList, commentCreate,

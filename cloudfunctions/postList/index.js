@@ -43,10 +43,44 @@
   }
 })()
 /* ===== END MEM-INJECT ===== */
-const { coll, _, COL, decodeCursor, encodeCursor, ms } = require('./lib/db');
+const { cloud, coll, _, COL, decodeCursor, encodeCursor, ms } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth, resolveCtx } = require('./lib/auth');
 const { postBrief } = require('./lib/present');
+
+/** 作者公开信息（2026-11-16 起所有人可见）：只下发昵称+头像临时链接，绝不下发 authorUid */
+async function resolveAuthors(uids) {
+  const uniq = [...new Set((uids || []).filter(Boolean))];
+  if (!uniq.length) return {};
+  try {
+    const r = await coll(COL.users)
+      .where({ _id: _.in(uniq) })
+      .field({ nickname: true, avatar: true })
+      .limit(100)
+      .get();
+    const users = r.data || [];
+    const fileIds = users
+      .map((u) => (u.avatar && u.avatar.fileId && u.avatar.status !== 'risky' ? u.avatar.fileId : ''))
+      .filter(Boolean);
+    const urlMap = {};
+    if (fileIds.length) {
+      try {
+        const tr = await cloud.getTempFileURL({ fileList: fileIds });
+        (tr.fileList || []).forEach((f) => { if (f.tempFileURL) urlMap[f.fileID] = f.tempFileURL; });
+      } catch (e) { /* 头像链接失败降级为空，前端回退匿名头像 */ }
+    }
+    const map = {};
+    users.forEach((u) => {
+      const av = u.avatar || {};
+      const fileId = av.status !== 'risky' ? av.fileId || '' : '';
+      map[u._id] = { nickname: String(u.nickname || '').trim(), avatarUrl: fileId ? urlMap[fileId] || '' : '' };
+    });
+    return map;
+  } catch (e) {
+    console.warn('[postList resolveAuthors]', e && (e.errMsg || e.message));
+    return {};
+  }
+}
 const { queryTokens } = require('./lib/tokenize');
 const { getConfig } = require('./lib/config');
 
@@ -129,6 +163,8 @@ exports.main = withAuth(async (event, ctx) => {
 
   const inter = await loadInteractions(ctx.uid, page.map((p) => p._id));
   const expireDays = (config.hot && config.hot.expireDays) || 90;
+  // 作者公开信息批量解析（一次 users 查 + 一次临时链接换算）
+  const authors = await resolveAuthors(page.map((p) => p.authorUid));
 
   const list = page.map((p) => {
     const brief = postBrief(p, inter[p._id]);
@@ -137,6 +173,7 @@ exports.main = withAuth(async (event, ctx) => {
     }
     // 本人发的帖（2026-11-16：前端据此展示用户自己设置的头像，他人仍看匿名糖果色）
     brief.isMine = p.authorUid === ctx.uid;
+    brief.author = authors[p.authorUid] || null;
     return brief;
   });
 

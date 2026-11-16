@@ -12,7 +12,7 @@ const { entryOf, applyPage, merged } = require('../../../utils/comment-cache')
 // 楼中楼身份：楼主 / 层主 / 其他匿名同学（tag 由 commentList 计算）
 const REPLY_NICK = { op: '楼主', layer: '层主' }
 function decorateReply(r) {
-  return { ...r, mine: !!r.isMine, nick: REPLY_NICK[r.tag] || '匿名同学', timeText: timeAgo(r.createdAt) }
+  return { ...r, mine: !!r.isMine, nick: REPLY_NICK[r.tag] || (r.author && r.author.nickname) || '匿名同学', timeText: timeAgo(r.createdAt) }
 }
 
 /** 周报日期框用：只留「月.日」（11.18），跟手绘稿的写法一致 */
@@ -187,6 +187,8 @@ Page({
     const page = (res.list || []).map(c => ({
       ...c,
       mine: !!c.isMine,
+      // 作者填过昵称则显示昵称，否则回退「匿名 #楼层」
+      nick: (c.author && c.author.nickname) || '',
       timeText: timeAgo(c.createdAt),
       replies: (c.replies || []).map(decorateReply)
     }))

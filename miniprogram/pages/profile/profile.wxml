@@ -27,10 +27,11 @@
           <image class="avatar-cam-icon" src="/assets/icons/camera-primary.png" mode="aspectFit" />
         </view>
       </view>
-      <view class="user-nick">
+      <view class="user-nick" bind:tap="onNickTap">
         <text>{{profile.nick || '匿名同学'}}</text>
+        <image class="nick-edit-icon" src="/assets/icons/edit.png" mode="aspectFit" />
       </view>
-      <view class="user-sub">你的身份仅自己可见</view>
+      <view class="user-sub">点昵称可修改 · 昵称和头像对所有人可见</view>
     </view>
 
     <!-- 统计（设计稿：335×84 描边卡，三列） -->

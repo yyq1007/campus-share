@@ -11,12 +11,13 @@
 <!-- 普通帖子卡（信息流样式：头像+昵称/时间 → 正文 → 图片 → 话题 → 赞/评论/收藏） -->
 <view wx:else class="pc card" bindtap="onTap">
   <view class="pc-head">
-    <!-- 头像：本人帖子显示自己设置的头像（仅自己可见），他人一律匿名糖果色 -->
-    <image wx:if="{{post.myAvatarUrl}}" class="pc-avatar-img" src="{{post.myAvatarUrl}}" mode="aspectFill" />
+    <!-- 头像：作者设置过头像则所有人可见；没设置回退糖果色（本人帖优先用自己头像兜底） -->
+    <image wx:if="{{post.author && post.author.avatarUrl}}" class="pc-avatar-img" src="{{post.author.avatarUrl}}" mode="aspectFill" />
+    <image wx:elif="{{post.myAvatarUrl}}" class="pc-avatar-img" src="{{post.myAvatarUrl}}" mode="aspectFill" />
     <view wx:else class="pc-avatar av-{{avatarIdx}}">匿</view>
     <view class="pc-main">
       <view class="pc-name-row">
-        <text class="pc-name">匿名同学</text>
+        <text class="pc-name">{{post.author && post.author.nickname ? post.author.nickname : '匿名同学'}}</text>
         <!-- 状态角标（仅「我的分享」）：占样例里「热门」的位置 -->
         <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
       </view>

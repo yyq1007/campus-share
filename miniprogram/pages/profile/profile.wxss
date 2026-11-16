@@ -94,7 +94,7 @@
   font-weight: 600;
   color: var(--text-strong);
 }
-.user-edit { width: 28rpx; height: 28rpx; opacity: 0.4; }
+.nick-edit-icon { width: 28rpx; height: 28rpx; opacity: 0.4; }
 .user-sub { margin-top: 12rpx; font-size: 26rpx; color: var(--text-soft); }
 
 /* ---------- 统计卡（335×84 → 670×168rpx，描边） ---------- */

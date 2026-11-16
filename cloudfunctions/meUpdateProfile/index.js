@@ -27,6 +27,26 @@ async function download(fileId) {
 exports.main = withAuth(async (event, ctx) => {
   // 频控已移除（测试期不受限；上线前如需防滥用可恢复 avatarPerHour 限流）
 
+  // ---- 昵称修改（2026-11-16 新增）：event.nickname 存在即走昵称分支，与头像互不干扰 ----
+  if (event.nickname !== undefined) {
+    const nick = String(event.nickname || '').trim().replace(/\s+/g, ' ');
+    if (!nick) return fail(40001, '昵称不能为空');
+    if (nick.length > 12) return fail(40002, '昵称最长 12 个字');
+    if (nick === String((ctx.user && ctx.user.nickname) || '').trim()) return ok({ nickname: nick });
+    // 内容安全：不过审的昵称直接驳回，不落库（与敏感词口径一致，不回显词条）
+    const chk = await msgSecCheck(nick, ctx.openid);
+    if (chk.suggest !== 'pass') return fail(40002, '这个昵称不太合适，换一个吧');
+    try {
+      await coll(COL.users).where({ _id: ctx.uid }).update({
+        data: { nickname: nick, updatedAt: db.serverDate() },
+      });
+    } catch (e) {
+      console.error('[meUpdateProfile] nickname write failed', e && (e.errMsg || e.message));
+      return fail(50001, '服务异常:' + (e && (e.errMsg || e.message) || '写库失败'));
+    }
+    return ok({ nickname: nick });
+  }
+
   const raw = event.avatarFileId;
 
   // null / '' 表示恢复默认

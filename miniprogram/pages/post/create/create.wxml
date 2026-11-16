@@ -144,6 +144,7 @@
       </view>
       <view class="ai-regen-row">
         <view class="ai-regen-btn" bind:tap="onAssistRegen">换个写法</view>
+        <view class="ai-regen-btn ai-crop-btn" bind:tap="onAssistCrop">裁剪图片</view>
         <view class="ai-tag-row" wx:if="{{assistSuggest.tags.length}}">
           <text class="ai-tag" wx:for="{{assistSuggest.tags}}" wx:key="*this">#{{item}}</text>
         </view>
