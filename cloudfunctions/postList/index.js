@@ -43,7 +43,7 @@
   }
 })()
 /* ===== END MEM-INJECT ===== */
-const { cloud, coll, _, COL, decodeCursor, encodeCursor, ms } = require('./lib/db');
+const { cloud, coll, _, COL, db, decodeCursor, encodeCursor, ms } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth, resolveCtx } = require('./lib/auth');
 const { postBrief } = require('./lib/present');
@@ -136,7 +136,17 @@ exports.main = withAuth(async (event, ctx) => {
 
   if (keyword) {
     const tokens = queryTokens(keyword);
-    if (tokens.length) where.searchTokens = _.all(tokens);
+    const multi = tokens.filter((t) => Array.from(t).length > 1);
+    if (multi.length) {
+      where.searchTokens = _.all(multi);
+    } else {
+      // 纯单字关键词（如「包」）：帖子的 searchTokens 只含 2-gram/英文整词，
+      // 单字 token 永远命中不了索引 → 退化为标题/摘要正则匹配（压缩空白后整词匹配）
+      where.$titleRe = db.RegExp({
+        regexp: keyword.replace(/\s+/g, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        options: 'i',
+      });
+    }
   }
 
   if (cursor) {
@@ -144,7 +154,15 @@ exports.main = withAuth(async (event, ctx) => {
     else where.hotScore = _.lt(cursor.h);
   }
 
-  let query = coll(COL.posts).where(where);
+  // $titleRe 占位（单字搜索）：展开成 (title RE 或 excerpt RE) 与其余条件的 or 组合
+  let finalWhere = where;
+  if (where.$titleRe) {
+    const re = where.$titleRe;
+    delete where.$titleRe;
+    finalWhere = _.or([Object.assign({}, where, { title: re }), Object.assign({}, where, { excerpt: re })]);
+  }
+
+  let query = coll(COL.posts).where(finalWhere);
   query = sort === 'latest'
     ? query.orderBy('createdAt', 'desc')
     : query.orderBy('hotScore', 'desc');
