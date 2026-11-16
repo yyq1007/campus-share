@@ -6,7 +6,7 @@
 const { cloud, coll, COL, db, _ } = require('./lib/db');
 const { ok, fail } = require('./lib/resp');
 const { withAuth } = require('./lib/auth');
-const { imgSecCheck } = require('./lib/wxapi');
+const { imgSecCheck, msgSecCheck } = require('./lib/wxapi');
 const { belongsTo, isAvatar, registerMedia, deriveCheckFileId } = require('./lib/mediahelper');
 const { getConfig } = require('./lib/config');
 const rate = require('./lib/rate');
