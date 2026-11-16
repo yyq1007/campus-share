@@ -170,9 +170,10 @@ exports.main = withAuth(async (event, ctx) => {
     : query.orderBy('hotScore', 'desc');
 
   // —— 搜索 + 相关程度排序：拉 50 条候选内存打分（title 命中权重最高），offset 分页 ——
-  // 游标格式 off:N（与信息流的时间/热度游标无关）
-  const offMatch = isSearch && sort !== 'latest' ? /^off:(\d+)$/.exec(String(event.cursor || '')) : null;
-  if (offMatch) {
+  // 游标格式 off:N（与信息流的时间/热度游标无关）。keyword 模式下除 latest 外一律走这里，
+  // 首屏（cursor 为空）也是打分排序——不能只在翻页时打分
+  if (isSearch && sort !== 'latest') {
+    const offMatch = /^off:(\d+)$/.exec(String(event.cursor || ''));
     let cands;
     try {
       cands = await coll(COL.posts).where(finalWhere).orderBy('hotScore', 'desc').limit(50).get();
@@ -192,7 +193,7 @@ exports.main = withAuth(async (event, ctx) => {
       }
       return { p, s };
     }).sort((a, b) => b.s - a.s);
-    const start = Number(offMatch[1]) || 0;
+    const start = offMatch ? Number(offMatch[1]) || 0 : 0;
     const page = scored.slice(start, start + pageSize).map((x) => x.p);
     const inter = await loadInteractions(ctx.uid, page.map((p) => p._id));
     const authors = await resolveAuthors(page.map((p) => p.authorUid));
