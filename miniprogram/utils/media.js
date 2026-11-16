@@ -121,6 +121,48 @@ function fileSize(path) {
   })
 }
 
+// ---------- 本地文件保障（2026-11-16：修复草稿恢复后上传报 file doesn't exist） ----------
+// 临时路径跨会话会失效；草稿恢复还可能把 localPath 换成远程 URL，
+// 而 wx.cloud.uploadFile 只认本地文件 → 上传前统一「落本地」
+const FSM = wx.getFileSystemManager()
+
+function fileExists(path) {
+  return new Promise(resolve => {
+    if (!path || /^(https?|cloud):/i.test(path)) return resolve(false)
+    FSM.access({ path, success: () => resolve(true), fail: () => resolve(false) })
+  })
+}
+
+/** cloud:// 文件 ID → 本地临时文件 */
+function downloadCloudFile(fileId) {
+  return wx.cloud.downloadFile({ fileID: fileId }).then(r => r.tempFilePath)
+}
+
+/** https 图片 → 本地临时文件 */
+function downloadHttpFile(url) {
+  return new Promise((resolve, reject) => {
+    wx.downloadFile({
+      url,
+      success: r => r.statusCode === 200 ? resolve(r.tempFilePath)
+        : reject({ code: -3, msg: '图片下载失败（' + r.statusCode + '）' }),
+      fail: () => reject({ code: -3, msg: '图片下载失败，请检查网络' })
+    })
+  })
+}
+
+/**
+ * 把任意来源的图片引用转成可上传的本地路径：
+ * cloud:// → 云端下载；http(s) → 本地下载；本地路径 → 校验存在
+ * 失效抛 { code:-3, msg:'图片文件已失效…' }，调用方可回退 fileId
+ */
+async function ensureLocalFile(path) {
+  if (!path) throw { code: -3, msg: '图片文件缺失，请删除后重新选择' }
+  if (/^cloud:/i.test(path)) return downloadCloudFile(path)
+  if (/^https?:\/\//i.test(path)) return downloadHttpFile(path)
+  if (await fileExists(path)) return path
+  throw { code: -3, msg: '图片文件已失效，请删除后重新选择' }
+}
+
 function uploadFile(cloudPath, filePath) {
   return new Promise((resolve, reject) => {
     wx.cloud.uploadFile({
@@ -132,10 +174,16 @@ function uploadFile(cloudPath, filePath) {
       },
       fail: err => {
         console.error('[uploadFile]', cloudPath, err)
-        // 把微信侧真实 errMsg 透传出去（如「媒体文件无效」），便于定位是路径失效还是云存储配额/权限问题
+        // 把微信侧真实 errMsg 透传出去，便于定位是路径失效还是云存储配额/权限问题
+        const rawMsg = String(err && err.errMsg || '')
+          .replace(/^(cloud\.)?uploadFile:fail\s*/i, '')
+        // 常见失败翻译成人话（2026-11-16：file doesn't exist = 本地临时文件已失效）
+        const friendly = /file doesn'?t exist/i.test(rawMsg) ? '图片文件已失效，请删除后重新选择'
+          : /exceed/i.test(rawMsg) ? '文件过大'
+          : rawMsg
         reject({
           code: -2,
-          msg: '上传失败：' + String(err && err.errMsg || '').replace(/^cloud\.uploadFile:fail\s*/, ''),
+          msg: '上传失败：' + friendly,
           errMsg: err && err.errMsg,
           raw: err
         })
@@ -144,25 +192,37 @@ function uploadFile(cloudPath, filePath) {
   })
 }
 
+/** 上传前先拿到可用的本地文件：临时路径失效时回退 cloud:// 取回 */
+async function resolveUploadSource(item) {
+  try {
+    return await ensureLocalFile(item.localPath)
+  } catch (e) {
+    if (item.fileId) return downloadCloudFile(item.fileId) // 本地失效但有云端副本 → 取回
+    throw e
+  }
+}
+
 /**
  * 上传一张图片：展示图 + 送审图，返回媒体记录
  * path 规则：p/{yyyyMM}/{uid}/{rand24}.jpg（送审图加 _c 后缀）
  * 压缩产物路径在部分真机可能失效（报「媒体文件无效」）→ 失败自动回退原图路径重传
  */
 async function uploadImage(item, uid, onProgress) {
-  const prep = await prepareImage(item)
+  // 临时路径失效 / 远程 URL → 先落到本地；本地失效且有 fileId → 从云端取回
+  const src = await resolveUploadSource(item)
+  const prep = await prepareImage({ ...item, localPath: src })
   const ym = yyyyMM()
   const base = `p/${ym}/${uid}/${randId(24).toLowerCase()}`
   let fileId, checkFileId
   try {
     fileId = await uploadFile(`${base}.jpg`, prep.display)
   } catch (e) {
-    fileId = await uploadFile(`${base}.jpg`, item.localPath)
+    fileId = await uploadFile(`${base}.jpg`, src)
   }
   try {
     checkFileId = await uploadFile(`${base}_c.jpg`, prep.check)
   } catch (e) {
-    checkFileId = await uploadFile(`${base}_c.jpg`, item.localPath)
+    checkFileId = await uploadFile(`${base}_c.jpg`, src)
   }
   if (onProgress) onProgress(100)
   return {
@@ -176,9 +236,17 @@ async function uploadImage(item, uid, onProgress) {
 async function uploadVideo(item, uid) {
   const ym = yyyyMM()
   const base = `v/${ym}/${uid}/${randId(24).toLowerCase()}`
+  // 视频本体同样先落本地（跨会话恢复的草稿可能拿到失效临时路径）
+  let src
+  try {
+    src = await ensureLocalFile(item.localPath)
+  } catch (e) {
+    if (item.fileId) src = await downloadCloudFile(item.fileId)
+    else throw e
+  }
   let fileId
   try {
-    fileId = await uploadFile(`${base}.mp4`, item.localPath)
+    fileId = await uploadFile(`${base}.mp4`, src)
   } catch (e) {
     console.error('[uploadVideo] 主文件上传失败', e)
     throw e // 视频本体没有回退路径，直接上抛
@@ -187,7 +255,8 @@ async function uploadVideo(item, uid) {
   let posterFileId = ''
   if (item.thumb) {
     try {
-      posterFileId = await uploadFile(`${base}_poster.jpg`, item.thumb)
+      const thumbPath = await ensureLocalFile(item.thumb)
+      posterFileId = await uploadFile(`${base}_poster.jpg`, thumbPath)
     } catch (e) {
       console.error('[uploadVideo] 封面上传失败，跳过', e)
     }
@@ -201,11 +270,12 @@ async function uploadVideo(item, uid) {
 
 /** 头像上传：400×400，路径 avatar/{uid}/{ts}.jpg；压缩产物失效回退原图 */
 async function uploadAvatar(localPath, uid) {
-  const path = await compressImage(localPath, 400, 80)
+  const src = await ensureLocalFile(localPath) // 远程 URL / 失效路径先落本地
+  const path = await compressImage(src, 400, 80)
   try {
     return await uploadFile(`avatar/${uid}/${Date.now()}.jpg`, path)
   } catch (e) {
-    return uploadFile(`avatar/${uid}/${Date.now()}.jpg`, localPath)
+    return uploadFile(`avatar/${uid}/${Date.now()}.jpg`, src)
   }
 }
 
@@ -232,5 +302,6 @@ async function getTempUrls(fileIds) {
 
 module.exports = {
   chooseImages, chooseSingleImage, chooseVideo, prepareImage, uploadImage, uploadVideo,
-  uploadAvatar, uploadFile, getTempUrls, fileSize, compressImage
+  uploadAvatar, uploadFile, getTempUrls, fileSize, compressImage,
+  ensureLocalFile, fileExists
 }

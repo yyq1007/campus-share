@@ -7,7 +7,7 @@ const { toast } = require('../../../utils/cloud')
 const { guard, getUid } = require('../../../utils/auth')
 const { hasAgreed } = require('../../../utils/privacy')
 const { BOARDS, BOARD_KEYS, LIMITS } = require('../../../utils/config')
-const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, uploadFile, getTempUrls } = require('../../../utils/media')
+const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, uploadFile, getTempUrls, fileExists } = require('../../../utils/media')
 const { countChars, clipChars, normalizeText, cleanContent, validLink, randId } = require('../../../utils/format')
 
 const DRAFT_KEY = 'draft_post_'
@@ -245,6 +245,26 @@ Page({
     try { wx.removeStorageSync(key) } catch (e) { /* */ }
     // 跨会话恢复：本地临时路径可能已失效，有 fileId 的图后台换新临时链接
     if (media.some(m => m.fileId)) this._refreshDraftMedia()
+    // 剔除没有云端副本、本地临时文件也已失效的图（否则发布时上传必报 file doesn't exist）
+    this._validateRestoredMedia()
+  },
+
+  /** 恢复草稿后剔除失效图片：无 fileId 且本地临时文件已不存在的条目自动移除 */
+  async _validateRestoredMedia() {
+    const media = this.data.media
+    if (!media.length) return
+    const keep = []
+    let removed = 0
+    for (const m of media) {
+      // 有云端副本 / 已是远程 URL（可下载回本地）→ 保留，上传前会自动落本地
+      if (m.fileId || /^https?:\/\//i.test(m.localPath || '')) { keep.push(m); continue }
+      if (await fileExists(m.localPath)) keep.push(m)
+      else removed++
+    }
+    if (removed) {
+      this.setData({ media: keep, mediaType: keep.length ? this.data.mediaType : 'none' })
+      toast(`有 ${removed} 张图片已失效，自动移除`)
+    }
   },
 
   /** 草稿恢复后的图片链接续命：fileId → 新临时 URL（fire-and-forget） */
@@ -849,7 +869,12 @@ Page({
         }
         out[i] = rec
         done++
-        this.setData({ [`media[${i}].uploaded`]: true, [`media[${i}].progress`]: Math.round(done / media.length * 100) })
+        // fileId 回写页面记录：之后存草稿会带上云端副本，跨会话恢复也能自动取回
+        this.setData({
+          [`media[${i}].uploaded`]: true,
+          [`media[${i}].fileId`]: rec.fileId || '',
+          [`media[${i}].progress`]: Math.round(done / media.length * 100)
+        })
       }
     }
     await Promise.all([worker(), worker()])
