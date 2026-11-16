@@ -211,8 +211,8 @@
     <view wx:if="{{!draftList.length}}" class="draft-empty">暂无草稿，写点内容或拍张照会自动存到这里</view>
     <block wx:else>
       <view
-        wx:for="{{draftList}}" wx:key="board"
-        class="draft-item" data-board="{{item.board}}" bind:tap="onDraftTap"
+        wx:for="{{draftList}}" wx:key="key"
+        class="draft-item" data-key="{{item.key}}" data-board="{{item.board}}" bind:tap="onDraftTap"
       >
         <image wx:if="{{item.thumb}}" class="draft-thumb" src="{{item.thumb}}" mode="aspectFill" />
         <view wx:else class="draft-thumb draft-thumb-empty">无图</view>
@@ -223,7 +223,7 @@
           </view>
           <view class="draft-meta">{{item.count ? item.count + ' 张图 · ' : ''}}{{item.atText}}</view>
         </view>
-        <view class="draft-del" data-board="{{item.board}}" catch:tap="onDraftDel">删除</view>
+        <view class="draft-del" data-key="{{item.key}}" catch:tap="onDraftDel">删除</view>
       </view>
     </block>
     <view class="sheet-cancel" bind:tap="onDraftClose">关闭</view>

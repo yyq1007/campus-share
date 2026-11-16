@@ -11,6 +11,7 @@ const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, 
 const { countChars, clipChars, normalizeText, cleanContent, validLink, randId } = require('../../../utils/format')
 
 const DRAFT_KEY = 'draft_post_'
+const MAX_DRAFTS = 12               // 草稿箱上限（超出淘汰最旧），防存储膨胀
 
 // 拍照即发帖常量（契约见交互稿第五章）
 const ASSIST_TIMEOUT_MS = 22000      // 前端 22s 兜底：实测链路=压缩上传(~6s)+冷启动(0.5s)+视觉模型(~9s)≈15s+，12s 会误杀成功结果（2026-11-15 线上埋点 analyze_fail reason=超时 证实）
@@ -129,7 +130,7 @@ Page({
   },
 
   // ---------- 草稿（按板块完整隔离：文字+图片+AI 元数据一起存取） ----------
-  draftKey(board) { return DRAFT_KEY + (board || this.data.board) },
+  draftKey(id) { return DRAFT_KEY + id },
 
   /** 当前页面状态快照 → 草稿对象 */
   _snapshot() {
@@ -158,20 +159,56 @@ Page({
     }
   },
 
+  /** 追加式保存：每次存一条新草稿，绝不覆盖旧条目（2026-11-16 用户反馈「以前的没存进去」
+      —— 旧实现按板块单槽位覆盖，切板块时把历史草稿冲掉了）。
+      同板块最新一条内容完全相同则跳过，防来回切换产生重复条目。 */
   saveDraft(board) {
     try {
-      // 空状态不落盘、也不清历史草稿：进入页面是空白的，草稿箱里可能存着该板块的内容
+      const b = board || this.data.board
+      // 空状态不落盘
       if (!this.hasDraft() && !this._assistUsed) return
-      wx.setStorageSync(this.draftKey(board), this._snapshot())
+      const snap = this._snapshot()
+      snap.board = b
+      const sig = JSON.stringify([
+        snap.title, snap.content, snap.link, snap.fields,
+        snap.media.map(m => [m.localPath, m.fileId, m.uploaded])
+      ])
+      let keys = []
+      try { keys = wx.getStorageInfoSync().keys || [] } catch (e) { keys = [] }
+      for (const k of keys.filter(k => k.indexOf(DRAFT_KEY) === 0)) {
+        let d = null
+        try { d = wx.getStorageSync(k) } catch (e) { d = null }
+        // 一模一样的内容（同板块）→ 不重复追加
+        if (d && d.sig === sig) return
+      }
+      snap.sig = sig
+      wx.setStorageSync(this.draftKey(randId(12)), snap)
+      // 超上限：按时间淘汰最旧
+      const all = []
+      for (const k of keys.filter(k => k.indexOf(DRAFT_KEY) === 0)) {
+        let d = null
+        try { d = wx.getStorageSync(k) } catch (e) { continue }
+        if (d) all.push({ k, at: d.at || 0 })
+      }
+      if (all.length > MAX_DRAFTS) {
+        all.sort((a, b) => a.at - b.at)
+        for (const old of all.slice(0, all.length - MAX_DRAFTS)) {
+          try { wx.removeStorageSync(old.k) } catch (e) { /* */ }
+        }
+      }
     } catch (e) { /* 存储失败不阻塞 */ }
   },
 
-  restoreDraft(board) {
+  /** 从草稿箱按条目恢复（key = 草稿存储键）：自动切到草稿所属板块；恢复后移除该条目 */
+  restoreDraft(key, fallbackBoard) {
     let d = null
-    try { d = wx.getStorageSync(DRAFT_KEY + board) } catch (e) { /* */ }
+    try { d = wx.getStorageSync(key) } catch (e) { /* */ }
+    let board = (d && d.board) || fallbackBoard
+    if (BOARD_KEYS.indexOf(board) < 0) board = 'life'
+    if (board !== this.data.board) this.switchBoard(board)
     const hasContent = !!(d && (d.title || (d.media && d.media.length)))
     if (!hasContent) {
-      // 目标板块无草稿 → 全清（图片也要清，否则上一个板块的图会跟过来）
+      // 草稿为空/损坏 → 全清（图片也要清，否则上一个板块的图会跟过来）
       this.setData({
         title: '', content: '', link: '', fields: {},
         titleCount: 0, contentCount: 0,
@@ -204,6 +241,8 @@ Page({
       assistState: ai.prefilled ? 'prefilled' : 'idle'
     })
     this._assistUsed = !!ai.used
+    // 条目内容已上页面：从草稿箱移除（下次保存会以新条目回来，不会重复堆积）
+    try { wx.removeStorageSync(key) } catch (e) { /* */ }
     // 跨会话恢复：本地临时路径可能已失效，有 fileId 的图后台换新临时链接
     if (media.some(m => m.fileId)) this._refreshDraftMedia()
   },
@@ -224,11 +263,24 @@ Page({
     } catch (e) { /* 静默，展示失败不影响编辑 */ }
   },
 
+  /** 发布成功：只从草稿箱移除与刚发布内容一致的条目，其余历史草稿保留 */
   clearDraft() {
-    try { wx.removeStorageSync(this.draftKey()) } catch (e) { /* */ }
+    try {
+      const snap = this._snapshot()
+      const sig = JSON.stringify([
+        snap.title, snap.content, snap.link, snap.fields,
+        snap.media.map(m => [m.localPath, m.fileId, m.uploaded])
+      ])
+      const keys = (wx.getStorageInfoSync().keys || []).filter(k => k.indexOf(DRAFT_KEY) === 0)
+      for (const k of keys) {
+        let d = null
+        try { d = wx.getStorageSync(k) } catch (e) { d = null }
+        if (d && d.sig === sig) { try { wx.removeStorageSync(k) } catch (err) { /* */ } }
+      }
+    } catch (e) { /* */ }
   },
 
-  // ---------- 草稿箱（发布按钮旁入口，列出各板块草稿） ----------
+  // ---------- 草稿箱（发布按钮旁入口，追加式条目列表，旧草稿永不覆盖） ----------
   onDraftBox() {
     // 先把当前编辑状态存好再打开，抽屉里的数据才是最新的
     if (!this._submitted) this.saveDraft()
@@ -246,14 +298,20 @@ Page({
     } catch (e) { return [] }
     const out = []
     for (const k of keys) {
-      const board = k.slice(DRAFT_KEY.length)
-      if (BOARD_KEYS.indexOf(board) < 0) continue
       let d = null
       try { d = wx.getStorageSync(k) } catch (e) { continue }
       if (!d) continue
+      // 新格式：草稿对象自带 board；旧格式（按板块键存储）从 key 后缀推断
+      let board = d.board
+      if (BOARD_KEYS.indexOf(board) < 0) {
+        const suffix = k.slice(DRAFT_KEY.length)
+        if (BOARD_KEYS.indexOf(suffix) >= 0) board = suffix
+      }
+      if (!board) continue
       const count = (d.media && d.media.length) || 0
       const thumb = (d.media && d.media.length && d.media[0].localPath) || ''
       out.push({
+        key: k,
         board,
         label: BOARDS[board].label,
         color: BOARDS[board].color,
@@ -268,25 +326,22 @@ Page({
   },
 
   onDraftTap(e) {
-    const board = e.currentTarget.dataset.board
-    if (BOARD_KEYS.indexOf(board) < 0) return
+    const key = e.currentTarget.dataset.key
+    if (!key) return
     this.setData({ draftBoxShow: false })
-    // 打开草稿箱时当前内容已存过快照（onDraftBox），这里放心覆盖
-    if (board !== this.data.board) this.switchBoard(board)
-    this.restoreDraft(board)
+    this.restoreDraft(key, e.currentTarget.dataset.board)
   },
 
   onDraftDel(e) {
-    const board = e.currentTarget.dataset.board
-    if (BOARD_KEYS.indexOf(board) < 0) return
+    const key = e.currentTarget.dataset.key
+    if (!key) return
     wx.showModal({
       title: '删除草稿',
-      content: '确定删除「' + BOARDS[board].label + '」板块的草稿吗？删除后不可恢复。',
+      content: '确定删除这条草稿吗？删除后不可恢复。',
       confirmText: '删除',
       success: res => {
         if (!res.confirm) return
-        try { wx.removeStorageSync(DRAFT_KEY + board) } catch (err) { /* */ }
-        // 只删存储里的草稿，页面上的编辑内容不受影响（新模型下两者相互独立）
+        try { wx.removeStorageSync(key) } catch (err) { /* */ }
         this.setData({ draftList: this._buildDraftList() })
       }
     })
