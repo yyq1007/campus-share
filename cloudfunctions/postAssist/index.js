@@ -19,7 +19,8 @@ const { imgSecCheck } = require('./lib/wxapi');
 const { belongsTo, registerMedia, deriveCheckFileId } = require('./lib/mediahelper');
 
 const BOARDS = ['life', 'study', 'food'];
-const ASSIST_DAILY = 3;          // 每日限用 3 次（含「换个写法」）
+const ASSIST_DAILY = 999;        // 每日限用（含「换个写法」）：放开为 999 次，等于不限（2026-11-16 用户要求）；
+                                 // 仅作防刷保险丝，正常使用永不触发
 const MAX_CHECK_BYTES = 1024 * 1024; // imgSecCheck 上限 1MB
 const TITLE_MAX = 40;
 const CONTENT_MAX = 200;         // 建议 content 上限（低于表单 2000，AI 不写长文）
