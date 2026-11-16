@@ -58,7 +58,8 @@ exports.main = withAuth(async (event) => {
   const type = String(event.type || 'hot');
   const board = String(event.board || '');
 
-  const where = { status: 'published' };
+  // 周报帖（isDigest:true）不参与任何榜单
+  const where = { status: 'published', isDigest: _.neq(true) };
   let orderField = 'popScore';
 
   if (type === 'fresh') {

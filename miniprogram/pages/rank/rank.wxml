@@ -33,8 +33,6 @@
       <view class="rk-item" wx:for="{{list}}" wx:key="id"
             data-id="{{item.id}}" bindtap="onPostTap">
         <view class="rk-no {{item.rank <= 3 ? 'rk-no-' + item.rank : ''}}">{{item.rank}}</view>
-        <image wx:if="{{item.cover}}" class="rk-cover" src="{{item.cover}}" mode="aspectFill" />
-        <view wx:else class="rk-cover rk-cover-ph" />
         <view class="rk-body">
           <view class="rk-title">{{item.title || item.excerpt || '无标题'}}</view>
           <view class="rk-meta">
