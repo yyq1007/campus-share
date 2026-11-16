@@ -61,11 +61,11 @@ Page({
     assistLowConf: false,  // 低置信度黄条
     assistFieldKey: '',    // AI 预填的动态字段 key（✦ 标记用）
     aiMarks: { title: false, content: false, field: false }, // ✦ 字段级来源标记：开始编辑即移除
-    regenUsed: false,      // 「换个写法」限 1 次
     assistPreviewCover: '', // submitted 成功页帖子预览图
     submitStatus: '',       // submitted 成功页状态告知（published/pending）
     draftBoxShow: false,    // 草稿箱抽屉
-    draftList: []           // 草稿箱列表（板块+摘要+图数+时间）
+    draftList: [],          // 草稿箱列表（板块+摘要+图数+时间）
+    cameraShow: false       // 自拍相机浮层（camera 组件：takePhoto 不进系统相册）
   },
 
   onLoad(query) {
@@ -82,9 +82,9 @@ Page({
     this._assistSeq = 0        // 迟到结果丢弃守卫：只有最新一次分析的结果才允许落地
     this._assistFileId = ''    // 本次分析用的已上传 fileId（regen 复用）
     this._assistUsed = false   // 提交时是否带 aiAssist:true
-    this._regenUsed = false
+    this._cameraIntent = ''    // 自拍相机的用途：assist（识图）/ add（加图）
+    // 进入即空白：不自动恢复草稿，需要时从草稿箱取（2026-11-16 用户反馈）
     this.switchBoard(board, { silent: true })
-    this.restoreDraft(board)
   },
 
   onShow() {
@@ -117,12 +117,15 @@ Page({
   onBoardTap(e) {
     const board = e.currentTarget.dataset.key
     if (board === this.data.board) return
-    // 先把当前板块完整快照落盘（文字+图片+AI 标记一起隔离），再恢复目标板块
+    // 先把当前板块完整快照存进草稿箱（随时可找回），再切板块
     this.saveDraft()
+    // 切板块保留当前内容（标题/正文/图片/AI 建议）：点 AI 次选胶囊时
+    // 用户期望「当前内容换个板块」，而不是跳去目标板块的历史草稿
     this.switchBoard(board)
-    this.restoreDraft(board)
-    // 板块建议（assistBoardTop/Runner）与 ✦ 标记不再清除：
-    // 它们随各自板块的草稿存取，切走再切回依然可见（2026-11-16 用户反馈修复）
+    // ✦ 字段标记指向旧板块的字段集（fields 已随 switchBoard 重建为空），同步清掉
+    if (this.data.aiMarks.field) {
+      this.setData({ aiMarks: { ...this.data.aiMarks, field: false }, assistFieldKey: '' })
+    }
   },
 
   // ---------- 草稿（按板块完整隔离：文字+图片+AI 元数据一起存取） ----------
@@ -157,11 +160,8 @@ Page({
 
   saveDraft(board) {
     try {
-      if (!this.hasDraft() && !this._assistUsed) {
-        // 空状态不落盘，顺便清掉该板块的历史草稿
-        try { wx.removeStorageSync(this.draftKey(board)) } catch (e) { /* */ }
-        return
-      }
+      // 空状态不落盘、也不清历史草稿：进入页面是空白的，草稿箱里可能存着该板块的内容
+      if (!this.hasDraft() && !this._assistUsed) return
       wx.setStorageSync(this.draftKey(board), this._snapshot())
     } catch (e) { /* 存储失败不阻塞 */ }
   },
@@ -271,9 +271,8 @@ Page({
     const board = e.currentTarget.dataset.board
     if (BOARD_KEYS.indexOf(board) < 0) return
     this.setData({ draftBoxShow: false })
-    if (board === this.data.board) return // 当前板块的草稿本来就在页面上
-    this.saveDraft()
-    this.switchBoard(board)
+    // 打开草稿箱时当前内容已存过快照（onDraftBox），这里放心覆盖
+    if (board !== this.data.board) this.switchBoard(board)
     this.restoreDraft(board)
   },
 
@@ -287,8 +286,45 @@ Page({
       success: res => {
         if (!res.confirm) return
         try { wx.removeStorageSync(DRAFT_KEY + board) } catch (err) { /* */ }
-        if (board === this.data.board) this.restoreDraft(board) // 删的是当前板块 → 同步清空页面
+        // 只删存储里的草稿，页面上的编辑内容不受影响（新模型下两者相互独立）
         this.setData({ draftList: this._buildDraftList() })
+      }
+    })
+  },
+
+  /** 一键回到空白发布页：标题/正文/字段/图片/AI 状态全清（板块不变）。
+      清空前先把当前内容存进草稿箱，可随时找回。 */
+  onResetAll() {
+    if (this.data.submitting) return
+    if (this.data.assistState === 'analyzing') {
+      // 分析中：作废进行中的 AI 请求再清
+      this._assistSeq++
+    }
+    if (!this.hasDraft() && this.data.assistState !== 'prefilled') return toast('已经是空的啦')
+    wx.showModal({
+      title: '清空重写',
+      content: '当前内容会存入草稿箱，页面恢复空白，确定吗？',
+      confirmText: '清空',
+      success: res => {
+        if (!res.confirm) return
+        this.saveDraft()          // 内容进草稿箱，可找回
+        this._assistSeq++         // 迟到结果作废
+        this.clearAssistTimers()
+        this._assistUsed = false
+        this._assistFileId = ''
+        this.setData({
+          title: '', content: '', link: '',
+          fields: {}, titleCount: 0, contentCount: 0,
+          fieldList: BOARDS[this.data.board].fields.map(f => ({ ...f, value: '' })),
+          media: [], mediaType: 'none',
+          assistState: 'idle', assistPhoto: '', assistSuggest: null,
+          assistBoardTop: '', assistBoardConf: 0,
+          assistBoardRunner: '', assistBoardConf2: 0,
+          assistLowConf: false, assistFieldKey: '',
+          aiMarks: { title: false, content: false, field: false }
+        })
+        this.logAssist('reset_all')
+        toast('已恢复空白，内容在草稿箱里')
       }
     })
   },
@@ -382,17 +418,38 @@ Page({
     }
     const remain = LIMITS.maxImages - this.data.media.length
     if (remain <= 0) return toast(`最多 ${LIMITS.maxImages} 张图`)
-    try {
-      const items = await chooseImages(remain)
-      const media = this.data.media.concat(items.map(it => ({
-        // 本地唯一 id：用作 wx:key。删除中间项后 index 会前移，
-        // 用 index 当 key 会漂移（复用错位），用稳定 id 才安全。
-        lid: randId(8),
-        type: 'image', localPath: it.localPath, size: it.size, w: it.w, h: it.h,
-        uploaded: false, fileId: '', progress: 0
-      })))
-      this.setData({ media, mediaType: 'image' })
-    } catch (e) { /* 用户取消 */ }
+    const tap = await new Promise(resolve => {
+      wx.showActionSheet({
+        // 拍照走 camera 组件（不进系统相册）；chooseMedia 的拍照会强制存相册
+        itemList: ['拍摄（不进相册）', '从相册选择'],
+        success: res => resolve(res.tapIndex),
+        fail: () => resolve(-1)
+      })
+    })
+    if (tap === 0) {
+      this._cameraIntent = 'add'
+      return this.setData({ cameraShow: true })
+    }
+    if (tap === 1) {
+      try {
+        const items = await chooseImages(remain)
+        this._appendImages(items)
+      } catch (e) { /* 用户取消 */ }
+    }
+    /* 用户取消 */
+  },
+
+  /** 批量追加图片到 media（lid 用作 wx:key，删除中间项后 index 漂移会复用错位） */
+  _appendImages(items) {
+    const remain = LIMITS.maxImages - this.data.media.length
+    if (remain <= 0) return toast(`最多 ${LIMITS.maxImages} 张图`)
+    const add = (items || []).slice(0, remain).map(it => ({
+      lid: randId(8),
+      type: 'image', localPath: it.localPath, size: it.size, w: it.w, h: it.h,
+      uploaded: false, fileId: '', progress: 0
+    }))
+    if (!add.length) return
+    this.setData({ media: this.data.media.concat(add), mediaType: 'image' })
   },
 
   async onAddVideo() {
@@ -459,18 +516,28 @@ Page({
       toast(`最多 ${LIMITS.maxImages} 张图`)
       return this.setData({ assistState: 'idle' })
     }
+    if (sourceType === 'camera') {
+      // wx.chooseMedia 拍照会强制存入系统相册（平台行为，无参数可关）；
+      // 自拍相机用 camera 组件 takePhoto，只出临时文件不落相册
+      this._cameraIntent = 'assist'
+      return this.setData({ cameraShow: true })
+    }
     let item
     try {
-      item = await chooseSingleImage(sourceType)
+      item = await chooseSingleImage('album')
     } catch (e) {
       // 用户取消选图：回到 idle（半屏已关），无任何副作用
-      if (e && /cancel/i.test(e.errMsg || '')) return this.setData({ assistState: 'idle' })
       return this.setData({ assistState: 'idle' })
     }
+    this._assistProceed(item)
+  },
+
+  /** 拿到照片（相册选或自拍）→ 进入分析流程 */
+  _assistProceed(item) {
     // 照片先挂进 media 数组（fail 降级时原位保留，提交时统一走 uploadAllMedia）
     const rec = {
       lid: randId(8), type: 'image',
-      localPath: item.localPath, size: item.size, w: item.w, h: item.h,
+      localPath: item.localPath, size: item.size || 0, w: item.w || 0, h: item.h || 0,
       uploaded: false, fileId: '', progress: 0
     }
     const media = this.data.media.concat([rec])
@@ -482,6 +549,61 @@ Page({
     })
     this.startAssistAnim()
     this.runAssist(rec, media.length - 1)
+  },
+
+  // ---------- 自拍相机浮层（camera 组件：takePhoto 不进系统相册） ----------
+  onCameraClose() {
+    // 拍照取消：识图流程回 idle（半屏选图已关）
+    if (this._cameraIntent === 'assist') this.setData({ cameraShow: false, assistState: 'idle' })
+    else this.setData({ cameraShow: false })
+  },
+
+  onCameraError() {
+    this.setData({ cameraShow: false, assistState: 'idle' })
+    wx.showModal({
+      title: '相机不可用',
+      content: '需要使用相机拍照，请在设置中开启权限后重试',
+      confirmText: '去设置',
+      success: res => { if (res.confirm) wx.openSetting({}) }
+    })
+  },
+
+  async onShutter() {
+    if (this._shooting) return
+    this._shooting = true
+    try {
+      const res = await new Promise((resolve, reject) => {
+        wx.createCameraContext().takePhoto({ quality: 'high', success: resolve, fail: reject })
+      })
+      this.setData({ cameraShow: false })
+      // takePhoto 只给临时路径：补齐 size/w/h，与 chooseMedia 返回结构对齐
+      const item = await this._photoRecord(res.tempImagePath)
+      if (this._cameraIntent === 'assist') {
+        this._assistProceed(item)
+      } else {
+        this._appendImages([item])
+      }
+    } catch (e) {
+      toast('没拍到，再试一次')
+    } finally {
+      this._shooting = false
+    }
+  },
+
+  _photoRecord(path) {
+    return new Promise(resolve => {
+      wx.getImageInfo({
+        src: path,
+        success: info => {
+          wx.getFileInfo({
+            filePath: path,
+            success: f => resolve({ type: 'image', localPath: path, size: f.size, w: info.width, h: info.height }),
+            fail: () => resolve({ type: 'image', localPath: path, size: 0, w: info.width, h: info.height })
+          })
+        },
+        fail: () => resolve({ type: 'image', localPath: path, size: 0, w: 0, h: 0 })
+      })
+    })
   },
 
   // ---------- 屏 03 · AI 分析中（扫描光 + 文案轮换 + 12s 兜底） ----------
@@ -617,13 +739,13 @@ Page({
     wx.navigateTo({ url: '/pages/me/posts/posts?tab=pending' })
   },
 
-  /** 「换个写法」：仅标题与正文重新生成，限 1 次；用户改过的字段不被覆盖 */
+  /** 「换个写法」：仅标题与正文重新生成，可反复换（总量受服务端每日频控约束）；
+      用户改过的字段不被覆盖（canFill：只覆盖仍带 ✦ 的 AI 字段） */
   async onAssistRegen() {
-    if (this._regenUsed || this.data.assistState !== 'prefilled') return
+    if (this.data.assistState !== 'prefilled') return
     if (!this._assistFileId) return toast('照片还没上传成功，先手动改一改吧')
-    this._regenUsed = true
     this.logAssist('regen_click')
-    this.setData({ regenUsed: true, assistState: 'analyzing', assistPhaseText: ASSIST_PHASES[1] })
+    this.setData({ assistState: 'analyzing', assistPhaseText: ASSIST_PHASES[1] })
     this.startAssistAnim()
     // 复用已上传的 fileId，不再重传
     const mySeq = ++this._assistSeq

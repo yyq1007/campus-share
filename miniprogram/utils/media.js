@@ -5,12 +5,14 @@
 const { randId } = require('./format')
 const LIMITS = require('./config').LIMITS
 
-function chooseImages(remain) {
+function chooseImages(remain, sourceType) {
   return new Promise((resolve, reject) => {
     wx.chooseMedia({
       count: Math.max(1, remain),
       mediaType: ['image'],
-      sourceType: ['album', 'camera'],
+      // 默认只从相册选：chooseMedia 的拍照会强制存入系统相册（平台行为），
+      // 需要拍照的入口一律走页面内 camera 组件 takePhoto（只出临时文件）
+      sourceType: sourceType || ['album'],
       sizeType: ['compressed'],
       camera: 'back',
       success: res => {

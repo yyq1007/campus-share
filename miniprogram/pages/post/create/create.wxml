@@ -8,6 +8,7 @@
       <view class="nav-pill" bind:tap="onBack">取消</view>
       <view class="nav-pill nav-pill-primary" bind:tap="onSubmit">{{submitting ? '发布中…' : '发布'}}</view>
       <view class="nav-pill nav-draft" bind:tap="onDraftBox">草稿箱</view>
+      <view class="nav-pill nav-draft" bind:tap="onResetAll">清空</view>
     </view>
   </view>
 
@@ -142,9 +143,7 @@
         </view>
       </view>
       <view class="ai-regen-row">
-        <view class="ai-regen-btn {{regenUsed ? 'is-disabled' : ''}}" bind:tap="onAssistRegen">
-          {{regenUsed ? '已换过一次' : '换个写法'}}
-        </view>
+        <view class="ai-regen-btn" bind:tap="onAssistRegen">换个写法</view>
         <view class="ai-tag-row" wx:if="{{assistSuggest.tags.length}}">
           <text class="ai-tag" wx:for="{{assistSuggest.tags}}" wx:key="*this">#{{item}}</text>
         </view>
@@ -228,6 +227,19 @@
       </view>
     </block>
     <view class="sheet-cancel" bind:tap="onDraftClose">关闭</view>
+  </view>
+</view>
+
+<!-- 自拍相机浮层（camera 组件 takePhoto：照片只出临时文件，不保存到系统相册） -->
+<view wx:if="{{cameraShow}}" class="cam-mask">
+  <camera class="cam-view" device-position="back" flash="off" binderror="onCameraError" />
+  <view class="cam-tip">拍摄的照片不会保存到手机相册</view>
+  <view class="cam-foot">
+    <view class="cam-ghost" bind:tap="onCameraClose">取消</view>
+    <view class="cam-shutter" bind:tap="onShutter">
+      <view class="cam-shutter-core" />
+    </view>
+    <view class="cam-ghost cam-ghost-holder" />
   </view>
 </view>
 
