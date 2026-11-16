@@ -163,6 +163,47 @@ async function ensureLocalFile(path) {
   throw { code: -3, msg: '图片文件已失效，请删除后重新选择' }
 }
 
+// ---------- 草稿媒体持久化（2026-11-16 用户反馈「旧草稿的图用不了」） ----------
+// 临时文件（wxfile://tmp_*）跨会话必失效 → 存草稿时复制一份到 USER_DATA_PATH
+// （该目录随小程序存续，不被临时清理），恢复时优先用持久副本
+const DRAFT_MEDIA_DIR = `${wx.env.USER_DATA_PATH}/draft_media`
+
+function ensureDraftDir() {
+  try { FSM.mkdir({ dirPath: DRAFT_MEDIA_DIR, recursive: true }) } catch (e) { /* 已存在或失败 */ }
+}
+
+/** 草稿媒体条目 → 持久副本路径；已持久化原样返回、远程 URL 返回 ''、复制失败返回 '' */
+function persistDraftMedia(m) {
+  return new Promise(resolve => {
+    if (!m) return resolve('')
+    if (m.persistPath) return resolve(m.persistPath) // 已有持久副本，不重复拷贝
+    const src = m.localPath
+    if (!src || /^https?:|^cloud:/i.test(src)) return resolve('')
+    ensureDraftDir()
+    const dest = `${DRAFT_MEDIA_DIR}/d${randId(16)}${m.type === 'video' ? '.mp4' : '.jpg'}`
+    FSM.copyFile({ srcPath: src, destPath: dest, success: () => resolve(dest), fail: () => resolve('') })
+  })
+}
+
+/** 恢复草稿：原临时路径失效但持久副本仍在 → 换用持久路径，图片照常可用 */
+function reviveDraftMedia(media) {
+  for (const m of media || []) {
+    if (!m || !m.persistPath) continue
+    if (!m.localPath) { m.localPath = m.persistPath; continue }
+    try { FSM.accessSync(m.localPath) } catch (e) { m.localPath = m.persistPath }
+  }
+  return media
+}
+
+/** 删除持久副本（草稿删除/淘汰/发布成功时调用，防 USER_DATA_PATH 膨胀） */
+function removeDraftMedia(media) {
+  for (const m of media || []) {
+    if (m && m.persistPath && m.persistPath.indexOf(DRAFT_MEDIA_DIR) === 0) {
+      try { FSM.unlink({ filePath: m.persistPath }) } catch (e) { /* */ }
+    }
+  }
+}
+
 function uploadFile(cloudPath, filePath) {
   return new Promise((resolve, reject) => {
     wx.cloud.uploadFile({
@@ -303,5 +344,5 @@ async function getTempUrls(fileIds) {
 module.exports = {
   chooseImages, chooseSingleImage, chooseVideo, prepareImage, uploadImage, uploadVideo,
   uploadAvatar, uploadFile, getTempUrls, fileSize, compressImage,
-  ensureLocalFile, fileExists
+  ensureLocalFile, fileExists, persistDraftMedia, reviveDraftMedia, removeDraftMedia
 }

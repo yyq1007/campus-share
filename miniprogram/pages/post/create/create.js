@@ -7,7 +7,7 @@ const { toast } = require('../../../utils/cloud')
 const { guard, getUid } = require('../../../utils/auth')
 const { hasAgreed } = require('../../../utils/privacy')
 const { BOARDS, BOARD_KEYS, LIMITS } = require('../../../utils/config')
-const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, uploadFile, getTempUrls, fileExists } = require('../../../utils/media')
+const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, uploadFile, getTempUrls, fileExists, persistDraftMedia, reviveDraftMedia, removeDraftMedia } = require('../../../utils/media')
 const { countChars, clipChars, normalizeText, cleanContent, validLink, randId } = require('../../../utils/format')
 
 const DRAFT_KEY = 'draft_post_'
@@ -141,7 +141,8 @@ Page({
       fields: this.data.fields,
       media: this.data.media.map(m => ({
         lid: m.lid, type: m.type, localPath: m.localPath, size: m.size,
-        w: m.w, h: m.h, uploaded: m.uploaded, fileId: m.fileId
+        w: m.w, h: m.h, uploaded: m.uploaded, fileId: m.fileId,
+        persistPath: m.persistPath || ''   // USER_DATA_PATH 持久副本（跨会话存活）
       })),
       // AI 元数据：✦ 标记、板块建议、低置信黄条随草稿走，切板块不丢
       ai: {
@@ -161,13 +162,18 @@ Page({
 
   /** 追加式保存：每次存一条新草稿，绝不覆盖旧条目（2026-11-16 用户反馈「以前的没存进去」
       —— 旧实现按板块单槽位覆盖，切板块时把历史草稿冲掉了）。
-      同板块最新一条内容完全相同则跳过，防来回切换产生重复条目。 */
-  saveDraft(board) {
+      同板块最新一条内容完全相同则跳过，防来回切换产生重复条目。
+      存草稿前先把图片复制到 USER_DATA_PATH 持久目录：临时文件跨会话失效，
+      旧草稿的图因此始终可用（2026-11-16 用户反馈「旧草稿的图用不了」）。 */
+  async saveDraft(board) {
     try {
       const b = board || this.data.board
       // 空状态不落盘
       if (!this.hasDraft() && !this._assistUsed) return
       const snap = this._snapshot()
+      // 图片/视频先持久化（快照先取，避免 await 期间页面状态变化导致错位）
+      const paths = await Promise.all(snap.media.map(persistDraftMedia))
+      snap.media = snap.media.map((m, i) => ({ ...m, persistPath: paths[i] || '' }))
       snap.board = b
       const sig = JSON.stringify([
         snap.title, snap.content, snap.link, snap.fields,
@@ -193,6 +199,9 @@ Page({
       if (all.length > MAX_DRAFTS) {
         all.sort((a, b) => a.at - b.at)
         for (const old of all.slice(0, all.length - MAX_DRAFTS)) {
+          let od = null
+          try { od = wx.getStorageSync(old.k) } catch (e) { od = null }
+          if (od) removeDraftMedia(od.media) // 淘汰条目连持久副本一起清
           try { wx.removeStorageSync(old.k) } catch (e) { /* */ }
         }
       }
@@ -222,7 +231,8 @@ Page({
       return
     }
     const fieldList = BOARDS[board].fields.map(f => ({ ...f, value: (d.fields && d.fields[f.key]) || '' }))
-    const media = (d.media || []).map(m => ({ ...m, progress: m.uploaded ? 100 : 0 }))
+    // 原临时路径失效但存草稿时留了持久副本 → 换用持久路径，图片照常可用
+    const media = reviveDraftMedia((d.media || []).map(m => ({ ...m, progress: m.uploaded ? 100 : 0 })))
     const ai = d.ai || {}
     this.setData({
       title: d.title || '', content: d.content || '',
@@ -295,7 +305,12 @@ Page({
       for (const k of keys) {
         let d = null
         try { d = wx.getStorageSync(k) } catch (e) { d = null }
-        if (d && d.sig === sig) { try { wx.removeStorageSync(k) } catch (err) { /* */ } }
+        if (d && d.sig === sig) {
+          // 发布成功：持久副本一并清掉。延迟删除——恢复草稿时 localPath 可能
+          // 已换用持久副本文件，成功页预览还引用着它，立即删会闪黑图
+          setTimeout(() => removeDraftMedia(d.media), 6000)
+          try { wx.removeStorageSync(k) } catch (err) { /* */ }
+        }
       }
     } catch (e) { /* */ }
   },
@@ -361,6 +376,9 @@ Page({
       confirmText: '删除',
       success: res => {
         if (!res.confirm) return
+        let d = null
+        try { d = wx.getStorageSync(key) } catch (err) { d = null }
+        if (d) removeDraftMedia(d.media) // 删除草稿连持久副本一起清
         try { wx.removeStorageSync(key) } catch (err) { /* */ }
         this.setData({ draftList: this._buildDraftList() })
       }
