@@ -6,6 +6,7 @@ const { CATEGORY_STICKERS } = require('../../utils/config')
 const { collectPatches, patchPost } = require('../../utils/post-sync')
 const { writePatch, gcPatches } = require('../../utils/feed-patch')
 const { syncTabBarLock } = require('../../utils/privacy')
+const { getMyAvatarUrl } = require('../../utils/my-avatar')
 
 
 Page({
@@ -96,6 +97,9 @@ Page({
     // 首页信息流不再放周报卡（board='all' 时往期周报也会混进流里占位）：
     // 周报统一从 AI 引导卡下方的入口进，详情页内含往期周报
     const rows = (res.list || []).filter(x => !x.isDigest)
+    // 本人发的帖显示自己设置的头像（他人仍匿名糖果色，2026-11-16 用户反馈）
+    const myAvatarUrl = await getMyAvatarUrl()
+    if (myAvatarUrl) rows.forEach(x => { if (x.isMine) x.myAvatarUrl = myAvatarUrl })
     const list = reset ? rows : this.data.list.concat(rows)
     this.setData({
       list,

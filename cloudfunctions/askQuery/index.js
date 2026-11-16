@@ -107,35 +107,95 @@ exports.main = async (event) => {
   }
 }
 
-/** 站内检索：2-gram 命中计数排序（MVP 用 token 检索替代向量，P90 可控） */
+/** 站内检索：2-gram 命中计数排序（MVP 用 token 检索替代向量，P90 可控）
+ *  2026-11-16 增强：宽泛词（「推荐」「书籍」「美食」）字面在帖子里不存在 →
+ *  以前零命中直接引导发帖，被用户吐槽「一问三不知」。现在三级降级：
+ *  ① 2-gram 直查 → ② 同义词扩展 grams 再查 → ③ 板块/热门兜底（按 hotScore 取站内热帖）。
+ *  同时放宽阈值：直查全被阈值滤掉但仍有弱命中时，取弱命中 top N（模型会自行说明信息不足）。 */
+const SYNONYM_GROUPS = [
+  { // 学习/书籍/资料（grams 必须 2 字：searchTokens 只索引中文 2-gram）
+    re: /(书籍|书本|教材|资料|真题|考研|期末|复习|图书馆|自习|学习|课程|英语|单词|笔记)/,
+    grams: ['真题', '考研', '资料', '图书', '自习', '复习', '英语', '笔记', '课程', '期末', '单词', '学霸'],
+    board: 'study'
+  },
+  { // 美食/吃的
+    re: /(美食|吃的|好吃|食堂|餐饮|外卖|奶茶|小吃|吃饭|早餐|午餐|晚餐|宵夜|面馆|咖啡)/,
+    grams: ['食堂', '麻辣', '牛肉', '面条', '奶茶', '外卖', '好吃', '窗口', '咖啡', '酸辣', '汤粉', '鸡排'],
+    board: 'food'
+  },
+  { // 好物/生活/推荐（宽泛）
+    re: /(好物|好用|推荐|必备|宿舍|生活|收纳|神器|平价|性价比|开箱)/,
+    grams: ['宿舍', '收纳', '好物', '鼠标', '键盘', '桌面', '洗衣', '单车', '拼豆', '床品', '神器', '平价'],
+    board: 'life'
+  }
+]
+
+/** 板块兜底：按 hotScore 取该板块热帖（无人赞藏的帖不上榜） */
+async function boardFallback(db, board, limit) {
+  const BOARD_LABEL = { life: '生活', study: '学习', food: '美食' }
+  try {
+    const res = await db.collection('posts')
+      .where({ status: 'published', board, popScore: _.gt(0) })
+      .orderBy('hotScore', 'desc')
+      .limit(limit)
+      .get()
+    return (res.data || []).map((p) => ({
+      id: p._id,
+      title: p.title,
+      board: p.board,
+      boardLabel: BOARD_LABEL[p.board] || p.board,
+      content: p.content,
+      coverFileId: p.media && p.media[0] ? (p.media[0].type === 'image' ? p.media[0].fileId : p.media[0].posterFileId) : ''
+    }))
+  } catch (e) {
+    console.error('[askQuery] boardFallback', e && e.message)
+    return []
+  }
+}
+
+/** 全站热门兜底（宽泛问题最后一级） */
+async function hotFallback(db, limit) {
+  try {
+    const res = await db.collection('posts')
+      .where({ status: 'published', popScore: _.gt(0) })
+      .orderBy('hotScore', 'desc')
+      .limit(limit)
+      .get()
+    const BOARD_LABEL = { life: '生活', study: '学习', food: '美食' }
+    return (res.data || []).map((p) => ({
+      id: p._id,
+      title: p.title,
+      board: p.board,
+      boardLabel: BOARD_LABEL[p.board] || p.board,
+      content: p.content,
+      coverFileId: p.media && p.media[0] ? (p.media[0].type === 'image' ? p.media[0].fileId : p.media[0].posterFileId) : ''
+    }))
+  } catch (e) {
+    console.error('[askQuery] hotFallback', e && e.message)
+    return []
+  }
+}
+
 async function searchPosts(db, q, limit) {
   const BOARD_LABEL = { life: '生活', study: '学习', food: '美食' }
-  const t = q.replace(/\s+/g, '')
-  const grams = new Set()
-  for (let i = 0; i < t.length - 1; i++) grams.add(t.slice(i, i + 2))
-  const keys = [...grams].slice(0, 12)
-  if (!keys.length) return []
 
-  const res = await db.collection('posts')
-    .where({ status: 'published', searchTokens: _.in(keys) })
-    .limit(50)
-    .get()
-  // 计分：token 命中数 + 标题命中加成；再做相关性阈值过滤，
-  // 避免长问题里常见 2-gram 误命中一堆无关帖（「问答不匹配」）
-  const scored = res.data.map(p => {
-    const hay = (p.title + p.content).toLowerCase()
-    let score = 0
-    for (const g of keys) if (hay.includes(g)) score++
-    if ((p.title || '').toLowerCase().includes(t)) score += 3
-    return { p, score }
-  }).filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score)
+  const gramQuery = async (keys) => {
+    const res = await db.collection('posts')
+      .where({ status: 'published', searchTokens: _.in(keys) })
+      .limit(50)
+      .get()
+    const scored = res.data.map(p => {
+      const hay = (p.title + p.content).toLowerCase()
+      let score = 0
+      for (const g of keys) if (hay.includes(g)) score++
+      if ((p.title || '').toLowerCase().includes(q.replace(/\s+/g, ''))) score += 3
+      return { p, score }
+    }).filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+    return scored
+  }
 
-  const max = scored.length ? scored[0].score : 0
-  const minScore = Math.max(2, Math.ceil(max * 0.35))
-  return scored.filter(x => x.score >= minScore)
-    .slice(0, limit)
-    .map(({ p }) => ({
+  const toCands = (scored, n) => scored.slice(0, n).map(({ p }) => ({
     id: p._id,
     title: p.title,
     board: p.board,
@@ -143,4 +203,39 @@ async function searchPosts(db, q, limit) {
     content: p.content,
     coverFileId: p.media && p.media[0] ? (p.media[0].type === 'image' ? p.media[0].fileId : p.media[0].posterFileId) : ''
   }))
+
+  const t = q.replace(/\s+/g, '')
+  const grams = new Set()
+  for (let i = 0; i < t.length - 1; i++) grams.add(t.slice(i, i + 2))
+  const keys = [...grams].slice(0, 12)
+
+  // ① 直查
+  if (keys.length) {
+    const scored = await gramQuery(keys)
+    if (scored.length) {
+      const max = scored[0].score
+      const minScore = Math.max(2, Math.ceil(max * 0.35))
+      const strong = scored.filter(x => x.score >= minScore)
+      // 放宽：强命中为空但仍有弱命中 → 取弱命中（模型自行说明信息不足，好过「不知道」）
+      return toCands(strong.length ? strong : scored, limit)
+    }
+  }
+
+  // ② 同义词扩展再查（「书籍」→ 真题/考研/图书…）
+  const group = SYNONYM_GROUPS.find(g => g.re.test(q))
+  if (group) {
+    const scored = await gramQuery(group.grams.slice(0, 12))
+    if (scored.length) return toCands(scored, limit)
+    // ③ 板块兜底：该板块热帖
+    const fb = await boardFallback(db, group.board, limit)
+    if (fb.length) return fb
+  }
+
+  // ④ 全站热门兜底：宽泛问题（如「推荐」「有什么好吃的」）至少给出站内热帖
+  if (charLen(q) <= 12) {
+    const hot = await hotFallback(db, limit)
+    if (hot.length) return hot
+  }
+
+  return []
 }

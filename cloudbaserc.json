@@ -338,6 +338,18 @@
         "WX_ENV_VERSION": "release"
       },
       "description": "校园分享 · 小程序码生成"
+    },
+    {
+      "name": "rankList",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      },
+      "description": "校园分享 · 榜单（热度榜/新秀榜/板块榜）"
     }
   ]
 }

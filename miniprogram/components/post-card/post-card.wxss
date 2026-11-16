@@ -33,6 +33,14 @@
   font-weight: 500;
   color: var(--text-on-brand);
 }
+/* 本人头像（post.myAvatarUrl 有值时渲染）：尺寸与糖果色头像一致 */
+.pc-avatar-img {
+  width: 72rpx;
+  height: 72rpx;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--bg-field);
+}
 .av-1 { background: var(--avatar-1); }
 .av-2 { background: var(--avatar-2); }
 .av-3 { background: var(--avatar-3); }

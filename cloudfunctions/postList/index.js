@@ -135,6 +135,8 @@ exports.main = withAuth(async (event, ctx) => {
     if (!p.expired && p.publishedAt && Date.now() - ms(p.publishedAt) > expireDays * 86400000) {
       brief.expired = true;
     }
+    // 本人发的帖（2026-11-16：前端据此展示用户自己设置的头像，他人仍看匿名糖果色）
+    brief.isMine = p.authorUid === ctx.uid;
     return brief;
   });
 

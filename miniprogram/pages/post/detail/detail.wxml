@@ -32,9 +32,10 @@
   <block wx:elif="{{post}}">
     <!-- 正文卡（排版同信息流：作者行 → 标题 → 正文 → 图集 → 字段） -->
     <view class="detail-card">
-      <!-- 作者行：匿名糖果色头像 + 昵称/时间 + 板块胶囊（周报是系统发布，没有作者，直接显示标题） -->
+      <!-- 作者行：本人显示自己设置的头像（仅自己可见），他人一律匿名糖果色 -->
       <view wx:if="{{!post.isDigest}}" class="author-row">
-        <view class="avatar avatar-{{post.avatarIdx}}">匿</view>
+        <image wx:if="{{post.isMine && myAvatarUrl}}" class="avatar avatar-img" src="{{myAvatarUrl}}" mode="aspectFill" />
+        <view wx:else class="avatar avatar-{{post.avatarIdx}}">匿</view>
         <view class="author-main">
           <view class="author-name">匿名同学</view>
           <view class="author-sub">{{post.timeText}}</view>
@@ -71,7 +72,7 @@
         <block wx:if="{{post.mediaView.length === 1}}">
           <image
             wx:if="{{post.mediaView[0].type === 'image'}}"
-            class="gallery-img solo" src="{{post.mediaView[0].url}}" mode="widthFix"
+            class="gallery-img solo" src="{{post.mediaView[0].url}}" mode="aspectFill"
             data-idx="{{0}}" bind:tap="onPreview"
           />
           <video wx:else class="gallery-video" src="{{post.mediaView[0].url}}" poster="{{post.mediaView[0].poster}}" object-fit="contain" controls />

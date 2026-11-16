@@ -141,8 +141,13 @@
   height: 420rpx;
   border-radius: 32rpx;
 }
-/* 单图：宽度撑满、高度随原图比例，不再裁切 */
-.gallery-img.solo { display: block; height: auto; }
+/* 单图：固定高度居中裁切展示（2026-11-16 用户反馈竖拍长图占满整屏像被拉长），
+   点图可进 wx.previewImage 看完整原图 */
+.gallery-img.solo {
+  display: block;
+  height: 560rpx;
+  max-height: 60vh;
+}
 .gallery-video {
   width: 100%;
   height: 420rpx;
@@ -249,6 +254,8 @@
   border-radius: 50%;
 }
 .avatar-1 { background: var(--avatar-1); }
+/* 本人头像（isMine 时渲染），尺寸对齐糖果色头像 */
+.avatar-img { background: var(--bg-field); }
 .avatar-2 { background: var(--avatar-2); }
 .avatar-3 { background: var(--avatar-3); }
 .avatar-4 { background: var(--avatar-4); }

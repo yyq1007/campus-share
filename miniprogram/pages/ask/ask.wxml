@@ -64,6 +64,10 @@
         maxlength="100" bindinput="onInput" bindconfirm="onSend"
         bindkeyboardheightchange="onKbHeight" bindfocus="onKbShow" bindblur="onKbHide"
       />
+      <!-- 发送按钮（2026-11-16 用户反馈：输入框右侧空白、缺发送入口） -->
+      <view class="send-btn {{question ? 'is-on' : ''}}" bind:tap="onSend">
+        <text class="send-arrow">↑</text>
+      </view>
     </view>
   </view>
   <view class="aigc-tip">内容由 AI 生成，仅供参考</view>

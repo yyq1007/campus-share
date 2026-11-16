@@ -4,6 +4,7 @@ const { toast } = require('../../../utils/cloud')
 const { guard } = require('../../../utils/auth')
 const { BOARDS } = require('../../../utils/config')
 const { timeAgo, countShort, linkHost, randId, avatarIndex } = require('../../../utils/format')
+const { getMyAvatarUrl } = require('../../../utils/my-avatar')
 const { getTempUrls } = require('../../../utils/media')
 const { patchPost } = require('../../../utils/post-sync')
 const { entryOf, applyPage, merged } = require('../../../utils/comment-cache')
@@ -127,6 +128,10 @@ Page({
         post.digestBlocks = splitDigestBody(post.content, post.digestItems)
       }
       this.setData({ post, state: 'success' })
+      // 本人发的帖：作者头像换成自己设置的（他人仍匿名糖果色，2026-11-16 用户反馈）
+      if (post.isMine) {
+        getMyAvatarUrl().then(url => { if (url) this.setData({ myAvatarUrl: url }) })
+      }
       this.renderComments()
     } catch (e) {
       // ⚠️ silent 错误 = 正在跳转邀请码页/登录态刷新，不该把页面打成 error 态

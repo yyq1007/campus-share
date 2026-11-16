@@ -11,8 +11,9 @@
 <!-- 普通帖子卡（信息流样式：头像+昵称/时间 → 正文 → 图片 → 话题 → 赞/评论/收藏） -->
 <view wx:else class="pc card" bindtap="onTap">
   <view class="pc-head">
-    <!-- 匿名糖果色头像（按帖子 id 取色，不泄露作者） -->
-    <view class="pc-avatar av-{{avatarIdx}}">匿</view>
+    <!-- 头像：本人帖子显示自己设置的头像（仅自己可见），他人一律匿名糖果色 -->
+    <image wx:if="{{post.myAvatarUrl}}" class="pc-avatar-img" src="{{post.myAvatarUrl}}" mode="aspectFill" />
+    <view wx:else class="pc-avatar av-{{avatarIdx}}">匿</view>
     <view class="pc-main">
       <view class="pc-name-row">
         <text class="pc-name">匿名同学</text>
@@ -35,9 +36,9 @@
         </view>
       </view>
 
-      <!-- 话题（板块）：描边小胶囊 -->
+      <!-- 话题（板块）：描边小胶囊（2026-11-16 移除贴纸图标：白色贴纸在白卡上不可见，
+           只剩图标占位 → 胶囊前半截空白、文字靠后） -->
       <view wx:if="{{showBoard && boardLabel}}" class="pc-topic">
-        <icon name="{{boardSticker}}" size="26" />
         <text class="pc-topic-text">{{boardLabel}}</text>
       </view>
     </view>

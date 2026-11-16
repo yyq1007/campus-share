@@ -11,7 +11,9 @@ const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, 
 const { countChars, clipChars, normalizeText, cleanContent, validLink, randId } = require('../../../utils/format')
 
 const DRAFT_KEY = 'draft_post_'
-const MAX_DRAFTS = 12               // 草稿箱上限（超出淘汰最旧），防存储膨胀
+const DRAFT_WARN_KEY = 'draft_box_warned' // 「接近上限」提醒标记（只提醒一次，淘汰后重置）
+const MAX_DRAFTS = 30               // 草稿箱上限（超出淘汰最旧），防存储膨胀
+const DRAFT_WARN_AT = 25            // 接近上限时提醒一次用户（2026-11-16 用户要求 30 条 + 提醒）
 
 // 拍照即发帖常量（契约见交互稿第五章）
 const ASSIST_TIMEOUT_MS = 22000      // 前端 22s 兜底：实测链路=压缩上传(~6s)+冷启动(0.5s)+视觉模型(~9s)≈15s+，12s 会误杀成功结果（2026-11-15 线上埋点 analyze_fail reason=超时 证实）
@@ -189,14 +191,20 @@ Page({
       }
       snap.sig = sig
       wx.setStorageSync(this.draftKey(randId(12)), snap)
-      // 超上限：按时间淘汰最旧
+      // 超上限：按时间淘汰最旧；接近上限提醒一次（每轮只提醒一次，记标记）
       const all = []
       for (const k of keys.filter(k => k.indexOf(DRAFT_KEY) === 0)) {
         let d = null
         try { d = wx.getStorageSync(k) } catch (e) { continue }
         if (d) all.push({ k, at: d.at || 0 })
       }
+      if (all.length >= DRAFT_WARN_AT && !wx.getStorageSync(DRAFT_WARN_KEY)) {
+        wx.setStorageSync(DRAFT_WARN_KEY, 1)
+        toast(`草稿箱已存 ${all.length} 条（上限 ${MAX_DRAFTS}），建议清理旧草稿`)
+      }
       if (all.length > MAX_DRAFTS) {
+        // 淘汰时清掉提醒标记，下次接近上限会再次提醒
+        try { wx.removeStorageSync(DRAFT_WARN_KEY) } catch (e) { /* */ }
         all.sort((a, b) => a.at - b.at)
         for (const old of all.slice(0, all.length - MAX_DRAFTS)) {
           let od = null
@@ -621,6 +629,8 @@ Page({
       // 用户取消选图：回到 idle（半屏已关），无任何副作用
       return this.setData({ assistState: 'idle' })
     }
+    // 选完同样先让用户裁剪编辑（与拍照一致，2026-11-16）
+    item.localPath = await this._editImage(item.localPath)
     this._assistProceed(item)
   },
 
@@ -668,8 +678,10 @@ Page({
         wx.createCameraContext().takePhoto({ quality: 'high', success: resolve, fail: reject })
       })
       this.setData({ cameraShow: false })
+      // 拍完先让用户裁剪编辑（2026-11-16 用户要求），取消/不支持则用原图
+      const edited = await this._editImage(res.tempImagePath)
       // takePhoto 只给临时路径：补齐 size/w/h，与 chooseMedia 返回结构对齐
-      const item = await this._photoRecord(res.tempImagePath)
+      const item = await this._photoRecord(edited)
       if (this._cameraIntent === 'assist') {
         this._assistProceed(item)
       } else {
@@ -680,6 +692,18 @@ Page({
     } finally {
       this._shooting = false
     }
+  },
+
+  /** 图片编辑（微信内置裁剪）：基础库 2.22+；用户取消或低版本回退原图 */
+  _editImage(path) {
+    return new Promise(resolve => {
+      if (!wx.editImage) return resolve(path)
+      wx.editImage({
+        src: path,
+        success: r => resolve((r && r.tempFilePath) || path),
+        fail: () => resolve(path)
+      })
+    })
   },
 
   _photoRecord(path) {

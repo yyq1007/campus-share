@@ -175,6 +175,27 @@
 .input-field { flex: 1; font-size: 28rpx; color: var(--text-body); }
 .ph { color: var(--text-faint); }
 
+/* 发送按钮：输入框右侧圆形按钮；有内容时点亮主色（2026-11-16） */
+.send-btn {
+  flex-shrink: 0;
+  width: 72rpx;
+  height: 72rpx;
+  margin-left: 16rpx;
+  border-radius: 50%;
+  background: var(--brand-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.send-btn.is-on { background: var(--brand-600); }
+.send-arrow {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--brand-600);
+  line-height: 1;
+}
+.send-btn.is-on .send-arrow { color: var(--text-on-brand); }
+
 /* ---------- AIGC 声明（设计 B5：输入框之下、11px 淡字；为自定义 TabBar 预留高度） ---------- */
 .aigc-tip {
   padding: 8rpx 0 calc(112rpx + env(safe-area-inset-bottom));

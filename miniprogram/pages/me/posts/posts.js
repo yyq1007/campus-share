@@ -5,6 +5,7 @@ const api = require('../../../utils/api')
 const { toast } = require('../../../utils/cloud')
 const { guard } = require('../../../utils/auth')
 const { collectPatches } = require('../../../utils/post-sync')
+const { getMyAvatarUrl } = require('../../../utils/my-avatar')
 
 const TABS = [
   { key: 'all', label: '全部' },
@@ -111,6 +112,11 @@ Page({
     }
 
     if (seq !== this._reqSeq) return
+    // 我的分享全部是自己发的：统一带上自己的头像（2026-11-16 用户反馈换头像后仍显示随机头像）
+    try {
+      const myAvatarUrl = await getMyAvatarUrl()
+      if (myAvatarUrl) matched.forEach(x => { x.myAvatarUrl = myAvatarUrl })
+    } catch (e) { /* 拿不到头像就继续匿名展示 */ }
     this.setData({
       list: matched,
       cursor,
