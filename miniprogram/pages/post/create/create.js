@@ -420,8 +420,7 @@ Page({
     if (remain <= 0) return toast(`最多 ${LIMITS.maxImages} 张图`)
     const tap = await new Promise(resolve => {
       wx.showActionSheet({
-        // 拍照走 camera 组件（不进系统相册）；chooseMedia 的拍照会强制存相册
-        itemList: ['拍摄（不进相册）', '从相册选择'],
+        itemList: ['拍摄', '从相册选择'],
         success: res => resolve(res.tapIndex),
         fail: () => resolve(-1)
       })
