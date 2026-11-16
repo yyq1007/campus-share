@@ -7,6 +7,7 @@
     <view class="hero-nav" style="height:{{navH}}px">
       <view class="nav-pill" bind:tap="onBack">取消</view>
       <view class="nav-pill nav-pill-primary" bind:tap="onSubmit">{{submitting ? '发布中…' : '发布'}}</view>
+      <view class="nav-pill nav-draft" bind:tap="onDraftBox">草稿箱</view>
     </view>
   </view>
 
@@ -200,6 +201,33 @@
   <view class="done-actions">
     <view class="done-btn done-btn-primary" bind:tap="onAssistGoHome">看看首页</view>
     <view class="done-btn done-btn-ghost" bind:tap="onAssistGoMine">回我的分享</view>
+  </view>
+</view>
+
+<!-- 草稿箱抽屉：按板块列出全部草稿，点击恢复、删除不可恢复 -->
+<view wx:if="{{draftBoxShow}}" class="assist-mask" bind:tap="onDraftClose">
+  <view class="assist-sheet" catch:tap="stopBubble">
+    <view class="sheet-grabber" />
+    <view class="sheet-title">草稿箱</view>
+    <view wx:if="{{!draftList.length}}" class="draft-empty">暂无草稿，写点内容或拍张照会自动存到这里</view>
+    <block wx:else>
+      <view
+        wx:for="{{draftList}}" wx:key="board"
+        class="draft-item" data-board="{{item.board}}" bind:tap="onDraftTap"
+      >
+        <image wx:if="{{item.thumb}}" class="draft-thumb" src="{{item.thumb}}" mode="aspectFill" />
+        <view wx:else class="draft-thumb draft-thumb-empty">无图</view>
+        <view class="draft-body">
+          <view class="draft-title-row">
+            <text class="draft-board draft-board-{{item.color}}">{{item.label}}</text>
+            <text class="draft-title">{{item.title}}</text>
+          </view>
+          <view class="draft-meta">{{item.count ? item.count + ' 张图 · ' : ''}}{{item.atText}}</view>
+        </view>
+        <view class="draft-del" data-board="{{item.board}}" catch:tap="onDraftDel">删除</view>
+      </view>
+    </block>
+    <view class="sheet-cancel" bind:tap="onDraftClose">关闭</view>
   </view>
 </view>
 

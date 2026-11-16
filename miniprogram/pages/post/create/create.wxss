@@ -646,3 +646,70 @@
   background: var(--bg-elevated);
   box-shadow: var(--shadow-soft);
 }
+
+/* ---------- 草稿箱（发布按钮旁入口 + 抽屉列表） ---------- */
+.nav-draft { color: var(--text-soft); }
+.draft-empty {
+  padding: 72rpx 0;
+  text-align: center;
+  font-size: var(--fs-body-m);
+  color: var(--text-soft);
+}
+.draft-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 0;
+  border-bottom: 2rpx solid var(--fill-soft);
+}
+.draft-thumb {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+  background: var(--brand-50);
+}
+.draft-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-micro);
+  color: var(--text-disabled);
+}
+.draft-body { flex: 1; min-width: 0; }
+.draft-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  min-width: 0;
+}
+.draft-board {
+  flex-shrink: 0;
+  padding: 4rpx 14rpx;
+  font-size: var(--fs-micro);
+  color: var(--text-on-brand);
+  border-radius: var(--radius-chip);
+}
+.draft-board-mint { background: var(--board-mint); }
+.draft-board-sky { background: var(--board-sky); }
+.draft-board-coral { background: var(--board-coral); }
+.draft-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body);
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.draft-meta {
+  margin-top: 8rpx;
+  font-size: var(--fs-caption);
+  color: var(--text-soft);
+}
+.draft-del {
+  flex-shrink: 0;
+  padding: 8rpx 12rpx;
+  font-size: var(--fs-caption);
+  color: var(--coral);
+}

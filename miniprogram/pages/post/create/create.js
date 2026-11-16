@@ -7,7 +7,7 @@ const { toast } = require('../../../utils/cloud')
 const { guard, getUid } = require('../../../utils/auth')
 const { hasAgreed } = require('../../../utils/privacy')
 const { BOARDS, BOARD_KEYS, LIMITS } = require('../../../utils/config')
-const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, uploadFile } = require('../../../utils/media')
+const { chooseImages, chooseSingleImage, chooseVideo, uploadImage, uploadVideo, uploadFile, getTempUrls } = require('../../../utils/media')
 const { countChars, clipChars, normalizeText, cleanContent, validLink, randId } = require('../../../utils/format')
 
 const DRAFT_KEY = 'draft_post_'
@@ -17,6 +17,16 @@ const ASSIST_TIMEOUT_MS = 22000      // 前端 22s 兜底：实测链路=压缩�
 const ASSIST_PHASE_MS = 2500         // 分析屏文案轮换间隔
 const ASSIST_PHASES = ['在认物品…', '在写标题和简介…', '在估价格挑板块…']
 const ASSIST_CONF_LOW = 0.6          // 低置信度：标题留空 + 黄条，不硬编内容
+
+function pad2(n) { return n < 10 ? '0' + n : '' + n }
+function fmtWhen(at) {
+  if (!at) return ''
+  const d = new Date(at)
+  const hm = pad2(d.getHours()) + ':' + pad2(d.getMinutes())
+  const now = new Date()
+  if (d.toDateString() === now.toDateString()) return '今天 ' + hm
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + hm
+}
 
 Page({
   data: {
@@ -53,7 +63,9 @@ Page({
     aiMarks: { title: false, content: false, field: false }, // ✦ 字段级来源标记：开始编辑即移除
     regenUsed: false,      // 「换个写法」限 1 次
     assistPreviewCover: '', // submitted 成功页帖子预览图
-    submitStatus: ''       // submitted 成功页状态告知（published/pending）
+    submitStatus: '',       // submitted 成功页状态告知（published/pending）
+    draftBoxShow: false,    // 草稿箱抽屉
+    draftList: []           // 草稿箱列表（板块+摘要+图数+时间）
   },
 
   onLoad(query) {
@@ -105,59 +117,180 @@ Page({
   onBoardTap(e) {
     const board = e.currentTarget.dataset.key
     if (board === this.data.board) return
-    if (this.hasDraft()) this.saveDraft()
+    // 先把当前板块完整快照落盘（文字+图片+AI 标记一起隔离），再恢复目标板块
+    this.saveDraft()
     this.switchBoard(board)
     this.restoreDraft(board)
-    // 用户手动选了板块 → 板块建议失效（胶囊手动点选永远优先）；
-    // 切板块会清空字段（restoreDraft），✦ 标记同步重置，避免标记与内容错位
-    if (this.data.aiMarks.title || this.data.aiMarks.content || this.data.aiMarks.field || this.data.assistBoardTop) {
-      this.setData({
-        aiMarks: { title: false, content: false, field: false },
-        assistFieldKey: '',
-        assistBoardTop: '',
-        assistBoardRunner: ''
-      })
+    // 板块建议（assistBoardTop/Runner）与 ✦ 标记不再清除：
+    // 它们随各自板块的草稿存取，切走再切回依然可见（2026-11-16 用户反馈修复）
+  },
+
+  // ---------- 草稿（按板块完整隔离：文字+图片+AI 元数据一起存取） ----------
+  draftKey(board) { return DRAFT_KEY + (board || this.data.board) },
+
+  /** 当前页面状态快照 → 草稿对象 */
+  _snapshot() {
+    return {
+      title: this.data.title,
+      content: this.data.content,
+      link: this.data.link,
+      fields: this.data.fields,
+      media: this.data.media.map(m => ({
+        lid: m.lid, type: m.type, localPath: m.localPath, size: m.size,
+        w: m.w, h: m.h, uploaded: m.uploaded, fileId: m.fileId
+      })),
+      // AI 元数据：✦ 标记、板块建议、低置信黄条随草稿走，切板块不丢
+      ai: {
+        marks: { ...this.data.aiMarks },
+        fieldKey: this.data.assistFieldKey,
+        boardTop: this.data.assistBoardTop,
+        boardConf: this.data.assistBoardConf,
+        boardRunner: this.data.assistBoardRunner,
+        boardConf2: this.data.assistBoardConf2,
+        lowConf: this.data.assistLowConf,
+        prefilled: this.data.assistState === 'prefilled',
+        used: this._assistUsed
+      },
+      at: Date.now()
     }
   },
 
-  // ---------- 草稿（按板块独立存取） ----------
-  draftKey() { return DRAFT_KEY + this.data.board },
-
-  saveDraft() {
+  saveDraft(board) {
     try {
-      wx.setStorageSync(this.draftKey(), {
-        title: this.data.title,
-        content: this.data.content,
-        link: this.data.link,
-        fields: this.data.fields,
-        at: Date.now()
-      })
+      if (!this.hasDraft() && !this._assistUsed) {
+        // 空状态不落盘，顺便清掉该板块的历史草稿
+        try { wx.removeStorageSync(this.draftKey(board)) } catch (e) { /* */ }
+        return
+      }
+      wx.setStorageSync(this.draftKey(board), this._snapshot())
     } catch (e) { /* 存储失败不阻塞 */ }
   },
 
   restoreDraft(board) {
-    try {
-      const d = wx.getStorageSync(DRAFT_KEY + board)
-      if (!d || !d.title) {
-        this.setData({ title: '', content: '', link: '', fields: {}, titleCount: 0, contentCount: 0 })
-        return
-      }
-      const fieldList = BOARDS[board].fields.map(f => ({ ...f, value: (d.fields && d.fields[f.key]) || '' }))
+    let d = null
+    try { d = wx.getStorageSync(DRAFT_KEY + board) } catch (e) { /* */ }
+    const hasContent = !!(d && (d.title || (d.media && d.media.length)))
+    if (!hasContent) {
+      // 目标板块无草稿 → 全清（图片也要清，否则上一个板块的图会跟过来）
       this.setData({
-        title: d.title || '', content: d.content || '',
-        // 学习/美食板块不恢复链接（老草稿里可能存着 link）
-        link: BOARDS[board].allowLink ? (d.link || '') : '',
-        fields: d.fields || {}, fieldList,
-        titleCount: countChars(d.title), contentCount: countChars(d.content)
+        title: '', content: '', link: '', fields: {},
+        titleCount: 0, contentCount: 0,
+        media: [], mediaType: 'none',
+        aiMarks: { title: false, content: false, field: false },
+        assistFieldKey: '', assistBoardTop: '', assistBoardConf: 0,
+        assistBoardRunner: '', assistBoardConf2: 0,
+        assistLowConf: false, assistState: 'idle'
       })
-      toast('已恢复上次草稿')
-    } catch (e) {
-      this.setData({ title: '', content: '', link: '', fields: {}, titleCount: 0, contentCount: 0 })
+      this._assistUsed = false
+      return
     }
+    const fieldList = BOARDS[board].fields.map(f => ({ ...f, value: (d.fields && d.fields[f.key]) || '' }))
+    const media = (d.media || []).map(m => ({ ...m, progress: m.uploaded ? 100 : 0 }))
+    const ai = d.ai || {}
+    this.setData({
+      title: d.title || '', content: d.content || '',
+      // 学习/美食板块不恢复链接（老草稿里可能存着 link）
+      link: BOARDS[board].allowLink ? (d.link || '') : '',
+      fields: d.fields || {}, fieldList,
+      titleCount: countChars(d.title), contentCount: countChars(d.content),
+      media, mediaType: media.length ? (media[0].type === 'video' ? 'video' : 'image') : 'none',
+      aiMarks: ai.marks || { title: false, content: false, field: false },
+      assistFieldKey: ai.fieldKey || '',
+      assistBoardTop: ai.boardTop || '',
+      assistBoardConf: ai.boardConf || 0,
+      assistBoardRunner: ai.boardRunner || '',
+      assistBoardConf2: ai.boardConf2 || 0,
+      assistLowConf: !!ai.lowConf,
+      assistState: ai.prefilled ? 'prefilled' : 'idle'
+    })
+    this._assistUsed = !!ai.used
+    // 跨会话恢复：本地临时路径可能已失效，有 fileId 的图后台换新临时链接
+    if (media.some(m => m.fileId)) this._refreshDraftMedia()
+  },
+
+  /** 草稿恢复后的图片链接续命：fileId → 新临时 URL（fire-and-forget） */
+  async _refreshDraftMedia() {
+    try {
+      const items = this.data.media.filter(m => m.fileId)
+      if (!items.length) return
+      const map = await getTempUrls(items.map(m => m.fileId))
+      const patch = {}
+      for (const m of items) {
+        const url = map[m.fileId]
+        const i = this.data.media.indexOf(m)
+        if (url && i > -1) patch['media[' + i + '].localPath'] = url
+      }
+      if (Object.keys(patch).length) this.setData(patch)
+    } catch (e) { /* 静默，展示失败不影响编辑 */ }
   },
 
   clearDraft() {
     try { wx.removeStorageSync(this.draftKey()) } catch (e) { /* */ }
+  },
+
+  // ---------- 草稿箱（发布按钮旁入口，列出各板块草稿） ----------
+  onDraftBox() {
+    // 先把当前编辑状态存好再打开，抽屉里的数据才是最新的
+    if (!this._submitted) this.saveDraft()
+    this.setData({ draftBoxShow: true, draftList: this._buildDraftList() })
+  },
+
+  onDraftClose() {
+    this.setData({ draftBoxShow: false })
+  },
+
+  _buildDraftList() {
+    let keys = []
+    try {
+      keys = (wx.getStorageInfoSync().keys || []).filter(k => k.indexOf(DRAFT_KEY) === 0)
+    } catch (e) { return [] }
+    const out = []
+    for (const k of keys) {
+      const board = k.slice(DRAFT_KEY.length)
+      if (BOARD_KEYS.indexOf(board) < 0) continue
+      let d = null
+      try { d = wx.getStorageSync(k) } catch (e) { continue }
+      if (!d) continue
+      const count = (d.media && d.media.length) || 0
+      const thumb = (d.media && d.media.length && d.media[0].localPath) || ''
+      out.push({
+        board,
+        label: BOARDS[board].label,
+        color: BOARDS[board].color,
+        title: d.title || (d.content ? clipChars(d.content, 22) : (count ? '[图片]' : '未命名草稿')),
+        count,
+        thumb,
+        at: d.at || 0,
+        atText: fmtWhen(d.at)
+      })
+    }
+    return out.sort((a, b) => b.at - a.at)
+  },
+
+  onDraftTap(e) {
+    const board = e.currentTarget.dataset.board
+    if (BOARD_KEYS.indexOf(board) < 0) return
+    this.setData({ draftBoxShow: false })
+    if (board === this.data.board) return // 当前板块的草稿本来就在页面上
+    this.saveDraft()
+    this.switchBoard(board)
+    this.restoreDraft(board)
+  },
+
+  onDraftDel(e) {
+    const board = e.currentTarget.dataset.board
+    if (BOARD_KEYS.indexOf(board) < 0) return
+    wx.showModal({
+      title: '删除草稿',
+      content: '确定删除「' + BOARDS[board].label + '」板块的草稿吗？删除后不可恢复。',
+      confirmText: '删除',
+      success: res => {
+        if (!res.confirm) return
+        try { wx.removeStorageSync(DRAFT_KEY + board) } catch (err) { /* */ }
+        if (board === this.data.board) this.restoreDraft(board) // 删的是当前板块 → 同步清空页面
+        this.setData({ draftList: this._buildDraftList() })
+      }
+    })
   },
 
   // ---------- 输入（用户开始编辑 = ✦ 责任移交完成） ----------
