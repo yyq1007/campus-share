@@ -23,7 +23,7 @@
 }
 .tab-text {
   font-size: 22rpx;
-  color: var(--text-2, #6B6780);
+  color: var(--text-2, #5F6470);
 }
 .tab-item.on .tab-text { color: var(--brand-800, #5A47C9); font-weight: 600; }
 /* 未读红点：图标右上角的实心圆，承载「站内消息」导航级提示 */
@@ -42,6 +42,8 @@
 /* 中间发布按钮：横胶囊 + 紫蓝渐变 + 白色加号（设计稿 S1 页脚）。
    无文字项，用 justify-content 单独居中，避免与图标+文字项错位。 */
 .tab-publish-wrap { justify-content: center; }
+/* v5.1 主色改雾蓝：此处写的是 fallback 值（自定义 tabBar 组件拿不到 page 的 CSS 变量，
+   var() 的第二参数才是实际生效色，必须与 theme.wxss 的 --brand-* 保持同步） */
 .tab-publish {
   width: 144rpx;
   height: 84rpx;
@@ -49,13 +51,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(100deg, #A78BFA 0%, #7C9BF5 100%);
+  background: linear-gradient(100deg, #8F7BEE 0%, #6C5CE7 100%);
   box-shadow: 0 8rpx 20rpx rgba(108, 92, 231, 0.28);
 }
 
 /* 未同意隐私协议：整条 bar 锁定 */
 .tab-bar.is-locked .tab-item { opacity: .35; }
-.tab-bar.is-locked .tab-text { color: var(--text-3, #9A96AC); }
+.tab-bar.is-locked .tab-text { color: var(--text-3, #7A7F8C); }
 .tab-lock {
   position: absolute;
   left: 0; right: 0; top: 0;
@@ -69,5 +71,5 @@
 }
 .tab-lock-text {
   font-size: 24rpx;
-  color: var(--text-2, #6B6780);
+  color: var(--text-2, #5F6470);
 }

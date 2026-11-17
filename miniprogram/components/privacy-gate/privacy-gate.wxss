@@ -67,10 +67,14 @@
   font-weight: 600;
 }
 
+/* 与「拒绝」完全一致的样式（以「拒绝」为模板） */
 .pg-btn-ghost {
-  background: var(--bg-elevated);
-  color: var(--brand-800);
-  border: 1rpx solid var(--border-strong);
+  background: var(--bg-subtle);
+  color: var(--text-soft);
+  border: none;
+  border-radius: var(--radius-input);
+  font-size: var(--fs-body-m);
+  font-weight: 500;
 }
 
 .pg-reject {

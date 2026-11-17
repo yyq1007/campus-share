@@ -8,52 +8,64 @@
   <view class="pc-digest-foot">点击查看完整周报与全部精选</view>
 </view>
 
-<!-- 普通帖子卡（信息流样式：头像+昵称/时间 → 正文 → 图片 → 话题 → 赞/评论/收藏） -->
-<view wx:else class="pc card" bindtap="onTap">
-  <view class="pc-head">
-    <!-- 头像：作者设置过头像则所有人可见；没设置回退糖果色（本人帖优先用自己头像兜底） -->
-    <image wx:if="{{post.author && post.author.avatarUrl}}" class="pc-avatar-img" src="{{post.author.avatarUrl}}" mode="aspectFill" />
-    <image wx:elif="{{post.myAvatarUrl}}" class="pc-avatar-img" src="{{post.myAvatarUrl}}" mode="aspectFill" />
-    <view wx:else class="pc-avatar av-{{avatarIdx}}">匿</view>
-    <view class="pc-main">
-      <view class="pc-name-row">
-        <text class="pc-name">{{post.author && post.author.nickname ? post.author.nickname : '匿名同学'}}</text>
-        <!-- 状态角标（仅「我的分享」）：占样例里「热门」的位置 -->
-        <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
+<!-- 双列网格卡（瀑布流用）：有封面 → 图 + 标题；无封面 → 纯文字卡（标题 + 摘要截断）
+     两种卡高度不同，两列自然错落 -->
+<view wx:elif="{{grid}}" class="pc pc-grid {{post.cover ? '' : 'pc-grid-text'}}" bindtap="onTap" hover-class="pc-pressed" hover-stay-time="60">
+  <view wx:if="{{post.cover}}" class="pg-cover-wrap">
+    <image class="pg-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
+    <view wx:if="{{boardLabel}}" class="pg-badge">{{boardLabel}}</view>
+    <view wx:if="{{post.mediaType === 'video'}}" class="pg-play">
+      <icon name="play-white" size="32"/>
+    </view>
+    <view wx:if="{{statusText}}" class="pg-status st-{{post.status}}">{{statusText}}</view>
+  </view>
+  <view class="pg-body {{post.cover ? '' : 'pg-body-text'}}">
+    <view wx:if="{{!post.cover && boardLabel}}" class="pg-text-board">{{boardLabel}}</view>
+    <view class="pg-title">{{post.title || post.excerpt}}</view>
+    <!-- 无图时补一段摘要，卡片才不空；统一截到 4 行 -->
+    <view wx:if="{{!post.cover && post.excerpt}}" class="pg-excerpt">{{post.excerpt}}</view>
+    <view class="pg-foot">
+      <view class="pg-act" catchtap="onLike">
+        <icon name="{{post.liked ? 'heart-on' : 'heart'}}" size="40" extraClass="{{likeBeat ? 'heart-beat' : ''}}"/>
+        <text class="pg-num {{post.liked ? 'pg-num-on' : ''}}">{{likeText}}</text>
       </view>
-      <view class="pc-sub">
-        <text>{{timeText}}</text>
-        <text wx:if="{{post.expired}}" class="pc-expired"> · 可能已过期</text>
+      <view class="pg-act">
+        <icon name="comment" size="38"/>
+        <text class="pg-num">{{commentText}}</text>
       </view>
-
-      <view wx:if="{{post.title}}" class="pc-title">{{post.title}}</view>
-      <view class="pc-excerpt">{{post.excerpt}}</view>
-
-      <!-- 图片/视频：排在正文下方（不再占据卡片顶部通栏） -->
-      <view wx:if="{{post.cover}}" class="pc-media">
-        <image class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
-        <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">
-          <icon name="play-white" size="36"/>
-        </view>
-      </view>
-
-      <!-- 话题（板块）：描边小胶囊（2026-11-16 移除贴纸图标：白色贴纸在白卡上不可见，
-           只剩图标占位 → 胶囊前半截空白、文字靠后） -->
-      <view wx:if="{{showBoard && boardLabel}}" class="pc-topic">
-        <text class="pc-topic-text">{{boardLabel}}</text>
+      <view wx:if="{{showFav}}" class="pg-act pg-act-fav" catchtap="onFav">
+        <icon name="{{post.faved ? 'star-on' : 'star'}}" size="38" extraClass="{{favBeat ? 'star-beat' : ''}}"/>
+        <text class="pg-num {{post.faved ? 'pg-num-fav-on' : ''}}">{{favText}}</text>
       </view>
     </view>
   </view>
+</view>
 
-  <!-- 底部互动条：左侧「被 AI 引用 N 次」/ 删除，右侧 赞·评论·收藏 -->
-  <view class="pc-foot">
-    <view class="pc-foot-left">
-      <text wx:if="{{showCited}}" class="pc-cited">被 AI 引用 {{post.citedCount || 0}} 次</text>
-      <view wx:if="{{manageable === 'manage'}}" class="pc-act pc-act-danger" catchtap="onDelete">删除</view>
+<!-- 普通帖子卡（v5 信息流样式：封面全出血 3:2 → 标题/摘要 → 互动底栏） -->
+<view wx:else class="pc" bindtap="onTap" hover-class="pc-pressed" hover-stay-time="60">
+  <!-- v5 封面全出血：图占满卡宽，板块角标浮于图上（原 v4 是卡内 86px 小图） -->
+  <view wx:if="{{post.cover}}" class="pc-cover-wrap">
+    <image class="pc-cover" src="{{post.cover}}" mode="aspectFill" lazy-load="{{true}}" />
+    <view wx:if="{{boardLabel}}" class="pc-board">{{boardLabel}}</view>
+    <view wx:if="{{post.mediaType === 'video'}}" class="pc-play">
+      <icon name="play-white" size="36"/>
     </view>
+  </view>
+
+  <view class="pc-body">
+    <view class="pc-title-row">
+      <text class="pc-title">{{post.title}}</text>
+      <!-- 状态角标（仅「我的分享」）：跟在标题后，不再单独占一行 -->
+      <view wx:if="{{statusText}}" class="pc-status st-{{post.status}}">{{statusText}}</view>
+    </view>
+    <view class="pc-excerpt">{{post.excerpt}}</view>
+  </view>
+
+  <!-- 底部互动条：左指标 / 右作者·时间 -->
+  <view class="pc-foot">
     <view class="pc-acts">
       <view class="pc-act" catchtap="onLike">
-        <icon name="{{post.liked ? 'heart-on' : 'heart'}}" size="36"/>
+        <icon name="{{post.liked ? 'heart-on' : 'heart'}}" size="36" extraClass="{{likeBeat ? 'heart-beat' : ''}}"/>
         <text class="pc-num {{post.liked ? 'pc-num-on' : ''}}">{{likeText}}</text>
       </view>
       <view class="pc-act">
@@ -61,9 +73,24 @@
         <text class="pc-num">{{commentText}}</text>
       </view>
       <view wx:if="{{showFav}}" class="pc-act" catchtap="onFav">
-        <icon name="{{post.faved ? 'star-on' : 'star'}}" size="36"/>
-        <text class="pc-num {{post.faved ? 'pc-num-on' : ''}}">{{favText}}</text>
+        <icon name="{{post.faved ? 'star-on' : 'star'}}" size="36" extraClass="{{favBeat ? 'star-beat' : ''}}"/>
+        <text class="pc-num {{post.faved ? 'pc-num-fav-on' : ''}}">{{favText}}</text>
+      </view>
+      <!-- v5：被引用次数首次露出于信息流（AI 价值可视化） -->
+      <view wx:if="{{showCited && post.citedCount}}" class="pc-cited">
+        <text class="pc-cited-txt">✦ {{post.citedCount}}</text>
       </view>
     </view>
+    <view class="pc-meta">
+      <text class="pc-author">{{authorText}}</text>
+      <text class="pc-dot" wx:if="{{authorText}}">·</text>
+      <text class="pc-time">{{timeText}}</text>
+      <text wx:if="{{post.expired}}" class="pc-expired">· 可能已过期</text>
+    </view>
+  </view>
+
+  <!-- 管理态（我的分享）：删除压在最底部，避免误触 -->
+  <view wx:if="{{manageable === 'manage'}}" class="pc-manage">
+    <view class="pc-act-danger" catchtap="onDelete">删除这条</view>
   </view>
 </view>

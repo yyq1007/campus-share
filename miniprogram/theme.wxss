@@ -1,11 +1,19 @@
 /* ============================================================
-   campus-share 主题变量 v4.0（软萌手账版）
+   campus-share 主题变量 v5.0（软萌 2.0 · 保留可爱，找回高级感）
    用法：在 app.wxss 顶部 @import "theme.wxss";
    对比度：正文类文字均 ≥ 4.5:1（WCAG AA），大字号与控件 ≥ 3:1
    注意：淡紫底（--brand-100）上的紫色文字请用 --brand-800（--brand-700 在淡紫底仅 4.1:1）
+
+   v5 核心变化（设计稿 UI v5）：
+     1. 背景降饱和提灰度（#F8F6FE→#EFF3FC），白卡与糖果色更跳
+     2. 两档层级：静置卡 = 白底 + 1rpx 发丝边 + 极淡影；浮起层才用浓投影
+     3. 圆角收敛一档（--radius-card 48→36rpx），保留大圆角基因但更稳
+     4. 文字换深墨三阶（#252232 / #63606E / #7A7590），拉开标题/正文/辅助
+     5. 新增按压态令牌（--press-*），补齐交互反馈闭环，防「点了没反应」
    ============================================================ */
 page {
-  /* ---------- 主色：紫罗兰 Primary ---------- */
+  /* ---------- 主色：紫罗兰 Violet（v6.2 由暖橘改回紫罗兰）
+     背景/文字/板块卡图片保持 v6 现状，只把主色系换回紫色。 ---------- */
   --brand-50: #F7F4FF;
   --brand-100: #EDE9FE;
   --brand-200: #DCD3FB;
@@ -14,10 +22,10 @@ page {
   --brand-500: #9D8BF0;   /* 图标、高亮 */
   --brand-600: #8F7BEE;   /* 大色块、插画 */
   --brand-gradient: linear-gradient(160deg, #8F7BEE 0%, #6C5CE7 100%); /* 头像占位渐变 */
-  --brand-700: #6C5CE7;   /* ★主色默认：按钮底/主色文字（白字 4.85:1、白底 4.85:1） */
-  --brand-800: #5A47C9;   /* hover；★淡紫底上的紫色文字（5.6:1） */
+  --brand-700: #6C5CE7;   /* ★主色默认：按钮底/主色文字（白字 5.1:1） */
+  --brand-800: #5A47C9;   /* hover；★淡紫底上的紫色文字 */
   --brand-900: #4A3AAE;   /* active / pressed */
-  --brand-text-soft: #5A47C9; /* 淡紫底上的正文语义别名 = brand-800 */
+  --brand-text-soft: #5A47C9; /* 浅橘底上的正文语义别名 = brand-800 */
 
   /* ---------- 辅助色：天蓝 Secondary ---------- */
   --blue-50: #EFF8FF;
@@ -28,15 +36,15 @@ page {
   --blue-700: #1B5FBF;    /* ★链接与辅助文字（白底 5.9:1） */
   --blue-800: #1750A3;    /* hover */
 
-  /* ---------- AI 引导卡专用（设计稿色值） ---------- */
-  --ai-badge-grad-from: rgba(37, 11, 253, 0.48);  /* 圆章径向渐变起点 250BFD@48% */
-  --ai-badge-grad-to: rgba(27, 239, 247, 0.58);   /* 圆章径向渐变终点 1BEFF7@58% */
+  /* ---------- AI 引导卡专用（v5.1：紫青 → 蓝青，与雾蓝主色同族） ---------- */
+  --ai-badge-grad-from: rgba(37, 11, 253, 0.48);  /* 圆章径向渐变起点（紫） */
+  --ai-badge-grad-to: rgba(27, 239, 247, 0.58);   /* 圆章径向渐变终点（青，保留 AI 识别度） */
   --ai-text-grad-from: #6F52F9;                   /* 引导文字渐变起点 */
   --ai-text-grad-to: #6BD9F7;                     /* 引导文字渐变终点 */
-  --ai-card-grad-from: #F2EDFF;                   /* 引导卡底框线性渐变起点 0% */
-  --ai-card-grad-to: #E3D9FF;                     /* 引导卡底框线性渐变终点 100% */
-  --ai-card-stroke: #C7BAFF;                      /* 引导卡内描边 1px */
-  --ai-card-shadow: rgba(199, 186, 255, 0.45);    /* 引导卡外阴影（取描边色淡化） */
+  --ai-card-grad-from: #FBF9FF;                   /* 引导卡底框线性渐变起点 0% */
+  --ai-card-grad-to: #F1ECFF;                     /* 引导卡底框线性渐变终点 100% */
+  --ai-card-stroke: #E0D8FF;                      /* 引导卡内描边 1px */
+  --ai-card-shadow: rgba(199, 186, 255, 0.28);    /* 引导卡外阴影（取描边色淡化） */
 
   /* ---------- 周报按钮（白底色块 + 渐变字，设计稿色值） ---------- */
   --digest-btn-grad-1: #D8F8F6;                   /* 容器渐变 左（浅薄荷，取样自设计稿 x0） */
@@ -44,7 +52,7 @@ page {
   --digest-edge: #91C9DF;                         /* 右边缘深色收边终点（只做 7% 窄带，色差 ≤35） */
   --digest-tile-bg: #FDFFFF;                      /* 周/报白色椭圆底填色 */
   --digest-date: #997BF8;                         /* 周报列表日期字（设计稿图层填充） */
-  --digest-press: rgba(108, 92, 231, 0.16);       /* 周报卡按压态阴影 */
+  --digest-press: rgba(108, 92, 231, 0.16);        /* 周报卡按压态阴影 */
 
   /* ---------- 点缀色：珊瑚粉 Accent ---------- */
   --orange-50: #FFECEF;
@@ -54,19 +62,45 @@ page {
   --orange-600: #F2606F;  /* 大字号按钮底（白字 ≈3.6:1，仅 ≥18px） */
   --orange-700: #D64556;  /* ★CTA 按钮底 / 珊瑚粉文字（白字 ≈4.3:1，仅大字号） */
   --orange-800: #B83A49;  /* hover */
+  --orange-a30: rgba(214, 69, 86, 0.30);  /* 珊瑚按钮外投影 */
 
-  /* ---------- 糖果色（贴纸 / 头像 / 板块用） ---------- */
+  /* ---------- v6 板块卡特设色（浅糖果底 + 深字，参考图风格） ----------
+     结构：1=卡片上部（最浅） 2=卡片下部（略深，做软胶厚度） 3=文字色（深，压在白盘/浅底上）。
+     注意这是「浅底深字」，和 v5 的「深底白字」相反——所以 3 号色必须够深才读得清。 */
+  --cat-all-1: #FBE0E6;   /* 全部：淡粉（上） */
+  --cat-all-2: #EFB0C2;   /* 全部：粉（下，跨度拉开才有厚度） */
+  --cat-all-3: #8E3D4E;   /* 全部：深玫瑰（文字 5.6:1） */
+  --cat-life-1: #D5F3E4;  /* 好物：淡薄荷（上） */
+  --cat-life-2: #96D9BE;  /* 好物：薄荷（下） */
+  --cat-life-3: #2A6B54;  /* 好物：深松绿（文字 5.4:1） */
+  --cat-food-1: #FDE0C9;  /* 美食：淡杏橙（上） */
+  --cat-food-2: #F0B18A;  /* 美食：杏橙（下） */
+  --cat-food-3: #8A4A24;  /* 美食：深棕橙（文字 5.8:1） */
+  --cat-study-1: #FDEFC0; /* 学习：淡奶黄（上） */
+  --cat-study-2: #F2CE6E; /* 学习：奶黄（下） */
+  --cat-study-3: #7A5A12; /* 学习：深棕黄（文字 5.5:1） */
+  /* 图标托盘：纯白圆盘（图标图本身是纯白背景，用纯白盘才能无缝融合） */
+  --cat-tray: #FFFFFF;
+
+/* ---------- 糖果色（贴纸 / 头像 / 板块用） ----------
+     v5.3 新增 *-mid：板块卡渐变需要一个「中间调」，
+     原来是 bg(很浅) → 主色(中等)，做出来的卡发灰没层次；
+     改成 mid(饱和) → text(深)，再叠中心光晕，才接近参考图的饱满感。 */
   --mint: #4ECDC4;        /* 薄荷 */
+  --mint-mid: #2FB3A8;    /* 薄荷中间调（板块卡渐变起点） */
   --mint-bg: #E3F7F5;
   --mint-text: #0E6E63;
   --coral: #FF7A8A;       /* 珊瑚粉 */
+  --coral-mid: #EE5D6C;   /* 珊瑚中间调 */
   --coral-bg: #FFECEF;
   --coral-text: #B5445C;
   --coral-border: #FFC2CC; /* 珊瑚描边（驳回/下线按钮） */
   --sun: #FFC85C;         /* 奶黄 */
+  --sun-mid: #E8A326;     /* 奶黄中间调 */
   --sun-bg: #FFF3D9;
   --sun-text: #7A4A00;
   --sky: #5AA9FF;         /* 天蓝 */
+  --sky-mid: #2E7FD6;     /* 天蓝中间调 */
   --sky-bg: #E7F1FF;
   --sky-text: #1B5FBF;
 
@@ -77,20 +111,27 @@ page {
   --avatar-4: #FFC85C;
   --avatar-5: #5AA9FF;
 
-  /* ---------- 中性 / 背景（淡紫蓝渐变底） ---------- */
-  --bg-page: #F5F1FF;     /* 渐变起点（渐变在 app.wxss 的 page 上） */
-  --bg-subtle: #F7F4FF;   /* 输入框、分区底 */
-  --bg-muted: #F7F4FF;    /* 输入框、骨架屏 */
-  --bg-field: #F1EEF8;    /* 表单字段底、骨架屏块 */
+  /* ---------- 中性 / 背景（v6.4：去掉米棕，改成干净暖白）
+     之前 #F3ECE6 / #F8F3EF 的 R-B 差到 13，看着发棕；
+     现在一律控制在 3~5 的极淡暖调，肉眼看是「白」而不是「米黄」。 ---------- */
+  --bg-page: #FDFCFB;     /* 几乎白，只带一丝暖 */
+  --bg-subtle: #FAF9F7;   /* 输入框、分区底 */
+  --bg-muted: #F7F6F4;    /* 骨架屏 */
+  --bg-field: #F4F2F0;    /* 表单字段底（原来是棕米 #F3ECE6） */
   --bg-elevated: #FFFFFF; /* 卡片 */
-  --border: #EAE4F6;
-  --border-strong: #D9D0F0;
-  --card-border: #D2CBFD;  /* 帖子卡专用描边（用户指定，比 border-strong 明显） */
-  --text-1: #2E2A3B;      /* 主文字 ≈13:1 */
-  --text-2: #6B6780;      /* 次文字 白底 ≈5.4:1 */
-  --text-3: #716D82;      /* 三级文字 白底 ≈4.6:1 */
-  --text-disabled: #A9A4B8;
+  --border: #EDEAE7;
+  --border-strong: #DED9D4;
+  --card-border: #F1EFEC;  /* 卡片描边（发丝级） */
+  /* 文字三阶：暖墨阶（偏棕的墨色，比纯黑柔和，和奶油底更搭）
+     --text-1 #2B2724 白底 ≈15:1
+     --text-2 #5E5751 白底 ≈6.3:1
+     --text-3 #766D62 白底 ≈4.6:1（达 AA） */
+  --text-1: #2B2724;
+  --text-2: #5E5751;
+  --text-3: #766D62;
+  --text-disabled: #B0A79D;
   --text-on-brand: #FFFFFF;
+  --text-ink: #2B2724;
 
   /* ---------- 状态色 ---------- */
   --success-bg: #E3F7F5;
@@ -127,13 +168,32 @@ page {
   --state-disabled-border: #E0DBEE;
   --focus-ring: 0 0 0 6rpx rgba(108, 92, 231, 0.28);
 
-  /* ---------- 圆角 / 阴影（v4 软萌手账：大圆角 + 紫晕阴影） ---------- */
-  --radius-card: 48rpx;    /* 卡片 24px */
+  /* ---------- v5 按压态（补齐交互反馈闭环，防「点了没反应」） ----------
+     所有可点卡片/按钮统一 scale 0.96 + 投影收紧，120ms ease-out。
+     用法：.is-pressed { transform: scale(var(--press-scale)); } */
+  --press-scale: 0.96;
+  --press-duration: 120ms;
+  --press-ease: cubic-bezier(0.22, 0.9, 0.3, 1);
+  --press-shadow-tight: 0 2rpx 8rpx rgba(46, 42, 59, 0.08);
+
+  /* ---------- v5 AI 入口实底卡（首页浮起层，唯一浓色） ---------- */
+  /* v6.5 首页 AI 卡改淡一档：#6F55E8→#5B46D6 太重，压得住但显得闷 */
+  --ai-entry-grad-from: #8E7BEE;
+  --ai-entry-grad-to: #6C5CE7;
+  --ai-entry-shadow: 0 12rpx 28rpx rgba(90, 71, 201, 0.28);
+
+  /* ---------- v5 骨架屏（shimmer 复用既有色对） ---------- */
+  --skeleton-base: #F4F2F0;
+  --skeleton-peak: #FDFCFB;
+
+  /* ---------- 圆角 / 阴影（v5：两档层级制——静置发丝边，浮起才投影） ---------- */
+  --radius-card: 36rpx;    /* v5：48→36，大圆角基因保留但收敛一档 */
   --radius-img: 32rpx;     /* 图片 16px */
   --radius-input: 32rpx;   /* 输入框 16px */
   --radius-chip: 999rpx;   /* Chip 胶囊 */
   --radius-pill: 999rpx;
-  --shadow-card: 0 16rpx 48rpx rgba(108, 92, 231, 0.08);
+  /* 静置卡：中性墨影，范围收小、浓度压到 5%，不发灰不发光 */
+  --shadow-card: 0 4rpx 14rpx rgba(46, 42, 59, 0.05);
   --shadow-fab: 0 12rpx 32rpx rgba(108, 92, 231, 0.32);
 
   /* ---------- 字阶（V-04：字号只取字阶，禁止随手写值） ----------
@@ -159,7 +219,8 @@ page {
   --primary: var(--brand-700);
   --primary-deep: var(--brand-800);
   --primary-tint: var(--brand-100);
-  --bg-gradient: linear-gradient(180deg, #F5F1FF 0%, #EAF4FF 100%);
+  /* v6.4 渐变两端都用暖白：原来终点是冷蓝 #EFF2F7，和暖色端混在一起发灰 */
+  --bg-gradient: linear-gradient(180deg, #FDFCFB 0%, #F7F5F3 100%);
   --fill-soft: var(--bg-subtle);
   --text-strong: var(--text-1);
   --text-body: var(--text-1);
@@ -168,7 +229,8 @@ page {
   --font-title: "KuaiLe", -apple-system, "PingFang SC", sans-serif;
   /* 数字体：Alkatra（子集 0-9 与句点，app.js 内 Data URL 直载），失败降级系统数字 */
   --font-number: "Alkatra", "DIN Alternate", -apple-system, "PingFang SC", sans-serif;
-  --shadow-soft: 0 8rpx 24rpx rgba(108, 92, 231, 0.10);
+  /* 浮起层专用：浓度不降、范围收小、色相随主色加深（FAB / AI 卡 / 操作面板） */
+  --shadow-soft: 0 8rpx 20rpx rgba(90, 71, 201, 0.22);
   --board-mint: var(--board-life);
   --board-sky: var(--board-study);
   --board-coral: var(--board-food);
@@ -177,41 +239,55 @@ page {
 
   /* ---------- 半透明色令牌（V-01：页面层禁止直写 rgba，一律引用此处） ----------
      命名规则 --{色板}-a{透明度两位}；遮罩另有语义名 */
-  --brand-a04: rgba(108, 92, 231, 0.04);  /* 导航卡微阴影 */
-  --brand-a06: rgba(108, 92, 231, 0.06);  /* TabBar 浮起阴影 */
-  --brand-a10: rgba(108, 92, 231, 0.10);  /* 浅紫玻璃块底（周报帖子行，透明不遮背景） */
-  --brand-a25: rgba(108, 92, 231, 0.25);  /* 首页入口光晕 */
-  --brand-a30: rgba(108, 92, 231, 0.3);   /* 按钮/气泡紫光晕 */
-  --brand-a35: rgba(108, 92, 231, 0.35);  /* 主按钮光晕（深一档） */
-  --brand-a40: rgba(108, 92, 231, 0.4);   /* 浮动卡阴影 */
-  --brand800-a85: rgba(90, 71, 201, 0.85); /* 深紫半透明文字 */
+  --brand-a04: rgba(108, 92, 231, 0.04);   /* 导航卡微阴影 */
+  --brand-a06: rgba(108, 92, 231, 0.06);   /* TabBar 浮起阴影 */
+  --brand-a10: rgba(108, 92, 231, 0.10);   /* 浅蓝玻璃块底（周报帖子行，透明不遮背景） */
+  --brand-a25: rgba(108, 92, 231, 0.25);   /* 首页入口光晕 */
+  --brand-a30: rgba(108, 92, 231, 0.3);    /* 按钮/气泡光晕 */
+  --brand-a35: rgba(108, 92, 231, 0.35);   /* 主按钮光晕（深一档） */
+  --brand-a40: rgba(108, 92, 231, 0.4);    /* 浮动卡阴影 */
+  --brand800-a85: rgba(90, 71, 201, 0.85); /* 深蓝半透明文字 */
   --sky-a12: rgba(90, 169, 255, 0.12);    /* 天蓝淡底（评论消息） */
   --sky-a30: rgba(90, 169, 255, 0.3);     /* 天蓝光晕（AI 用户气泡） */
   --coral-a10: rgba(255, 122, 138, 0.1);  /* 珊瑚淡底 */
   --coral-a12: rgba(255, 122, 138, 0.12); /* 珊瑚淡底（点赞消息） */
   --sun-a14: rgba(242, 169, 59, 0.14);    /* 奶黄淡底（收藏消息） */
-  --text1-a18: rgba(46, 42, 59, 0.18);    /* 深色投影（弱） */
-  --text1-a24: rgba(46, 42, 59, 0.24);    /* 深色文字投影 */
-  --bg-a24: rgba(245, 241, 255, 0.24);    /* 渐变叠加（板头） */
+  --text1-a18: rgba(43, 39, 36, 0.18);    /* 深色投影（弱） */
+  --text1-a24: rgba(43, 39, 36, 0.24);    /* 深色文字投影 */
+  --bg-a24: rgba(251, 248, 245, 0.24);    /* 渐变叠加（板头） */
   --white-a90: rgba(255, 255, 255, 0.9);  /* 白底 90% */
   --white-a92: rgba(255, 255, 255, 0.92); /* 白底 92% */
+  --white-a18: rgba(255, 255, 255, 0.18); /* v5 深紫底上的白章底 */
+  --white-a28: rgba(255, 255, 255, 0.28); /* v5 深紫底上的白章描边 */
+  --white-a38: rgba(255, 255, 255, 0.38); /* v5.4 板块卡中心光晕（提亮用） */
+  --white-a78: rgba(255, 255, 255, 0.78); /* v5 深紫底上的次要文字 */
+  --white-a00: rgba(255, 255, 255, 0);    /* 渐变的透明端（不用关键字 transparent，避免部分基础库渲染成黑） */
   --scrim: rgba(0, 0, 0, 0.45);           /* 模态遮罩（标准） */
   --scrim-soft: rgba(0, 0, 0, 0.32);      /* 轻遮罩 */
 }
 
 /* ===================== 语义类：全站统一 ===================== */
 
-/* 主按钮：白字 ≥4.85:1 */
+/* 主按钮（v6 软胶质感：渐变 + 顶部内高光 + 柔和外投影）
+   参考图的立体感就来自「上亮下暗 + 一道顶部高光」，纯平色块做不出来 */
 .btn-primary {
-  background: var(--brand-700);
+  background: linear-gradient(180deg, var(--brand-600) 0%, var(--brand-700) 100%);
   color: var(--text-on-brand);
   border-radius: var(--radius-pill);
   font-size: 30rpx;
+  box-shadow: 0 6rpx 14rpx var(--brand-a30), inset 0 2rpx 0 var(--white-a28);
+  transition: transform var(--press-duration) var(--press-ease),
+              box-shadow var(--press-duration) var(--press-ease);
 }
-.btn-primary.button-hover { background: var(--brand-800); }
+.btn-primary.button-hover {
+  background: linear-gradient(180deg, var(--brand-700) 0%, var(--brand-800) 100%);
+  transform: scale(0.97);
+  box-shadow: 0 3rpx 8rpx var(--brand-a30), inset 0 2rpx 0 var(--white-a18);
+}
 .btn-primary[disabled] {
   background: var(--state-disabled-bg);
   color: var(--state-disabled-text);
+  box-shadow: none;
 }
 
 /* 强调按钮（珊瑚粉）：大字号使用 */
@@ -220,22 +296,29 @@ page {
   color: var(--text-on-brand);
   border-radius: var(--radius-pill);
   font-size: 30rpx;
+  box-shadow: 0 6rpx 14rpx var(--orange-a30), inset 0 2rpx 0 var(--white-a28);
 }
 .btn-accent.button-hover { background: var(--orange-800); }
 .btn-accent[disabled] {
   background: var(--state-disabled-bg);
   color: var(--state-disabled-text);
+  box-shadow: none;
 }
 
-/* 次按钮 */
+/* 次按钮（白底 + 发丝边 + 极淡投影，轻浮起） */
 .btn-secondary {
   background: var(--bg-elevated);
   color: var(--text-1);
   border: 1rpx solid var(--border-strong);
   border-radius: var(--radius-pill);
   font-size: 30rpx;
+  box-shadow: 0 4rpx 10rpx var(--text1-a18);
+  transition: transform var(--press-duration) var(--press-ease);
 }
-.btn-secondary.button-hover { background: var(--bg-subtle); }
+.btn-secondary.button-hover {
+  background: var(--bg-subtle);
+  transform: scale(0.97);
+}
 
 /* 危险文字按钮 */
 .btn-danger {
@@ -278,14 +361,28 @@ page {
   color: var(--text-on-brand);
 }
 
-/* 卡片（v4：无描边，白卡 + 紫晕阴影） */
+/* 卡片（v5 两档层级：静置卡 = 白底 + 1px 发丝边 + 极淡影；浮起层另加 .card-float） */
 .card {
   background: var(--bg-elevated);
-  border: none;
+  border: 1rpx solid var(--card-border);
   border-radius: var(--radius-card);
   padding: 24rpx;
   margin-bottom: 24rpx;
   box-shadow: var(--shadow-card);
+}
+
+/* 浮起层：FAB / AI 卡 / 操作面板专用（更浓的投影 + 渐变） */
+.card-float {
+  box-shadow: var(--shadow-soft);
+}
+
+/* v5 通用按压态：给可点容器加 hover-class="is-pressed" 即可
+   （小程序 hover-class 默认有 70ms 延迟，配合 120ms 过渡手感自然） */
+.is-pressed {
+  transform: scale(var(--press-scale));
+  box-shadow: var(--press-shadow-tight);
+  transition: transform var(--press-duration) var(--press-ease),
+              box-shadow var(--press-duration) var(--press-ease);
 }
 
 /* 标签 */

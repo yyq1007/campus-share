@@ -94,7 +94,6 @@ Page({
       [`list[${idx}].${countKey}`]: nextCount
     })
     writePatch(post.id, { [key]: active, [countKey]: nextCount })
-    if (active) wx.vibrateShort({ type: 'light' })
     try {
       const res = await api.interactionToggle(post.id, type)
       // 用服务端真值校正：列表里的状态和计数可能已过期，不校正就会和详情页对不上

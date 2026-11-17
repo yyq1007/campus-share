@@ -125,23 +125,27 @@
 .stat-label { font-size: 26rpx; color: var(--text-soft); }
 
 /* ---------- 菜单卡（335×280 → 670×560rpx，描边） ---------- */
-.menu-card {
-  margin: 32rpx 40rpx 0;
+/* v5 发丝边分组列表（iOS 设置语义）：1rpx 边 + 极淡影，替代 v4 的 2rpx 淡紫描边大卡 */
+.menu-group {
+  margin: 24rpx 40rpx 0;
   padding: 0 32rpx;
   background: var(--bg-elevated);
-  border: 2rpx solid var(--brand-200);
-  border-radius: 44rpx;
-  box-shadow: none;
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 .menu-item {
   display: flex;
   align-items: center;
   gap: 30rpx;
   height: 112rpx;
+  transition: background var(--press-duration) var(--press-ease);
 }
 .menu-item + .menu-item {
-  border-top: 2rpx solid var(--border);
+  border-top: 1rpx solid var(--border);
 }
+/* v5 按压态：整行浅底（列表中不适合缩放，会抖动） */
+.menu-item-hover { background: var(--bg-subtle); }
 .menu-icon { width: 44rpx; height: 44rpx; flex-shrink: 0; }
 .menu-text { flex: 1; font-size: 30rpx; color: var(--text-1); }
 .menu-arrow { width: 40rpx; height: 40rpx; flex-shrink: 0; }
@@ -172,9 +176,19 @@
   text-align: center;
   font-size: 30rpx;
   color: var(--coral-text);
+  transition: opacity var(--press-duration) var(--press-ease);
+}
+/* v5 页脚：匿名身份说明（隐私心智前置，视觉权重压到最低） */
+.foot-note {
+  margin-top: 56rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--text-3);
+  line-height: 1.6;
+  padding: 0 60rpx;
 }
 .version {
-  margin-top: 40rpx;
+  margin-top: 12rpx;
   text-align: center;
   font-size: 22rpx;
   color: var(--text-faint);

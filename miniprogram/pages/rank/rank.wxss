@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--bg-gradient, linear-gradient(180deg, #F5F1FF 0%, #EAF4FF 100%));
+  background: var(--bg-gradient, linear-gradient(180deg, #FBF8F5 0%, #EAF4FF 100%));
 }
 .hero {
   padding: 0 32rpx 20rpx;
@@ -19,7 +19,7 @@
   align-items: center;
 }
 .hero-title { font-size: 36rpx; font-weight: 600; color: var(--text-strong, #2D2A45); }
-.hero-sub { margin-top: 4rpx; font-size: 24rpx; color: var(--text-soft, #9A96AC); }
+.hero-sub { margin-top: 4rpx; font-size: 24rpx; color: var(--text-soft, #7A7F8C); }
 
 /* ---------- 一级 Tab ---------- */
 .rk-tabs {
@@ -34,7 +34,7 @@
   text-align: center;
   border-radius: 38rpx;
   font-size: var(--fs-body, 30rpx);
-  color: var(--text-2, #6B6780);
+  color: var(--text-2, #5F6470);
   background: var(--bg-card, #FFFFFF);
   transition: background 0.15s, color 0.15s;
 }
@@ -54,7 +54,7 @@
   padding: 10rpx 30rpx;
   border-radius: 28rpx;
   font-size: var(--fs-body-s, 26rpx);
-  color: var(--text-2, #6B6780);
+  color: var(--text-2, #5F6470);
   background: var(--bg-card, #FFFFFF);
 }
 .rk-chip.on {
@@ -92,9 +92,9 @@
   height: 132rpx;
   flex: none;
   border-radius: 20rpx;
-  background: var(--brand-50, #F5F1FF);
+  background: var(--brand-50, #FBF8F5);
 }
-.rk-cover-ph { background: var(--brand-50, #F5F1FF); }
+.rk-cover-ph { background: var(--brand-50, #FBF8F5); }
 
 .rk-body {
   flex: 1;
@@ -120,7 +120,7 @@
 }
 .rk-board {
   color: var(--brand-800, #5A47C9);
-  background: var(--brand-50, #F5F1FF);
+  background: var(--brand-50, #FBF8F5);
   padding: 2rpx 12rpx;
   border-radius: 8rpx;
 }

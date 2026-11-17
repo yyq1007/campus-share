@@ -85,9 +85,11 @@
   transition: all 0.2s;
 }
 .board-pill.is-on { color: var(--text-on-brand); font-weight: 600; }
-.board-mint.is-on { background: var(--board-mint); }
-.board-sky.is-on { background: var(--board-sky); }
-.board-coral.is-on { background: var(--board-coral); }
+/* v6.3：选中态统一用主色，不再用薄荷/天蓝/珊瑚三种实底
+   （紫色主色下三种饱和色同时出现会互相抢戏） */
+.board-mint.is-on { background: var(--brand-700); }
+.board-sky.is-on { background: var(--brand-700); }
+.board-coral.is-on { background: var(--brand-700); }
 
 /* ---------- 输入 ---------- */
 .input-row {
@@ -690,9 +692,13 @@
   color: var(--text-on-brand);
   border-radius: var(--radius-chip);
 }
-.draft-board-mint { background: var(--board-mint); }
-.draft-board-sky { background: var(--board-sky); }
-.draft-board-coral { background: var(--board-coral); }
+/* v6.3：草稿卡上的板块标签改浅紫底 + 深紫字（原来三种糖果色实底白字） */
+.draft-board-mint,
+.draft-board-sky,
+.draft-board-coral {
+  background: var(--brand-100);
+  color: var(--brand-800);
+}
 .draft-title {
   flex: 1;
   min-width: 0;

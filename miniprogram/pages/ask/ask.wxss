@@ -30,17 +30,54 @@
   display: flex;
   margin-top: 28rpx;
   align-items: flex-start;
+  gap: 16rpx;
 }
 .msg.is-user { justify-content: flex-end; }
 
-/* AI 气泡：白卡 */
+/* v5 AI 身份圆章：紫青径向渐变，全站唯一形态（首页 AI 入口 / postAssist 同源） */
+.ai-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle,
+    var(--ai-badge-grad-from) 5%,
+    var(--ai-badge-grad-to) 100%);
+  color: var(--text-on-brand);
+  font-size: 24rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+  box-shadow: 0 4rpx 12rpx var(--brand-a25);
+}
+
+/* AI 气泡：白卡 + 发丝边（v5 静置层不再用浮起投影） */
 /* 设计稿：AI 白卡气泡圆角 20px = 40rpx，左上小圆角 */
 .bubble-ai {
   max-width: 78%;
   padding: 24rpx 28rpx;
   background: var(--bg-elevated);
+  border: 1rpx solid var(--card-border);
   border-radius: 12rpx 40rpx 40rpx 40rpx;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-card);
+}
+
+/* v5 依据徽章：回答头部，淡紫底胶囊 */
+.cite-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand-50);
+  border: 1rpx solid var(--brand-100);
+}
+.cite-badge-txt {
+  font-size: 22rpx;
+  color: var(--brand-800);
+  line-height: 1.5;
 }
 .bubble-text {
   font-size: 28rpx;
@@ -218,9 +255,10 @@
   font-size: 22rpx;
   color: var(--primary-deep);
 }
-.bubble-user { background: var(--sky); box-shadow: 0 8rpx 20rpx var(--sky-a30); }
-.hot-chip { background: var(--brand-50); color: var(--primary-deep); border: 2rpx solid var(--brand-100); }
-.cite-card { background: var(--bg-elevated); border: 2rpx solid var(--brand-100); }
+/* v5：用户气泡改深紫实底（原天蓝与 AI 圆章的青色撞色，且弱化「我说的」） */
+.bubble-user { background: var(--brand-700); box-shadow: 0 8rpx 20rpx var(--brand-a30); }
+.hot-chip { background: var(--brand-50); color: var(--primary-deep); border: 1rpx solid var(--brand-100); }
+.cite-card { background: var(--bg-elevated); border: 1rpx solid var(--card-border); }
 .cite-meta { color: var(--text-3); }
 .input-shell {
   background: linear-gradient(100deg, var(--brand-50) 0%, var(--bg-elevated) 60%);

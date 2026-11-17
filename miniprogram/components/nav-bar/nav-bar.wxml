@@ -8,7 +8,7 @@
       <icon name="{{transparent && bgOpacity < 0.5 ? 'back-white' : 'chevron-left'}}" size="40"/>
     </view>
     <view
-      class="nav-title font-title {{transparent && bgOpacity < 0.5 ? 'nav-title-light' : ''}}"
+      class="nav-title {{transparent && bgOpacity < 0.5 ? 'nav-title-light' : ''}}"
       style="margin-right:{{capsuleRight}}px;{{titleColor ? 'color:' + titleColor : ''}}"
     >{{title}}</view>
   </view>

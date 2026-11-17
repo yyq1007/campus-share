@@ -1,6 +1,6 @@
 <image
   wx:if="{{src}}"
-  class="icon"
+  class="icon {{extraClass}}"
   src="{{src}}"
   mode="aspectFit"
   style="width:{{size}}rpx;height:{{size}}rpx"

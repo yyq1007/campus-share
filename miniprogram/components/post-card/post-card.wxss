@@ -1,105 +1,114 @@
 /* 卡片自持样式（重要）：组件默认样式隔离，app.wxss 的 .card 类不生效——
-   白底/阴影必须在此显式声明，否则卡片透明、与页面渐变底无法区分。
-   2px 淡紫描边 + 白底 + 圆角 + 紫晕阴影 */
+   白底/边线必须在此显式声明，否则卡片透明、与页面渐变底无法区分。
+
+   v5 两档层级：静置卡 = 白底 + 1rpx 发丝边 + 极淡影（不再 2px 淡紫框 + 紫晕）。 */
 .pc {
   position: relative;
-  padding: 28rpx 28rpx 0;
+  padding: 0;
   overflow: hidden;
   background: var(--bg-elevated);
-  border: 2px solid var(--card-border);
-  /* 信息流卡片单独收成小弧度（16rpx=8pt）；全站 --radius-card 是 48rpx，
-     那样卡片太圆。只在本组件内改，不动全局令牌 */
-  border-radius: 16rpx;
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
+  transition: transform var(--press-duration) var(--press-ease),
+              box-shadow var(--press-duration) var(--press-ease);
 }
 
-/* ---------- 头部：头像 + 昵称/时间 ---------- */
-.pc-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 20rpx;
+/* v5 按压态：整卡 scale 0.96 + 投影收紧（配合 hover-class 使用） */
+.pc-pressed {
+  transform: scale(var(--press-scale));
+  box-shadow: var(--press-shadow-tight);
 }
-/* 匿名糖果色头像：按帖子 id 取色（见 post-card.js），不再是人像照片 */
-.pc-avatar {
-  width: 72rpx;
-  height: 72rpx;
-  flex-shrink: 0;
+
+/* ---------- 双列网格卡（首页瀑布流） ----------
+   两种形态：有封面走「图 + 标题」，无封面走「纯文字卡」（标题 + 摘要）。
+   两者高度天然不同，配多列布局就是错落效果。 */
+.pc-grid {
+  margin-bottom: 0;
+  border-radius: 20rpx;
+}
+/* 无封面：浅紫底 + 发丝边，和图片卡区分开 */
+.pc-grid-text {
+  background: var(--brand-50);
+  border: 1rpx solid var(--brand-100);
+}
+.pg-cover-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;      /* 1:1 方形图区 */
+  background: var(--bg-field);
+  overflow: hidden;
+}
+.pg-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.pg-badge {
+  position: absolute;
+  left: 12rpx;
+  top: 12rpx;
+  padding: 4rpx 14rpx;
+  border-radius: var(--radius-pill);
+  background: var(--white-a92);
+  color: var(--text-1);
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+.pg-status {
+  position: absolute;
+  right: 12rpx;
+  top: 12rpx;
+  padding: 4rpx 12rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.pg-status.st-published { background: var(--brand-100); color: var(--brand-700); }
+.pg-status.st-pending { background: var(--warning-bg); color: var(--warning-text); }
+.pg-status.st-rejected,
+.pg-status.st-hidden { background: var(--coral-bg); color: var(--coral-text); }
+.pg-status.st-expired { background: var(--warning-bg); color: var(--warning-text); }
+.pg-play {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 68rpx; height: 68rpx;
   border-radius: 50%;
+  background: var(--white-a90);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28rpx;
-  font-weight: 500;
-  color: var(--text-on-brand);
+  padding-left: 4rpx;
 }
-/* 本人头像（post.myAvatarUrl 有值时渲染）：尺寸与糖果色头像一致 */
-.pc-avatar-img {
-  width: 72rpx;
-  height: 72rpx;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--bg-field);
+.pg-body {
+  padding: 16rpx 18rpx 18rpx;
 }
-.av-1 { background: var(--avatar-1); }
-.av-2 { background: var(--avatar-2); }
-.av-3 { background: var(--avatar-3); }
-.av-4 { background: var(--avatar-4); }
-.av-5 { background: var(--avatar-5); }
-
-.pc-main { flex: 1; min-width: 0; }
-.pc-name-row {
+/* 纯文字卡：比图片卡矮一截，两列错落才明显；底栏吸底 */
+.pg-body-text {
+  padding: 18rpx 20rpx 16rpx;
+  min-height: 194rpx;
   display: flex;
-  align-items: center;
-  gap: 12rpx;
+  flex-direction: column;
 }
-.pc-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-1);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.pg-body-text .pg-foot {
+  margin-top: auto;
 }
-/* 状态角标（我的分享：审核中/已发布/已驳回/已下线）：占「热门」的位置 */
-.pc-status {
-  margin-left: auto;
-  flex-shrink: 0;
+/* 文字卡上的板块名（图片卡是压在封面上的角标，这里改成一行业务标签） */
+.pg-text-board {
   font-size: 22rpx;
-  padding: 4rpx 16rpx;
-  border-radius: var(--radius-pill);
-  font-weight: 500;
+  color: var(--brand-700);
+  margin-bottom: 6rpx;
 }
-.pc-status.st-published { background: var(--brand-100); color: var(--brand-700); }
-.pc-status.st-pending { background: var(--warn-bg); color: var(--warning-text); }
-.pc-status.st-rejected,
-.pc-status.st-hidden { background: var(--coral-bg); color: var(--coral-text); }
-.pc-status.st-expired { background: var(--warn-bg); color: var(--warning-text); }
-
-.pc-sub {
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  line-height: 1.3;
-  color: var(--text-3);
-}
-.pc-expired { color: var(--warning-text); }
-
-/* ---------- 正文 ---------- */
-.pc-title {
-  margin-top: 16rpx;
-  font-size: 32rpx;
-  font-weight: 600;
-  line-height: 1.45;
-  color: var(--text-1);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-.pc-excerpt {
+/* 无图卡补的摘要：截 3 行，比图片卡那边的标题更短，卡片才不会拉长 */
+.pg-excerpt {
   margin-top: 8rpx;
-  font-size: 30rpx;
-  line-height: 1.62;
+  font-size: 24rpx;
+  line-height: 1.5;
   color: var(--text-2);
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -107,19 +116,67 @@
   overflow: hidden;
   word-break: break-word;
 }
+/* 两行固定高度：同一行的两张卡标题行数不同时，底栏仍能对齐 */
+.pg-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-1);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 72rpx;
+  word-break: break-word;
+}
+.pg-foot {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  margin-top: 10rpx;
+}
+.pg-act {
+  display: flex;
+  align-items: center;
+  gap: 7rpx;
+  /* 图标放大后点击热区跟着放大，手指更好点 */
+  padding: 2rpx 0;
+}
+/* 收藏跟点赞/评论并排（原来用 margin-left:auto 推到了最右边，看着像掉到角落） */
+.pg-act-fav { margin-left: 0; }
+.pg-num { font-size: 24rpx; color: var(--text-3); }
+.pg-num-on { color: var(--coral-text); font-weight: 600; }
+.pg-num-fav-on { color: var(--sun-text); font-weight: 600; }
 
-/* ---------- 媒体（在正文下方） ---------- */
-.pc-media {
+/* ---------- v5 封面全出血 3:2 ----------
+   v4 是卡内 86px 小缩略图，标题一行就断；v5 让图占满卡宽，
+   用 padding-top 撑出 3:2 高度（图片绝对定位填满，避免下载前高度为 0 抖动）。 */
+.pc-cover-wrap {
   position: relative;
-  margin-top: 20rpx;
-  border-radius: 16rpx;   /* 与卡片同弧度，不再比卡片更圆 */
+  width: 100%;
+  padding-top: 66.66%;
+  background: var(--bg-field);
   overflow: hidden;
 }
 .pc-cover {
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 400rpx;
-  background: var(--bg-field);
+  height: 100%;
+}
+/* 板块角标：浮于封面左上角（白底半透明，压得住任意图色） */
+.pc-board {
+  position: absolute;
+  left: 20rpx;
+  top: 20rpx;
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-pill);
+  background: var(--white-a92);
+  color: var(--text-1);
+  font-size: 22rpx;
+  font-weight: 500;
+  line-height: 1.5;
 }
 .pc-play {
   position: absolute;
@@ -134,51 +191,105 @@
   padding-left: 8rpx;
 }
 
-/* ---------- 话题（板块）：描边胶囊 ---------- */
-.pc-topic {
-  display: inline-flex;
-  align-items: center;
-  gap: 8rpx;
-  margin-top: 20rpx;
-  padding: 8rpx 20rpx;
-  border: 2rpx solid var(--border);
-  border-radius: var(--radius-pill);
+/* ---------- 卡内文字区 ---------- */
+.pc-body {
+  padding: 24rpx 24rpx 0;
 }
-.pc-topic-text { font-size: 22rpx; color: var(--text-2); }
+.pc-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+}
+.pc-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text-1);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.pc-excerpt {
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+}
 
-/* ---------- 底部互动条（通栏分隔线） ---------- */
+/* 状态角标（我的分享：审核中/已发布/已驳回/已下线） */
+.pc-status {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  line-height: 1.5;
+}
+.pc-status.st-published { background: var(--brand-100); color: var(--brand-700); }
+.pc-status.st-pending { background: var(--warning-bg); color: var(--warning-text); }
+.pc-status.st-rejected,
+.pc-status.st-hidden { background: var(--coral-bg); color: var(--coral-text); }
+.pc-status.st-expired { background: var(--warning-bg); color: var(--warning-text); }
+
+/* ---------- 底部互动条：左指标 / 右作者·时间 ---------- */
 .pc-foot {
-  margin: 24rpx -28rpx 0;
-  padding: 0 28rpx;
-  height: 92rpx;
+  margin-top: 20rpx;
+  padding: 0 24rpx 20rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 2rpx solid var(--border);
-}
-.pc-foot-left {
-  display: flex;
-  align-items: center;
-  gap: 24rpx;
-  min-width: 0;
-}
-.pc-cited {
-  font-size: 22rpx;
-  color: var(--text-3);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 16rpx;
 }
 .pc-acts {
   display: flex;
   align-items: center;
-  gap: 48rpx;
+  gap: 32rpx;
   flex-shrink: 0;
 }
 .pc-act { display: flex; align-items: center; gap: 8rpx; }
-.pc-act-danger { font-size: 24rpx; color: var(--coral-text); }
 .pc-num { font-size: 24rpx; color: var(--text-3); }
-.pc-num-on { color: var(--brand-700); font-weight: 600; }
+/* 激活态用深一档的语义色：图标本身是彩色 PNG，数字若跟着用浅色（#FF7A8A 白底仅 2.5:1）
+   在 24rpx 下会看不清。数字用 --coral-text / --sun-text 保证 ≥4.5:1。 */
+.pc-num-on { color: var(--coral-text); font-weight: 600; }
+.pc-num-fav-on { color: var(--sun-text); font-weight: 600; }
+
+/* 被引用次数（AI 价值可视化）：淡紫文字，弱于互动指标 */
+.pc-cited { display: flex; align-items: center; }
+.pc-cited-txt { font-size: 22rpx; color: var(--brand-700); }
+
+.pc-meta {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  min-width: 0;
+  font-size: 22rpx;
+  color: var(--text-3);
+}
+.pc-author {
+  max-width: 190rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-dot { color: var(--text-3); }
+.pc-time { flex-shrink: 0; }
+.pc-expired { color: var(--warning-text); flex-shrink: 0; }
+
+/* 管理态（我的分享）：删除入口 */
+.pc-manage {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 24rpx 20rpx;
+}
+.pc-act-danger { font-size: 24rpx; color: var(--coral-text); }
 
 /* ---------- 周报卡（weeklyDigest 置顶） ----------
    不分板块的一篇周报：紫色渐变头 + AI 总结 + 精选帖列表。
@@ -187,10 +298,10 @@
   padding: 0;
   overflow: hidden;
   background: var(--bg-elevated);
-  border: 2px solid var(--card-border);
-  border-radius: 16rpx;   /* 与 .pc 保持一致的小弧度 */
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
   position: relative;
 }
 .pc-digest-head {

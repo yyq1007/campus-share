@@ -11,10 +11,36 @@
 .ps-btn { padding: 18rpx 56rpx; margin-top: 16rpx; }
 .ps-pad { padding: 32rpx; display: flex; flex-direction: column; gap: 20rpx; }
 
-/* 骨架 */
-.sk-cover { width: 100%; height: 400rpx; margin-bottom: 20rpx; }
+/* 骨架 / 骨架卡：组件默认 styleIsolation=isolated，app.wxss 的 .sk / .card
+   **不会作用到组件内部** —— v4 因此骨架屏实际是透明的（表现为「加载白屏」）。
+   v5 在此自持声明，shimmer 复用既有色对（skeleton-base → skeleton-peak）。 */
+.card {
+  background: var(--bg-elevated);
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius-card);
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.sk {
+  border-radius: 12rpx;
+  background: linear-gradient(90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-peak) 50%,
+    var(--skeleton-base) 75%);
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.4s linear infinite;
+}
+@keyframes sk-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* 封面骨架按 v5 的 3:2 比例（原 400rpx 与新卡比例不符） */
+.sk-cover { width: 100%; height: 500rpx; margin-bottom: 20rpx; }
 .sk-line { height: 32rpx; margin-top: 16rpx; }
-.sk-hero { width: 100%; height: 560rpx; border-radius: 0; }
+.sk-hero { width: 100%; height: 500rpx; border-radius: 0; }
 .sk-bubble { height: 88rpx; margin-bottom: 24rpx; }
 .sk-right { margin-left: auto; }
 

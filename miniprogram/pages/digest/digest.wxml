@@ -34,14 +34,14 @@
 
   <!-- 空态 -->
   <view wx:elif="{{state === 'empty'}}" class="state">
-    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <icon name="empty-cloud" size="160"/>
     <view class="state-title">还没有周报</view>
     <view class="state-sub">每周一会自动整理上一周的精选内容</view>
   </view>
 
   <!-- 失败 -->
   <view wx:elif="{{state === 'error'}}" class="state">
-    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <icon name="empty-cloud" size="160"/>
     <view class="state-title">加载失败了</view>
     <view class="state-btn" bind:tap="onRetry" hover-class="state-btn-press">点一下重试</view>
   </view>

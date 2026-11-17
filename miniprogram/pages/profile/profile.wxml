@@ -12,7 +12,7 @@
     <view class="skeleton" />
   </view>
   <view wx:elif="{{state === 'error'}}" class="state-wrap">
-    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <icon name="empty-cloud" size="160"/>
     <view class="state-text">加载失败了</view>
     <button class="state-btn" bind:tap="onRetry">重试</button>
   </view>
@@ -50,30 +50,33 @@
       </view>
     </view>
 
-    <!-- 菜单（设计稿：335×280 单张描边卡，5 行） -->
-    <view class="menu-card">
-      <view class="menu-item" bind:tap="onMyPosts">
+    <!-- v5 菜单：拆成两个发丝边分组列表（iOS 设置语义），不再一张描边大卡 -->
+    <view class="menu-group">
+      <view class="menu-item" bind:tap="onMyPosts" hover-class="menu-item-hover" hover-stay-time="60">
         <image class="menu-icon" src="/assets/icons/doc-fold.png" mode="aspectFit" />
         <text class="menu-text">我的分享</text>
         <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
       </view>
-      <view class="menu-item" bind:tap="onMyFavs">
+      <view class="menu-item" bind:tap="onMyFavs" hover-class="menu-item-hover" hover-stay-time="60">
         <image class="menu-icon" src="/assets/icons/star-line.png" mode="aspectFit" />
         <text class="menu-text">我的收藏</text>
         <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
       </view>
-      <view class="menu-item" bind:tap="onMessages">
+      <view class="menu-item" bind:tap="onMessages" hover-class="menu-item-hover" hover-stay-time="60">
         <image class="menu-icon" src="/assets/icons/bell-line.png" mode="aspectFit" />
         <text class="menu-text">站内消息</text>
         <view wx:if="{{profile.unread}}" class="menu-dot">{{profile.unread > 99 ? '99+' : profile.unread}}</view>
         <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
       </view>
-      <view class="menu-item" bind:tap="onAbout">
+    </view>
+
+    <view class="menu-group">
+      <view class="menu-item" bind:tap="onAbout" hover-class="menu-item-hover" hover-stay-time="60">
         <image class="menu-icon" src="/assets/icons/info-circle.png" mode="aspectFit" />
         <text class="menu-text">关于</text>
         <image class="menu-arrow" src="/assets/icons/chevron-right-soft.png" mode="aspectFit" />
       </view>
-      <view wx:if="{{isAdmin}}" class="menu-item" bind:tap="onAdmin">
+      <view wx:if="{{isAdmin}}" class="menu-item" bind:tap="onAdmin" hover-class="menu-item-hover" hover-stay-time="60">
         <image class="menu-icon" src="/assets/icons/shield-line.png" mode="aspectFit" />
         <text class="menu-text">审核台</text>
         <view class="menu-role">管理员</view>
@@ -84,6 +87,8 @@
     <!-- 退出登录 -->
     <view class="logout" bind:tap="onLogout">退出登录</view>
 
+    <!-- v5：匿名身份说明移页脚小字——隐私心智前置但降低视觉权重 -->
+    <view class="foot-note">匿名身份由系统生成 · 昵称头像仅本人可改</view>
     <view class="version">好物分享 MVP · v1.0.0</view>
   </block>
   <view class="tab-page-bottom"></view>

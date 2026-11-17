@@ -1,4 +1,4 @@
-// S1 首页：渐变页头 + 搜索 + 分类贴纸 + AI 引导卡 + 信息流
+// S1 首页：渐变页头 + 胶囊分类 + 搜索 + AI 引导卡 + 信息流
 const api = require('../../utils/api')
 const { guard } = require('../../utils/auth')
 const { CATEGORY_STICKERS } = require('../../utils/config')
@@ -8,12 +8,25 @@ const { writePatch, gcPatches } = require('../../utils/feed-patch')
 const { syncTabBarLock } = require('../../utils/privacy')
 const { getMyAvatarUrl } = require('../../utils/my-avatar')
 
+/**
+ * v5 板块卡（仿参考图：圆角方形卡 + 圆形图标徽章 + 底部色条文字）。
+ * 图标是 AI 生成的 3D 玻璃质感图（assets/icons/cat-icon-*.png，192×192），
+ * 本身带白色方形底，页面上用 border-radius 裁成圆形徽章。
+ */
+const CATS = [
+  { key: 'all', label: '全部', img: '/assets/icons/cat-icon-all.png' },
+  { key: 'life', label: '好物', img: '/assets/icons/cat-icon-life.png' },
+  { key: 'food', label: '美食', img: '/assets/icons/cat-icon-food.png' },
+  { key: 'study', label: '学习', img: '/assets/icons/cat-icon-study.png' }
+]
+
 
 Page({
   data: {
     statusBarH: 40,
     navH: 44,
     board: 'all',
+    cats: CATS,
     stickers: CATEGORY_STICKERS,
     digest: null,          // 最新周报（AI 引导卡下方入口），无周报时为 null
     list: [],
@@ -120,9 +133,23 @@ Page({
     wx.navigateTo({ url: `/pages/digest/digest${id}` })
   },
 
+  /**
+   * v5 胶囊分类：首页内筛选，不再跳板块页。
+   * 同一分类重复点击直接返回（避免重复请求打空接口）。
+   */
   onStickerTap(e) {
-    const key = e.currentTarget.dataset.board
-    wx.navigateTo({ url: `/pages/board/board?board=${key}&from=index` })
+    const raw = e.currentTarget.dataset.board || 'all'
+    // 兼容旧 dataset：study2 归到 study
+    const key = raw === 'study2' ? 'study' : raw
+    if (key === this.data.board) return
+    this.setData({
+      board: key,
+      list: [],
+      cursor: null,
+      hasMore: true,
+      state: 'loading'
+    })
+    this.fetchList(true).catch(() => this.setData({ state: 'error' }))
   },
 
   onSearchTap() {
@@ -168,7 +195,6 @@ Page({
       [`list[${idx}].${countKey}`]: nextCount
     })
     writePatch(post.id, { [key]: active, [countKey]: nextCount })
-    if (active) wx.vibrateShort({ type: 'light' })
     try {
       const res = await api.interactionToggle(post.id, type)
       // 用服务端真值校正：列表里的状态和计数可能已过期，不校正就会和详情页对不上

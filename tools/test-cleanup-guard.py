@@ -11,16 +11,26 @@ import json
 import subprocess
 import sys
 import time
+def _detect_node():
+    import os as _o
+    base = _o.path.expanduser('~/.workbuddy/binaries/node/versions')
+    for d in sorted(_o.listdir(base), reverse=True):
+        p = _o.path.join(base, d, 'node.exe')
+        if _o.path.isfile(p):
+            return p
+    raise SystemExit('node.exe not found under ' + base)
 
-NODE = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
+
+
+NODE = _detect_node()
 CLI = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_modules\@cloudbase\cli\dist\standalone\cli.js"
-ENV = 'yyq-d6g1dv0kgf893afe8'
+ENV = 'qqq-d7g05y68803d5476c'
 MY_UID = '080954836ae07a5b0040a26908637ad3'
 OLD = '2020-01-01T00:00:00.000Z'   # 远早于 1 天前，确保会被扫到
 
-TEST_A = 'cloud://yyq-d6g1dv0kgf893afe8.test/avatar/aa.jpg'   # 被帖子引用
-TEST_B = 'cloud://yyq-d6g1dv0kgf893afe8.test/avatar/bb.jpg'   # 无人引用
-TEST_C = 'cloud://yyq-d6g1dv0kgf893afe8.test/avatar/cc.jpg'   # refCount=1
+TEST_A = 'cloud://qqq-d7g05y68803d5476c.test/avatar/aa.jpg'   # 被帖子引用
+TEST_B = 'cloud://qqq-d7g05y68803d5476c.test/avatar/bb.jpg'   # 无人引用
+TEST_C = 'cloud://qqq-d7g05y68803d5476c.test/avatar/cc.jpg'   # refCount=1
 
 
 def run(cmds, t=180):

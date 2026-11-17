@@ -22,11 +22,11 @@
   justify-content: center;
 }
 .nav-back-icon { width: 40rpx; height: 40rpx; }
+/* v5：评论页标题回归系统字（快乐体只留给页面级大标题） */
 .nav-title {
   font-size: 44rpx;
   font-weight: 600;
   color: var(--text-strong);
-  font-family: var(--font-title);
 }
 
 /* ---------- 帖子摘要白卡（335×64，圆角 20px） ---------- */

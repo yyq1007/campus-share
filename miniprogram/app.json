@@ -22,15 +22,15 @@
   ],
   "window": {
     "navigationStyle": "custom",
-    "backgroundColor": "#F5F1FF",
+    "backgroundColor": "#FDFCFB",
     "backgroundTextStyle": "dark",
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "校园分享"
   },
   "tabBar": {
     "custom": true,
-    "color": "#6B6780",
-    "selectedColor": "#5A47C9",
+    "color": "#5F6470",
+    "selectedColor": "#6C5CE7",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [

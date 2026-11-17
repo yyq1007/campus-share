@@ -1,1 +1,60 @@
 .icon { display: block; }
+
+/* ---------- 点赞跳动爱心 ----------
+   挂在 icon 内部 image 上的类（由调用方通过 extraClass 传入）。
+   必须是「一次性」动画：靠 .heart-beat 类被移除再重新加上来重播，
+   所以 keyframes 结束态必须回到原始状态（scale 1），否则心形会留在放大态。
+
+   节奏：先弹到 1.35 倍并轻微右倾 → 回弹到 0.92 倍 → 稳定回到 1。
+   这个「过冲再回落」是「跳动」手感的关键；单纯线性放大看起来像渐变。 */
+.heart-beat {
+  animation: heart-beat 0.52s cubic-bezier(0.22, 0.9, 0.3, 1);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes heart-beat {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  28% {
+    transform: scale(1.35) rotate(-9deg);
+  }
+  52% {
+    transform: scale(0.92) rotate(5deg);
+  }
+  74% {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ---------- 收藏星标跳动 ----------
+   和爱心同一套「过冲再回落」节奏，但幅度更夸张：
+   星标比爱心小，动作不够大就看不出来。
+   旋转方向也反过来（先顺时针再逆时针），和爱心区分开。 */
+.star-beat {
+  animation: star-beat 0.54s cubic-bezier(0.22, 0.9, 0.3, 1);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes star-beat {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  26% {
+    transform: scale(1.42) rotate(14deg);
+  }
+  50% {
+    transform: scale(0.90) rotate(-8deg);
+  }
+  72% {
+    transform: scale(1.12) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}

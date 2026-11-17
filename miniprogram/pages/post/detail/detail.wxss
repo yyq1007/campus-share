@@ -77,7 +77,53 @@
 .state-btn::after { border: none; }
 
 /* ---------- 正文区（设计稿：无白卡，直接排在渐变底上，左右 20px） ---------- */
-.detail-card {
+/* ---------- v5 封面全出血（3:2 = 750×500rpx） ---------- */
+.hero-media {
+  position: relative;
+  width: 100%;
+  background: var(--bg-field);
+}
+.hero-gallery {
+  width: 100%;
+  height: 500rpx;
+}
+.hero-img {
+  display: block;
+  width: 100%;
+  height: 500rpx;
+}
+/* 单图：竖拍长图不占满整屏，居中裁切，点开可看原图 */
+.hero-img.solo {
+  height: 500rpx;
+  max-height: 56vh;
+}
+.hero-video {
+  width: 100%;
+  height: 500rpx;
+}
+.hero-dots {
+  position: absolute;
+  right: 24rpx;
+  bottom: 72rpx;
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-pill);
+  background: var(--scrim-soft);
+  color: var(--text-on-brand);
+  font-size: 22rpx;
+}
+
+/* ---------- v5 白卡下沉：负边距上移，盖住封面下缘 ---------- */
+.detail-card-lift {
+  position: relative;
+  z-index: 2;
+  margin: -48rpx 24rpx 0;
+  padding: 28rpx 28rpx 8rpx;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: var(--shadow-card);
+}
+/* 无封面 / 周报：保持透明排版（不压白底，避免出现多余空白卡） */
+.detail-card-plain {
   margin: 20rpx 40rpx 0;
   padding: 0;
   background: transparent;
@@ -116,11 +162,15 @@
   font-size: 22rpx;
   font-weight: 600;
   border-radius: 24rpx;
-  color: var(--text-on-brand);
+  /* v6.3：三个板块统一成「浅紫底 + 深紫字」
+     原来是薄荷/天蓝/珊瑚实底白字，在紫色主色下三种饱和色一起跳，
+     反而抢标题的注意力。分类只是标识，不需要三个颜色抢戏。 */
+  background: var(--brand-100);
+  color: var(--brand-800);
 }
-.board-mint { background: var(--board-mint); }
-.board-sky { background: var(--board-sky); }
-.board-coral { background: var(--board-coral); }
+.board-mint { background: var(--brand-100); }
+.board-sky { background: var(--brand-100); }
+.board-coral { background: var(--brand-100); }
 .detail-title {
   margin-top: 24rpx;
   font-size: 36rpx;
@@ -170,31 +220,38 @@
 }
 
 /* ---------- 字段卡 ---------- */
+/* v5 字段卡：灰底压灰字（label 灰 / value 深墨保证可读），行间发丝分隔 */
 .field-card {
   margin-top: 24rpx;
-  padding: 20rpx 24rpx;
-  background: var(--primary-tint);
+  padding: 0 24rpx;
+  background: var(--bg-field);
   border-radius: 24rpx;
 }
 .field-row {
   display: flex;
   align-items: center;
-  min-height: 64rpx;
+  min-height: 76rpx;
   gap: 16rpx;
+  border-bottom: 1rpx solid var(--border);
 }
+.field-row:last-child { border-bottom: none; }
 .field-label {
-  width: 160rpx;
+  width: 150rpx;
   flex-shrink: 0;
   font-size: 24rpx;
-  color: var(--text-soft);
+  color: var(--text-3);
 }
 .field-value {
   flex: 1;
+  min-width: 0;
   font-size: 26rpx;
   font-weight: 500;
-  color: var(--primary-deep);
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.field-copy { width: 26rpx; height: 26rpx; opacity: 0.5; }
+.field-copy { width: 26rpx; height: 26rpx; opacity: 0.45; flex-shrink: 0; }
 
 /* ---------- 链接卡 ---------- */
 .link-card {
@@ -308,7 +365,7 @@
 }
 .page-bottom-pad { height: 200rpx; }
 
-/* ---------- 底部互动栏（设计稿：白条 375×48 r=11px，输入框 #EDE9FE + 3 个线性图标） ---------- */
+/* ---------- 底部互动栏（设计稿：白条 375×48 r=11px，输入框 #E5EBF3 + 3 个线性图标） ---------- */
 .action-bar {
   position: fixed;
   left: 0;
@@ -333,16 +390,82 @@
 }
 .action-input-field { flex: 1; font-size: 26rpx; color: var(--text-body); }
 .ph { color: var(--text-faint); }
+/* v5 互动条胶囊化：激活态才上底色（未激活透明，避免底部栏拥挤）
+   喜欢 = 珊瑚红胶囊，收藏 = 奶黄橙胶囊，两者色相区分 */
 .action-item {
   display: flex;
   align-items: center;
   gap: 6rpx;
+  padding: 8rpx 14rpx;
+  border-radius: var(--radius-pill);
   font-size: 24rpx;
   color: var(--text-soft);
+  transition: background var(--press-duration) var(--press-ease),
+              color var(--press-duration) var(--press-ease);
 }
-.action-item.is-on { color: var(--coral); }
-.action-item.is-on-fav { color: var(--sun-deep); }
+.action-item.is-on {
+  color: var(--coral-text);
+  background: var(--coral-bg);
+}
+.action-item.is-on-fav {
+  color: var(--sun-text);
+  background: var(--sun-bg);
+}
 .action-icon { width: 40rpx; height: 40rpx; }
+
+/* ---------- 收藏星标跳动 ----------
+   幅度比爱心更大（星标更小，动作不大看不出来），旋转方向相反以便区分。 */
+.star-beat {
+  animation: star-beat 0.54s cubic-bezier(0.22, 0.9, 0.3, 1);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes star-beat {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  26% {
+    transform: scale(1.42) rotate(14deg);
+  }
+  50% {
+    transform: scale(0.90) rotate(-8deg);
+  }
+  72% {
+    transform: scale(1.12) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ---------- 点赞跳动爱心 ----------
+   与 icon 组件内的 .heart-beat 同一套节奏：先弹到 1.35 倍并轻微左倾 →
+   回弹到 0.92 倍 → 稳定回到 1。「过冲再回落」是跳动手感的关键。
+   keyframes 末态必须回到 scale(1)，否则心形会留在放大态。 */
+.heart-beat {
+  animation: heart-beat 0.52s cubic-bezier(0.22, 0.9, 0.3, 1);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes heart-beat {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  28% {
+    transform: scale(1.35) rotate(-9deg);
+  }
+  52% {
+    transform: scale(0.92) rotate(5deg);
+  }
+  74% {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
 /* 发送键：仅在有输入内容时出现（设计稿静态态无发送按钮，键盘 confirm 亦可发送） */
 .action-send {
   width: 72rpx;
@@ -376,18 +499,8 @@
 .reply-close { width: 26rpx; height: 26rpx; }
 
 /* ---- v4 设计稿对齐（追加覆盖） ---- */
-/* 图集已移入正文卡（正文下方），左右内缩由 .detail-card 的 40rpx 承担 */
-.gallery-wrap { position: relative; margin-top: 28rpx; padding: 0; }
-.detail-card { margin-top: 20rpx; }
+/* v5：图集已改为页首全出血封面（.hero-media），旧卡内图集样式保留但不再引用 */
 .board-chip { display: inline-flex; align-items: center; gap: 8rpx; }
-.field-chips { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 24rpx; }
-.field-chip {
-  padding: 10rpx 24rpx;
-  font-size: 24rpx;
-  color: var(--primary-deep);
-  background: var(--brand-50);
-  border-radius: 999rpx;
-}
 .ai-cite-card {
   display: flex;
   align-items: center;

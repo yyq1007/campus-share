@@ -37,8 +37,18 @@ CF = os.path.join(ROOT, 'cloudfunctions')
 AUTHOR_ENV = 'yyq-d6g1dv0kgf893afe8'
 APPID = 'wxb354543de577f74b'
 PORT = '3799'
+def _detect_node():
+    import os as _o
+    base = _o.path.expanduser('~/.workbuddy/binaries/node/versions')
+    for d in sorted(_o.listdir(base), reverse=True):
+        p = _o.path.join(base, d, 'node.exe')
+        if _o.path.isfile(p):
+            return p
+    raise SystemExit('node.exe not found under ' + base)
 
-NODE = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
+
+
+NODE = _detect_node()
 TCB = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_modules\@cloudbase\cli\dist\standalone\cli.js"
 
 

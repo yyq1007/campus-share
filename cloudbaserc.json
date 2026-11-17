@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
-  "envId": "yyq-d6g1dv0kgf893afe8",
+  "envId": "qqq-d7g05y68803d5476c",
   "functionRoot": "cloudfunctions",
   "functions": [
     {
@@ -209,15 +209,14 @@
     },
     {
       "name": "postAssist",
-      "timeout": 25,
+      "timeout": 20,
       "runtime": "Nodejs18.15",
       "handler": "index.main",
       "installDependency": true,
       "envVariables": {
         "MODERATION_MODE": "strict",
         "WX_ENV_VERSION": "release"
-      },
-      "description": "校园分享 · 拍照即发帖（多模态识图建议，纯建议不落库）"
+      }
     },
     {
       "name": "postCreate",
@@ -268,6 +267,17 @@
       "description": "校园分享 · 帖子列表（首页/板块/搜索）"
     },
     {
+      "name": "rankList",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      }
+    },
+    {
       "name": "reportCreate",
       "timeout": 20,
       "runtime": "Nodejs18.15",
@@ -278,6 +288,17 @@
         "WX_ENV_VERSION": "release"
       },
       "description": "校园分享 · 举报"
+    },
+    {
+      "name": "taskBackfillPop",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      }
     },
     {
       "name": "taskCleanup",
@@ -324,8 +345,18 @@
       "envVariables": {
         "MODERATION_MODE": "strict",
         "WX_ENV_VERSION": "release"
-      },
-      "description": "校园分享 · 每周周报（热帖汇总 + AI 总结）"
+      }
+    },
+    {
+      "name": "visionProbe",
+      "timeout": 20,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "envVariables": {
+        "MODERATION_MODE": "strict",
+        "WX_ENV_VERSION": "release"
+      }
     },
     {
       "name": "wxacodeGen",
@@ -338,18 +369,6 @@
         "WX_ENV_VERSION": "release"
       },
       "description": "校园分享 · 小程序码生成"
-    },
-    {
-      "name": "rankList",
-      "timeout": 20,
-      "runtime": "Nodejs18.15",
-      "handler": "index.main",
-      "installDependency": true,
-      "envVariables": {
-        "MODERATION_MODE": "strict",
-        "WX_ENV_VERSION": "release"
-      },
-      "description": "校园分享 · 榜单（热度榜/新秀榜/板块榜）"
     }
   ]
 }

@@ -24,8 +24,18 @@ import os
 import shutil
 import subprocess
 import sys
+def _detect_node():
+    import os as _o
+    base = _o.path.expanduser('~/.workbuddy/binaries/node/versions')
+    for d in sorted(_o.listdir(base), reverse=True):
+        p = _o.path.join(base, d, 'node.exe')
+        if _o.path.isfile(p):
+            return p
+    raise SystemExit('node.exe not found under ' + base)
 
-NODE = r'C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe'
+
+
+NODE = _detect_node()
 CLI = r'C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_modules\@cloudbase\cli\dist\standalone\cli.js'
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TMP = os.path.join(REPO, '_selftest_tmp')

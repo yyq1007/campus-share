@@ -6,7 +6,17 @@ import subprocess
 import sys
 
 ROOT = r"C:\Users\Admin（无密码）\WorkBuddy\2026-10-26-10-38-44\campus-share"
-NODE = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
+def _detect_node():
+    import os as _o
+    base = _o.path.expanduser('~/.workbuddy/binaries/node/versions')
+    for d in sorted(_o.listdir(base), reverse=True):
+        p = _o.path.join(base, d, 'node.exe')
+        if _o.path.isfile(p):
+            return p
+    raise SystemExit('node.exe not found under ' + base)
+
+
+NODE = _detect_node()
 
 fail = 0
 

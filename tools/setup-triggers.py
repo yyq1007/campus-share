@@ -10,8 +10,18 @@ cron 是 7 位（秒 分 时 日 月 周 年），频率取自 docs/MVP产品开
 import json
 import subprocess
 import sys
+def _detect_node():
+    import os as _o
+    base = _o.path.expanduser('~/.workbuddy/binaries/node/versions')
+    for d in sorted(_o.listdir(base), reverse=True):
+        p = _o.path.join(base, d, 'node.exe')
+        if _o.path.isfile(p):
+            return p
+    raise SystemExit('node.exe not found under ' + base)
 
-NODE = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
+
+
+NODE = _detect_node()
 CLI = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_modules\@cloudbase\cli\dist\standalone\cli.js"
 ENV = 'qqq-d7g05y68803d5476c'
 
@@ -20,6 +30,8 @@ TRIGGERS = [
     ('taskHotScore', 'taskHotScoreTimer', '0 0 * * * * *', '每小时整点重算热度分'),
     ('taskVectorize', 'taskVectorizeTimer', '0 */5 * * * * *', '每 5 分钟重建向量索引'),
     ('taskCleanup', 'taskCleanupTimer', '0 0 3 * * * *', '每日 03:00 清理过期与临时文件'),
+    # 周报：每周一 09:00（cron 7 位：秒 分 时 日 月 周 年，最后一位是年，留空=每年）
+    ('taskWeeklyDigest', 'taskWeeklyDigestTimer', '0 0 9 * * 1 *', '每周一 09:00 生成周报'),
 ]
 
 

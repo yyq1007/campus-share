@@ -7,7 +7,9 @@ const { localIcon } = require('../../utils/icons')
 Component({
   properties: {
     name: { type: String, value: '' },
-    size: { type: Number, value: 48 } // rpx
+    size: { type: Number, value: 48 }, // rpx
+    // 透传给内部 image 的附加 class，用于挂动画（如点赞跳动爱心）
+    extraClass: { type: String, value: '' }
   },
   data: {
     src: '',

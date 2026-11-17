@@ -170,7 +170,17 @@ print()
 print('=' * 68)
 print('语法校验（node --check）')
 print('=' * 68)
-NODE = r'C:\Users\Admin（无密码）\.workbuddy\binaries\node\versions\22.22.2-3\node.exe'
+def _detect_node():
+    import os as _o
+    base = _o.path.expanduser('~/.workbuddy/binaries/node/versions')
+    for d in sorted(_o.listdir(base), reverse=True):
+        p = _o.path.join(base, d, 'node.exe')
+        if _o.path.isfile(p):
+            return p
+    raise SystemExit('node.exe not found under ' + base)
+
+
+NODE = _detect_node()
 for f in ['app.js', 'utils/privacy.js', 'utils/auth.js',
           'components/privacy-gate/privacy-gate.js', 'pages/agreement/agreement.js',
           'custom-tab-bar/index.js']:

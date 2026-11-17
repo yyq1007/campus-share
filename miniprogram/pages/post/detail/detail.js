@@ -37,7 +37,10 @@ Page({
     commentDraft: '',
     replyTo: null,          // { floor, nick }
     sending: false,
-    imgIdx: 0
+    imgIdx: 0,
+    // 点赞跳动爱心：仅点赞瞬间为 true，动画播完置回 false
+    likeBeat: false,
+    favBeat: false
   },
 
   onLoad(query) {
@@ -348,7 +351,7 @@ Page({
     })
     // 补丁在乐观更新瞬间就写入：用户立刻返回列表页也能拿到最新状态，不等网络
     this.patchInteraction({ liked: active, likeCount })
-    if (active) wx.vibrateShort({ type: 'light' })
+    if (active) this.triggerLikeBeat()
     try {
       const res = await api.interactionToggle(this.postId, 'like')
       const count = res && typeof res.count === 'number' ? res.count : likeCount
@@ -372,13 +375,13 @@ Page({
     const active = !p.faved
     const favCount = Math.max(0, (p.favCount || 0) + (active ? 1 : -1))
 
+    if (active) this.triggerFavBeat()
     this.setData({
       'post.faved': active,
       'post.favCount': favCount,
       'post.favShort': countShort(favCount)
     })
     this.patchInteraction({ faved: active, favCount })
-    if (active) wx.vibrateShort({ type: 'light' })
     try {
       const res = await api.interactionToggle(this.postId, 'fav')
       const count = res && typeof res.count === 'number' ? res.count : favCount
@@ -402,6 +405,30 @@ Page({
     const patches = app.globalData.interactionPatches || (app.globalData.interactionPatches = {})
     const cur = patches[this.postId] || {}
     patches[this.postId] = { ...cur, ...patch, ts: Date.now() }
+  },
+
+  /**
+   * 触发爱心跳动动画。
+   * 靠 likeBeat 置 true、动画时长后置 false 来重播：
+   * 一直保持 true 的话，「取消赞 → 再赞」第二次就不会再播。
+   */
+  triggerLikeBeat() {
+    if (this._beatTimer) clearTimeout(this._beatTimer)
+    this.setData({ likeBeat: true })
+    this._beatTimer = setTimeout(() => {
+      this.setData({ likeBeat: false })
+      this._beatTimer = null
+    }, 600)
+  },
+
+  /** 收藏瞬间 → 星标跳动（只在「变为已收藏」时播，取消收藏不跳） */
+  triggerFavBeat() {
+    if (this._favTimer) clearTimeout(this._favTimer)
+    this.setData({ favBeat: true })
+    this._favTimer = setTimeout(() => {
+      this.setData({ favBeat: false })
+      this._favTimer = null
+    }, 620)
   },
 
   // ---------- 媒体 ----------

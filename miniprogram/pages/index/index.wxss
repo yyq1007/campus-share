@@ -1,114 +1,181 @@
-/* S1 首页 */
-/* 设计稿栅格：内容左右边距 20px = 40rpx */
-.hero { padding-left: 40rpx; padding-right: 40rpx; }
-.hero-inner { position: relative; height: 200rpx; }
-.hero-title-wrap { position: absolute; left: 0; top: 20rpx; }
-.hero-title {
-  font-size: 44rpx;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--text-1);
-}
-/* 设计稿：小猫插画 112×112，贴右 20px */
-.hero-cat {
-  position: absolute;
-  right: 0; bottom: 0;
-  width: 224rpx; height: 224rpx;
-}
-.hero-cloud {
-  position: absolute;
-  right: 150rpx; top: 10rpx;
-  width: 96rpx; height: 56rpx;
-  opacity: 0.9;
-}
-.hero-star {
-  position: absolute;
-  left: 44rpx; bottom: 26rpx;
-  width: 88rpx; height: 52rpx;
-  opacity: 0.85;
+/* 抖音美好体（标题专用，子集化后仅含标题 11 个字）
+   字体文件 2MB，全量放不进主包；这里只保留用到的字，内联成 base64 免加载延迟 */
+@font-face {
+  font-family: 'DouyinMeihao';
+  src: url('data:font/woff;base64,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') format('woff');
+  font-weight: 400;
+  font-display: swap;
 }
 
-/* 搜索胶囊 */
-/* 设计稿：搜索胶囊 335×52，左右边距 20px */
+/* S1 首页 */
+/* 设计稿栅格：内容左右边距 20px = 40rpx
+   v5.2：去掉猫与云朵插画（那套白色素材在浅底上没有轮廓，怎么调都脏），
+   回到纯大字版头——这也是 UI v5 设计稿首页的原样。省下的高度直接让给信息流。 */
+.hero {
+  padding-left: 40rpx;
+  padding-right: 40rpx;
+  padding-bottom: 20rpx;
+}
+.hero-inner { position: relative; }
+.hero-title-wrap { padding-top: 20rpx; }
+/* v6.6 标题改法：
+   ① 去掉 font-title（KuaiLe 字体文件根本不存在，一直回退系统字，
+      在 Windows/安卓上会落到雅黑 Bold，又粗又方）
+   ② 字重 600 → 500：系统字体的 600 在多数平台会映射成 Bold，太重
+   ③ 第二行用品牌紫，两行形成深浅对比，比整块黑字有层次 */
+.hero-title {
+  font-family: 'DouyinMeihao', -apple-system, 'PingFang SC', sans-serif;
+  font-size: 48rpx;
+  font-weight: 400;
+  line-height: 1.32;
+  letter-spacing: 1rpx;
+  /* v6.7 文字渐变：紫 → 浅紫 → 天蓝，两行共用同一套色阶，读起来是连贯的一整块 */
+  background: linear-gradient(118deg, var(--brand-700) 0%, var(--brand-500) 46%, var(--sky) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* 搜索胶囊（v5：从二级页提到首页常驻，紧跟在分类胶囊行下方） */
 .search-pill {
-  margin-top: 12rpx;
-  height: 104rpx;
+  margin-bottom: 24rpx;
+  height: 88rpx;
   border-radius: var(--radius-pill);
   background: var(--bg-elevated);
+  border: 1rpx solid var(--card-border);
   display: flex;
   align-items: center;
   gap: 16rpx;
-  padding: 0 40rpx;
+  padding: 0 32rpx;
   box-shadow: var(--shadow-card);
+  transition: transform var(--press-duration) var(--press-ease),
+              box-shadow var(--press-duration) var(--press-ease);
+}
+.search-pill-hover {
+  transform: scale(var(--press-scale));
+  box-shadow: var(--press-shadow-tight);
 }
 .search-ph { font-size: 28rpx; color: var(--text-3); }
 
 .body { margin-top: 24rpx; }
 
-/* 分类贴纸 */
-/* 设计稿：4 个贴纸 x = 26/118/209/301（48×48），左右再缩进 6px */
-.stickers {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 24rpx;
-  padding: 0 12rpx 28rpx;
+/* ---------- v5 板块卡（仿参考图） ----------
+   结构：圆角方形卡 = 上部彩色渐变 + 半透明玻璃球图标，下部同色系深色条 + 白字。
+   四个卡刚好铺满一行（155×4 + 16×3 = 668rpx），加了新板块会自动变成可横向滚动。 */
+.cat-row {
+  white-space: nowrap;
+  width: 100%;
+  margin-top: 8rpx;
+  margin-bottom: 26rpx;
 }
-.sticker-entry {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10rpx;
+/* ---------- v6 板块卡（参考图：浅糖果底 + 米白立体圆盘 + 深色字） ----------
+   和 v5 的「深底白字」正好相反：这里底色浅、文字深，
+   层次靠「软胶厚度」（顶部内高光 + 底部投影）而不是靠颜色对比。 */
+/* ---------- v6 板块卡：整卡是图片（原图抠出，含白盘/粘土图标/文字） ----------
+   卡片内的所有视觉都在图片里，CSS 只负责尺寸、圆角、投影和按压反馈。
+   图片宽高比 192:222，所以卡片高 = 158 * 222/192 ≈ 183rpx。 */
+.cat-card {
+  display: inline-flex;
+  width: 152rpx;
+  height: 176rpx;
+  margin-right: 16rpx;
+  border-radius: 28rpx;
+  overflow: hidden;
+  vertical-align: top;
+  flex-shrink: 0;
+  /* translateZ(0) 触发合成层：iOS 上 overflow:hidden 裁圆角对 <image> 常失效，
+     图片会溢出到圆角外面，加合成层后裁切才正常 */
+  transform: translateZ(0);
+  box-shadow: 0 4rpx 12rpx var(--brand-a10);
+  transition: transform var(--press-duration) var(--press-ease),
+              box-shadow var(--press-duration) var(--press-ease);
 }
-.sticker-label { font-size: 24rpx; color: var(--text-1); }
+/* 4 张卡：152×4 + 16×3 = 656rpx，可用宽 670rpx，留 14rpx 余量 */
+.cat-card-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 28rpx;
+}
+.cat-card-hover {
+  transform: scale(var(--press-scale));
+}
+/* 选中态：上浮 + 投影略深（不加描边，描边在浅色卡上很突兀） */
+.cat-card.is-on {
+  box-shadow: 0 8rpx 18rpx var(--brand-a25);
+  transform: translateY(-3rpx);
+}
 
-/* AI 引导卡（设计稿：浅紫渐变底 + 径向渐变圆章 "AI" + 渐变主色文案） */
+/* ---------- v5 AI 引导卡：深紫实底浮起层 ----------
+   v4 是浅紫渐变底（和白卡同明度，抢不到焦点）。v5 改成深紫实底 +
+   外投影：全屏唯一的浓色块，一眼就知道这是主入口。
+   同时承接 postAssist（拍照发帖）入口，副标题说明它还能问答。 */
 .ai-card {
   flex: 1;
   min-width: 0;
-  margin-bottom: 0;              /* 行间距由 .guide-row 控制 */
   display: flex;
   align-items: center;
   gap: 20rpx;
-  height: 124rpx;                /* 设计 62 */
-  border-radius: 48rpx;          /* 设计圆角 24 */
-  padding: 0 24rpx;              /* 圆章位于卡片 X14/Y10 → 水平 24rpx，高度由 height 锁定 */
-  /* 底框：线性渐变 F2EDFF(0%) → E3D9FF(100%) + 内描边 C7BAFF 1px + 外阴影 */
-  background: linear-gradient(90deg, var(--ai-card-grad-from) 0%, var(--ai-card-grad-to) 100%);
-  box-shadow: inset 0 0 0 2rpx var(--ai-card-stroke), 0 8rpx 24rpx var(--ai-card-shadow);
+  height: 132rpx;
+  border-radius: 32rpx;
+  padding: 0 26rpx;
+  background: linear-gradient(135deg,
+    var(--ai-entry-grad-from) 0%,
+    var(--ai-entry-grad-to) 100%);
+  box-shadow: var(--ai-entry-shadow);
+  transition: transform var(--press-duration) var(--press-ease),
+              box-shadow var(--press-duration) var(--press-ease);
 }
+.ai-card-hover {
+  transform: scale(var(--press-scale));
+  box-shadow: var(--press-shadow-tight);
+}
+/* 深紫底上的白章：半透明白底 + 白字，替代 v4 的彩色径向渐变 */
 .ai-badge {
-  box-sizing: border-box; /* 锁定 80×80：padding 计入高度，不撑成椭圆 */
-  width: 80rpx; height: 80rpx; /* 设计稿 40×40 */
+  box-sizing: border-box;
+  width: 76rpx; height: 76rpx;
   border-radius: 999rpx;
-  /* 径向渐变：圆心=正圆心，250BFD(5%) → 1BEFF7(100%)，两 stop 各带 48%/58% 不透明度 */
-  background: radial-gradient(circle,
-    var(--ai-badge-grad-from) 5%,
-    var(--ai-badge-grad-to) 100%);
+  background: var(--white-a18);
+  border: 1rpx solid var(--white-a28);
   color: var(--text-on-brand);
   font-family: 'Agbalumo', 'KuaiLe', -apple-system, 'PingFang SC', sans-serif;
-  font-size: 48rpx; /* 设计稿 Agbalumo Regular 24 */
+  font-size: 36rpx;
   font-weight: 400;
-  /* Agbalumo 行盒中心比 "AI" 字形视觉中心低 4.8rpx（hhea asc/desc 偏大），补 padding 使字形回到圆心 */
-  padding-bottom: 10rpx;
+  /* Agbalumo 行盒中心偏低，补 padding 让字形回到圆心 */
+  padding-bottom: 8rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 8rpx 20rpx var(--brand-a25);
 }
-.ai-text { flex: 1; }
-/* 引导文字：Noto Sans SC Bold 15，线性渐变填色 6F52F9 → 6BD9F7 */
+.ai-text { flex: 1; min-width: 0; }
 .ai-main {
   font-size: 30rpx;
   font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-on-brand);
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;   /* 卡片变窄（265pt）后防溢出 */
-  background: linear-gradient(90deg, var(--ai-text-grad-from) 0%, var(--ai-text-grad-to) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
+  text-overflow: ellipsis;
+}
+.ai-sub {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: var(--white-a78);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* 深紫底上的 CTA 箭头：CSS 画右尖角（图标库只有紫/灰/墨色箭头，深底上看不清） */
+.ai-arrow {
+  flex-shrink: 0;
+  width: 14rpx;
+  height: 14rpx;
+  border-top: 4rpx solid var(--text-on-brand);
+  border-right: 4rpx solid var(--text-on-brand);
+  transform: rotate(45deg);
+  margin-left: 4rpx;
 }
 
 /* 引导行：AI 卡（265×62） + 周报按钮（77×52）同一行 */
@@ -179,6 +246,21 @@
   left: -1.6rpx;
   width: 41.1rpx;
   height: 54rpx;
+}
+
+/* ---------- 信息流：多列瀑布流 ----------
+   用 column-count 而不是 flex 两列：卡片高度本来就不一样（有图 / 无图文字卡），
+   flex 会被行内最高卡撑齐、下方留空，多列才能自然错落。 */
+.feed-grid {
+  column-count: 2;
+  column-gap: 20rpx;
+}
+.feed-item {
+  width: 100%;              /* 多列里宽度由列决定，不能写 calc，否则溢出 */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 20rpx;
 }
 
 /* 加载更多 */

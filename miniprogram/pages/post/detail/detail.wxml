@@ -20,18 +20,40 @@
     <view class="skeleton card-skel short" />
   </view>
   <view wx:elif="{{state === 'error'}}" class="state-wrap">
-    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <icon name="empty-cloud" size="160"/>
     <view class="state-text">加载失败了</view>
     <button class="state-btn" bind:tap="onRetry">重试</button>
   </view>
   <view wx:elif="{{state === 'gone'}}" class="state-wrap">
-    <image class="state-icon" src="/assets/deco/cloud.png" mode="aspectFit" />
+    <icon name="empty-cloud" size="160"/>
     <view class="state-text">内容不存在或已删除</view>
   </view>
 
   <block wx:elif="{{post}}">
-    <!-- 正文卡（排版同信息流：作者行 → 标题 → 正文 → 图集 → 字段） -->
-    <view class="detail-card">
+    <!-- v5 封面全出血：图占满屏宽，下方白卡负边距上移压住封面下缘（白卡下沉） -->
+    <view wx:if="{{!post.isDigest && post.mediaView.length}}" class="hero-media">
+      <swiper wx:if="{{post.mediaView.length > 1}}" class="hero-gallery" circular bindchange="onSwiperChange">
+        <swiper-item wx:for="{{post.mediaView}}" wx:key="index">
+          <image
+            wx:if="{{item.type === 'image'}}" class="hero-img"
+            src="{{item.url}}" mode="aspectFill" data-idx="{{index}}" bind:tap="onPreview"
+          />
+          <video wx:else class="hero-video" src="{{item.url}}" poster="{{item.poster}}" object-fit="contain" controls />
+        </swiper-item>
+      </swiper>
+      <block wx:if="{{post.mediaView.length === 1}}">
+        <image
+          wx:if="{{post.mediaView[0].type === 'image'}}"
+          class="hero-img solo" src="{{post.mediaView[0].url}}" mode="aspectFill"
+          data-idx="{{0}}" bind:tap="onPreview"
+        />
+        <video wx:else class="hero-video" src="{{post.mediaView[0].url}}" poster="{{post.mediaView[0].poster}}" object-fit="contain" controls />
+      </block>
+      <view wx:if="{{post.mediaView.length > 1}}" class="hero-dots">{{imgIdx + 1}}/{{post.mediaView.length}}</view>
+    </view>
+
+    <!-- 正文卡（v5：白卡下沉盖住封面下缘） -->
+    <view class="detail-card {{post.isDigest || !post.mediaView.length ? 'detail-card-plain' : 'detail-card-lift'}}">
       <!-- 作者行：本人显示自己设置的头像（仅自己可见），他人一律匿名糖果色 -->
       <view wx:if="{{!post.isDigest}}" class="author-row">
         <image wx:if="{{post.author && post.author.avatarUrl}}" class="avatar avatar-img" src="{{post.author.avatarUrl}}" mode="aspectFill" />
@@ -59,33 +81,9 @@
       <!-- 正文 -->
       <view wx:if="{{!post.isDigest}}" class="detail-content">{{post.content}}</view>
 
-      <!-- 图集：排在正文下方（不再占据页首通栏），图片/视频同属一个轮播 -->
-      <view class="gallery-wrap">
-        <swiper wx:if="{{post.mediaView.length > 1}}" class="gallery" style="{{post.galleryH ? 'height:' + post.galleryH + 'rpx' : ''}}" circular bindchange="onSwiperChange">
-          <swiper-item wx:for="{{post.mediaView}}" wx:key="index">
-            <image
-              wx:if="{{item.type === 'image'}}" class="gallery-img"
-              src="{{item.url}}" mode="aspectFill" data-idx="{{index}}" bind:tap="onPreview"
-            />
-            <video wx:else class="gallery-video" src="{{item.url}}" poster="{{item.poster}}" object-fit="contain" controls />
-          </swiper-item>
-        </swiper>
-        <block wx:if="{{post.mediaView.length === 1}}">
-          <image
-            wx:if="{{post.mediaView[0].type === 'image'}}"
-            class="gallery-img solo" src="{{post.mediaView[0].url}}" mode="aspectFill"
-            data-idx="{{0}}" bind:tap="onPreview"
-          />
-          <video wx:else class="gallery-video" src="{{post.mediaView[0].url}}" poster="{{post.mediaView[0].poster}}" object-fit="contain" controls />
-        </block>
-        <view wx:if="{{post.mediaView.length > 1}}" class="gallery-dots">{{imgIdx + 1}}/{{post.mediaView.length}}</view>
-      </view>
-
-      <!-- 结构化字段（设计稿：浅紫底小标签） -->
-      <view wx:if="{{post.fieldChips.length}}" class="field-chips">
-        <view class="field-chip" wx:for="{{post.fieldChips}}" wx:key="label" data-value="{{item.value}}" bind:tap="onCopyField">{{item.label}}</view>
-      </view>
-      <view wx:if="{{post.fieldRows.length && false}}" class="field-card">
+      <!-- v5 字段卡：灰底压灰字，整行可点复制（label 左 / value 右 / 复制图标）
+           v4 是浅紫小标签（field-chips），信息扁平且看不出字段名，改成两列字段行 -->
+      <view wx:if="{{post.fieldRows.length}}" class="field-card">
         <view class="field-row" wx:for="{{post.fieldRows}}" wx:key="label" data-value="{{item.value}}" bind:tap="onCopyField">
           <text class="field-label">{{item.label}}</text>
           <text class="field-value">{{item.value}}</text>
@@ -187,11 +185,11 @@
         />
       </view>
       <view class="action-item {{post.liked ? 'is-on' : ''}}" bind:tap="onLike">
-        <image class="action-icon" src="/assets/icons/{{post.liked ? 'heart-fill' : 'heart'}}.png" mode="aspectFit" />
+        <image class="action-icon {{likeBeat ? 'heart-beat' : ''}}" src="/assets/icons/{{post.liked ? 'heart-fill' : 'heart'}}.png" mode="aspectFit" />
         <text class="action-num">{{post.likeShort}}</text>
       </view>
       <view class="action-item {{post.faved ? 'is-on-fav' : ''}}" bind:tap="onFav">
-        <image class="action-icon" src="/assets/icons/{{post.faved ? 'star-fill' : 'star'}}.png" mode="aspectFit" />
+        <image class="action-icon {{favBeat ? 'star-beat' : ''}}" src="/assets/icons/{{post.faved ? 'star-fill' : 'star'}}.png" mode="aspectFit" />
         <text class="action-num">{{post.favShort}}</text>
       </view>
       <view wx:if="{{post.isMine}}" class="action-item" bind:tap="onDeletePost">

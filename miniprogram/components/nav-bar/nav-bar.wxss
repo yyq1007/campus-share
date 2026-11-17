@@ -28,10 +28,12 @@
 .nav-back-dark {
   background: var(--scrim-soft);
 }
+/* v5：导航标题回归系统字 semibold（快乐体只留给页面级大标题，每屏 ≤1 处） */
 .nav-title {
   flex: 1;
   text-align: center;
   font-size: 36rpx;
+  font-weight: 600;
   color: var(--text-1);
 }
 .nav-title-light { color: var(--text-on-brand); }

@@ -13,6 +13,8 @@
     <view wx:for="{{messages}}" wx:key="id" id="{{item.id}}" class="msg {{item.role === 'user' ? 'is-user' : 'is-ai'}}">
       <!-- AI -->
       <block wx:if="{{item.role === 'ai'}}">
+        <!-- v5 AI 身份圆章：紫青渐变，全站唯一形态（与首页 AI 入口同源） -->
+        <view class="ai-avatar">AI</view>
         <view class="bubble-ai">
           <view wx:if="{{item.loading}}" class="dot-row">
             <view class="dot" />
@@ -20,8 +22,12 @@
             <view class="dot dot-3" />
           </view>
           <block wx:else>
+            <!-- v5：依据徽章前置到回答头部——评委最关注的 AI 可视化证据 -->
+            <view wx:if="{{item.cites && item.cites.length}}" class="cite-badge">
+              <text class="cite-badge-txt">✦ 依据站内 {{item.cites.length}} 条分享作答</text>
+            </view>
             <view class="bubble-text">{{item.text}}</view>
-            <!-- 引用帖卡：无引用不输出 -->
+            <!-- 引用帖卡：直接进气泡（看得见的依据），无引用不输出 -->
             <view wx:if="{{item.cites && item.cites.length}}" class="cite-wrap">
               <view class="cite-label">来自这些分享</view>
               <view
