@@ -11,20 +11,63 @@ import json
 import os
 import subprocess
 import sys
-def _detect_node():
-    import os as _o
-    base = _o.path.expanduser('~/.workbuddy/binaries/node/versions')
-    for d in sorted(_o.listdir(base), reverse=True):
-        p = _o.path.join(base, d, 'node.exe')
-        if _o.path.isfile(p):
-            return p
-    raise SystemExit('node.exe not found under ' + base)
+
+# ── 可移植化：node / tcb CLI / 环境ID 全部自动探测 ─────────────────
+# 用法：python tools/setup-db.js.py [-e 环境ID]
+#   环境ID 缺省时读 cloudbaserc.json 的 envId
+#   前置：已安装 @cloudbase/cli（npm i -g @cloudbase/cli）并 tcb login
 
 
+def _find_tcb_cli():
+    """依次找：1) PATH 里的 tcb 命令  2) 全局 npm 包里的 standalone cli.js"""
+    import shutil
+    tcb = shutil.which('tcb') or shutil.which('tcb.cmd')
+    if tcb:
+        return [tcb]
+    try:
+        root = subprocess.run(['npm', 'root', '-g'], capture_output=True,
+                              text=True, timeout=30).stdout.strip()
+        cand = os.path.join(root, '@cloudbase', 'cli', 'dist', 'standalone', 'cli.js')
+        if os.path.isfile(cand):
+            import sysconfig
+            node = sys.executable if os.name == 'nt' else shutil.which('node') or 'node'
+            # Windows 下 npm 全局 bin 的 node 不一定在 PATH，找同盘 node
+            if node == sys.executable:
+                node_dir = os.path.dirname(root)
+                for exe in (os.path.join(node_dir, 'node.exe'), shutil.which('node')):
+                    if exe and os.path.isfile(exe):
+                        node = exe
+                        break
+            return [node, cand]
+    except Exception:
+        pass
+    raise SystemExit('找不到 @cloudbase/cli，请先 npm i -g @cloudbase/cli 并 tcb login')
 
-NODE = _detect_node()
-CLI = r"C:\Users\Admin（无密码）\.workbuddy\binaries\node\workspace\node_modules\@cloudbase\cli\dist\standalone\cli.js"
-ENV = 'qqq-d7g05y68803d5476c'
+
+def _load_env_id():
+    """读 cloudbaserc.json 的 envId"""
+    p = os.path.join(os.path.dirname(__file__), '..', 'cloudbaserc.json')
+    try:
+        with open(p, encoding='utf-8') as f:
+            return json.load(f).get('envId')
+    except Exception:
+        return None
+
+
+TCB = _find_tcb_cli()
+
+# 命令行 -e/--env 覆盖 cloudbaserc
+argv = sys.argv[1:]
+ENV = None
+if '-e' in argv or '--env' in argv:
+    i = argv.index('-e') if '-e' in argv else argv.index('--env')
+    ENV = argv[i + 1]
+    del argv[i:i + 2]
+if not ENV:
+    ENV = _load_env_id()
+if not ENV:
+    raise SystemExit('未指定环境ID：传 -e <envId> 或确认 cloudbaserc.json 里有 envId')
+print(f'目标环境: {ENV}')
 
 # ── 集合与索引规格 ────────────────────────────────────────────────
 # 字段名已逐条对照云函数源码核验：
@@ -144,7 +187,7 @@ SEED = {
 def run_nosql(commands, timeout=120):
     """执行一批 MongoDB 命令，返回 (exit_code, 解析后的 json 或原文)"""
     cmd = json.dumps(commands, ensure_ascii=False)
-    args = [NODE, CLI, 'db', 'nosql', 'execute', '--command', cmd, '-e', ENV, '--json']
+    args = TCB + ['db', 'nosql', 'execute', '--command', cmd, '-e', ENV, '--json']
     p = subprocess.run(args, capture_output=True, text=True, timeout=timeout,
                        encoding='utf-8', errors='replace')
     out = p.stdout or ''

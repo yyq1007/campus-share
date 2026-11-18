@@ -8,6 +8,60 @@
 - 契约映射：`docs/契约映射-前端与环境版.md` —— 前端 ↔ 环境版函数字段对照
 - 配色规范：`docs/配色规范-v4.md` + `miniprogram/theme.wxss`（令牌唯一来源）
 
+## 快速开始（他人从零部署）
+
+> 前置要求：微信开发者工具（稳定版）、Node ≥ 18、Python 3.8+。
+> 仓库里的环境 ID（`yyq-d6g1dv0kgf893afe8`）是作者的私有环境，**他人无法访问，必须换成自己的环境**；AppID 同理。
+
+### 1. 开通云开发环境
+
+1. 注册/登录 [腾讯云 CloudBase 控制台](https://console.cloud.tencent.com/tcb)，创建环境（基础版即可），记下 **envId**
+2. 在该环境中开通：
+   - **云函数 / 云存储**（默认开通）
+   - **内容安全**：msgSecCheck、imgSecCheck（控制台 → 安全配置）
+   - **AI 大模型服务**（控制台 → AI → 开通，选资源点计费）：识图用 `hy-vision-2.0-instruct`，站内问答用 `hunyuan-exp`
+
+### 2. 初始化数据库（建集合 + 索引 + 种子数据）
+
+```bash
+npm i -g @cloudbase/cli
+tcb login                     # 浏览器授权
+python tools/setup-db.js.py -e <你的envId>
+```
+
+幂等脚本：自动建 18 个集合、全部索引、灌种子数据（含邀请码 `GXNU2026`）。
+
+### 3. 部署云函数
+
+```bash
+# bash 循环部署全部函数（PowerShell 可用 Get-ChildItem cloudfunctions | % { ... }）
+for d in cloudfunctions/*/; do
+  n=$(basename "$d")
+  tcb fn deploy "$n" -e <你的envId> --dir "$d" --force --install-dependency true
+done
+```
+
+- `installDependency` 让云端自动 `npm install`，无需本机上 node_modules
+- 部署完在控制台确认每个函数的环境变量：`MODERATION_MODE=strict`、`WX_ENV_VERSION=release`（cloudbaserc.json 已配好，跟随部署）
+
+### 4. 换成你自己的 AppID 和环境 ID
+
+| 文件 | 改什么 |
+|---|---|
+| `project.config.json` | `appid` 换成你自己的（没有可在开发者工具里用测试号） |
+| `miniprogram/utils/config.js` | `CLOUD_ENV` 换成你的 envId |
+| `cloudbaserc.json` | `envId` 换成你的 envId |
+
+> ⚠️ 多人协作时环境 ID 是配置雷区：各自的环境 ID 不要随提交合入主干。
+
+### 5. 运行
+
+微信开发者工具导入项目 → 填入 AppID → 编译。首次登录的用户自动成为管理员；用邀请码 `GXNU2026` 注册体验用户。体验版发布、隐私保护指引、正式 AppID 等上线事项见下方「上线前待办」。
+
+### 备注：tools/ 目录
+
+`tools/` 下除 `setup-db.js.py`、`static-check.js`、`sync-*.py` 外，多为作者本机的一次性运维脚本（部分硬编码了作者本机路径与环境 ID），不影响小程序使用，可按需参考。
+
 ## 项目结构
 
 ```

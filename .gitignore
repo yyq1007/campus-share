@@ -32,3 +32,6 @@ tools/fetch-env-src.js
 
 # 视觉自检临时产物（headless 截图/对照页，仅本机用）
 .tmp-preview/
+
+# 图标设计稿候选（仅本机选稿用，不入库）
+design/app-icon/
