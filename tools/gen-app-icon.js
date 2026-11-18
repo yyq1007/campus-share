@@ -11,10 +11,10 @@ const sharp = require('sharp')
 const OUT = path.join(__dirname, '..', 'design', 'app-icon')
 fs.mkdirSync(OUT, { recursive: true })
 
-// 图标专用紫色（用户反馈 #6C5CE7 偏蓝 → 色相从 247° 调到 270° 纯紫区）
-const P700 = '#9B5CF0'   // 主紫（图标用，色相 271°）
-const P800 = '#7C3ED6'   // 深紫（渐变深端）
-const P200 = '#E6D4FF'   // 淡紫高光
+// 主色按队友 v6 改版口径：紫罗兰 #6C5CE7（与全站 UI 统一）
+const P700 = '#6C5CE7'   // 主紫（v6 主色）
+const P800 = '#5A47C9'   // 深紫（渐变深端）
+const P200 = '#DCD3FB'   // 淡紫高光
 const MINT = '#4ECDC4'   // 板块·生活
 const SKY  = '#5AA9FF'   // 板块·学习
 const CORAL = '#FF7A8A'  // 板块·美食
@@ -93,7 +93,34 @@ async function render(name, svg) {
   console.log('OK', name)
 }
 
+/** 方案四：v6 粘土风统一 —— 紫渐变底 + 白盘 + 队友的粘土猫图标（assets/icons/cat-icon-all.png） */
+async function renderD() {
+  const bg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${P700}"/>
+        <stop offset="1" stop-color="${P800}"/>
+      </linearGradient>
+    </defs>
+    <rect width="512" height="512" fill="url(#bg)"/>
+    <circle cx="256" cy="250" r="168" fill="#FFFFFF"/>
+    <path d="M108 96 l8 22 22 8 -22 8 -8 22 -8 -22 -22 -8 22 -8 z" fill="#FFE28A"/>
+    <path d="M412 120 l6 16 16 6 -16 6 -6 16 -6 -16 -16 -6 16 -6 z" fill="#DCD3FB"/>
+  </svg>`
+  const cat = await sharp(path.join(__dirname, '..', 'miniprogram', 'assets', 'icons', 'cat-icon-all.png'))
+    .resize(300, 300).png().toBuffer()
+  // 先把底图渲染成固定 512 的 buffer，再合成（SVG 直接 composite 会因渲染尺寸不确定报错）
+  const base = await sharp(Buffer.from(bg)).resize(512, 512).png().toBuffer()
+  // 先合成出成品 buffer，再单独缩 144（sharp 管线固定 resize 先于 composite，不能链在一起）
+  const merged = await sharp(base).composite([{ input: cat, left: 106, top: 100 }])
+    .png().toBuffer()
+  await sharp(merged).png().toFile(path.join(OUT, 'D-clay-cat-512.png'))
+  await sharp(merged).resize(144, 144).png().toFile(path.join(OUT, 'D-clay-cat-144.png'))
+  console.log('OK D-clay-cat')
+}
+
 ;(async () => {
+  // 注：cat-icon-all.png 实为 v6「全部」板块卡（带文字），不适合做 app 图标，方案 D 已废弃
   await render('A-bubble-heart', svgA)
   await render('B-plane', svgB)
   await render('C-handbook-dots', svgC)
